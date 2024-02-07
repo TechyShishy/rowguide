@@ -1,0 +1,6 @@
+<button type="button" (click)="onToggle()">Row {{row.id}}</button>
+<ol [hidden]="!visible">
+  <li *ngFor="let step of steps; index as i">
+    <app-step [step]="step" />
+  </li>
+</ol>
