@@ -6018,7 +6018,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"log4js@npm:^6.4.1":
+"log4js@npm:^6.4.1, log4js@npm:^6.9.1":
   version: 6.9.1
   resolution: "log4js@npm:6.9.1"
   dependencies:
@@ -7554,10 +7554,22 @@ __metadata:
     karma-coverage: "npm:~2.2.0"
     karma-jasmine: "npm:~5.1.0"
     karma-jasmine-html-reporter: "npm:~2.1.0"
+    log4js: "npm:^6.9.1"
     rxjs: "npm:~7.8.0"
     tslib: "npm:^2.3.0"
     typescript: "npm:~5.3.2"
     zone.js: "npm:~0.14.3"
+  dependenciesMeta:
+    "@angular/common@17.1.2":
+      unplugged: true
+    "@angular/core@17.1.2":
+      unplugged: true
+    "@angular/platform-browser@17.1.2":
+      unplugged: true
+    "@angular/router@17.1.2":
+      unplugged: true
+    tslib@2.6.2:
+      unplugged: true
   languageName: unknown
   linkType: soft
 

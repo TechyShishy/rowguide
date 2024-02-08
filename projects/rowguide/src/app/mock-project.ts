@@ -1,5 +1,10 @@
 import { Row } from './row';
 
+export const PROJECTSTRING: string = `1(D) 4(A) 2(B)
+2(B) 1(A) 2(B) 1(A) 2(B) 1(A)
+1(D) 4(A) 2(B) 1(D) 4(A) 2(B)
+2(B) 1(A)`;
+
 export const PROJECT: Row[] = [
   {
     id: 1,

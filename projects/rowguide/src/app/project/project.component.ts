@@ -4,6 +4,7 @@ import { NgFor } from '@angular/common';
 import { PROJECT } from '../mock-project';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
+import { ProjectService } from '../project.service';
 
 @Component({
   selector: 'app-project',
@@ -13,13 +14,20 @@ import { StepComponent } from '../step/step.component';
   styleUrl: './project.component.scss',
 })
 export class ProjectComponent {
-  rows = PROJECT;
+  rows!: Array<Row>;
 
   @ViewChildren(RowComponent) rowComponents!: Array<RowComponent>;
 
   advanceRowIterator!: IterableIterator<RowComponent>;
   advanceRowCurrent!: RowComponent;
 
+  constructor(private projectService: ProjectService) {}
+
+  ngOnInit() {
+    this.projectService.getProject().subscribe((project) => {
+      this.rows = project.rows;
+    });
+  }
   onAdvance() {
     // Initialization at first call
     if (this.advanceRowIterator === undefined) {
