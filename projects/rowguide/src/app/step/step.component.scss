@@ -1,4 +1,21 @@
-.highlighted {
-  background-color: yellow;
-  font-weight: bold;
+$step-height: 3rem;
+
+:host {
+  color: rgba(255, 255, 255, 255);
+  font-size: x-large;
+  background-color: #4ab9ec;
+  border-color: rgba(0, 0, 0, 0);
+  border-radius: 0.5rem;
+  display: inline-block;
+  list-style-type: none;
+  margin: 0.125rem 0.25rem 0.125rem 0;
+  width: 5rem;
+  height: $step-height;
+  text-align: center;
+}
+
+
+span {
+  height: $step-height;
+  line-height: $step-height;
 }

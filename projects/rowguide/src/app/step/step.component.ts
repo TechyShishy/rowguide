@@ -1,8 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, HostBinding, HostListener, Input } from '@angular/core';
 import { Step } from '../step';
 
 @Component({
-  selector: 'app-step',
+  selector: 'li.app-step',
   standalone: true,
   imports: [],
   templateUrl: './step.component.html',
@@ -10,7 +10,11 @@ import { Step } from '../step';
 })
 export class StepComponent {
   @Input() step!: Step;
-  highlighted = false;
+  @HostBinding('class.highlighted') highlighted = false;
+  @HostListener('click', ['$event'])
+  onClick(_e: any) {
+    this.onToggle();
+  }
   onToggle() {
     this.highlighted = !this.highlighted;
   }

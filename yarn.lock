@@ -7568,6 +7568,8 @@ __metadata:
       unplugged: true
     "@angular/router@17.1.2":
       unplugged: true
+    rxjs@7.8.1:
+      unplugged: true
     tslib@2.6.2:
       unplugged: true
   languageName: unknown

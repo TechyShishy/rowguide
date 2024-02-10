@@ -1,6 +1,4 @@
 <ol>
-  <li *ngFor="let row of rows; index as i">
-    <app-row [row]="row" [steps]="row.steps" />
-  </li>
+  <li class="app-row" *ngFor="let row of rows; index as i" [row]="row" [steps]="row.steps"></li>
 </ol>
 <button type="button" (click)="onAdvance()">Advance</button>

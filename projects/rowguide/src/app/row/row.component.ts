@@ -5,7 +5,7 @@ import { Step } from '../step';
 import { NgFor } from '@angular/common';
 
 @Component({
-  selector: 'app-row',
+  selector: '.app-row',
   standalone: true,
   imports: [NgFor, StepComponent],
   templateUrl: './row.component.html',
