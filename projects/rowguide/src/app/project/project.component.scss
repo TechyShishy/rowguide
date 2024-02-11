@@ -1,3 +1,8 @@
 li {
   list-style-type: none;
 }
+
+ol {
+  height: 80vh;
+  overflow-y: scroll;
+}

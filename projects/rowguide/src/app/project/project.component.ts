@@ -5,6 +5,7 @@ import { PROJECT } from '../mock-project';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
 import { ProjectService } from '../project.service';
+import { Log } from '../log';
 
 @Component({
   selector: 'app-project',
@@ -28,62 +29,65 @@ export class ProjectComponent {
       this.rows = project.rows;
     });
   }
-  onAdvance() {
-    // Initialization at first call
+  conditionalInitializeRowIterator() {
     if (this.advanceRowIterator === undefined) {
-      console.log('Initializing row iterator');
+      Log.debug('Initializing row iterator');
       this.advanceRowIterator = this.rowComponents[Symbol.iterator]();
     }
-    if (this.advanceRowCurrent === undefined) {
-      console.log('Initializing current row');
-      let advanceRowIteratorResult = this.advanceRowIterator.next();
-      if (advanceRowIteratorResult.done) {
-        console.log('No rows to advance');
-        return;
-      }
-      this.advanceRowCurrent = advanceRowIteratorResult.value;
-      console.log('Current row initialized to', this.advanceRowCurrent.row.id);
-    }
+  }
+  conditionalInitializeCurrentRow() {}
+  onAdvanceRow() {
+    this.doAdvanceRow();
+    this.doAdvanceStep();
+  }
+  doAdvanceRow() {
+    // Initialization at first call
+    this.conditionalInitializeRowIterator();
 
-    console.log('Showing current row');
-    this.advanceRowCurrent.show();
-
-    console.log('Advancing steps in current row');
-    let advanceRow = this.advanceRowCurrent.onAdvance();
-    if (!advanceRow) {
-      console.log('Steps in current row advanced');
-      return;
-    }
-    console.log('Steps in current row advanced, advancing to next row');
     let advanceRowIteratorResult = this.advanceRowIterator.next();
     if (advanceRowIteratorResult.done) {
-      console.log('No more rows to advance');
+      Log.debug('No more rows to advance');
       this.rowComponents.forEach((rowComponent) => {
-        console.log('Hiding row', rowComponent.row.id);
+        Log.debug('Hiding row', rowComponent.row.id);
         rowComponent.hide();
-        console.log('Unhighlighting steps in row', rowComponent.row.id);
+        Log.debug('Unhighlighting steps in row', rowComponent.row.id);
         rowComponent.stepComponents.forEach((stepComponent) => {
           stepComponent.unhighlight();
         });
-        console.log(
-          'Reinitializing step iterator for row',
-          rowComponent.row.id
-        );
+        Log.debug('Reinitializing step iterator for row', rowComponent.row.id);
         rowComponent.advanceStepIterator =
           rowComponent.stepComponents[Symbol.iterator]();
       });
 
-      console.log('Reinitializing row iterator');
+      Log.debug('Reinitializing row iterator');
       this.advanceRowIterator = this.rowComponents[Symbol.iterator]();
       advanceRowIteratorResult = this.advanceRowIterator.next();
     }
 
     this.advanceRowCurrent = advanceRowIteratorResult.value;
+    this.advanceRowCurrent.show();
+  }
+  onAdvanceStep() {
+    this.doAdvanceStep();
+  }
+  doAdvanceStep() {
+    if (this.advanceRowCurrent === undefined) {
+      Log.debug('Initializing current row');
+      this.doAdvanceRow();
+    }
+    Log.debug('Advancing steps in current row');
+    let advanceRow = this.advanceRowCurrent.onAdvance();
+    if (!advanceRow) {
+      Log.debug('Steps in current row advanced');
+      return;
+    }
+    Log.debug('Steps in current row advanced, advancing to next row');
+    this.doAdvanceRow();
 
-    console.log('Showing next row');
+    Log.debug('Showing next row');
     this.advanceRowCurrent.show();
 
-    console.log('Advancing steps in next row');
+    Log.debug('Advancing steps in next row');
     this.advanceRowCurrent.onAdvance();
   }
 }

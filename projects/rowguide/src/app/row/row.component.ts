@@ -3,6 +3,7 @@ import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
 import { Step } from '../step';
 import { NgFor } from '@angular/common';
+import { Log } from '../log';
 
 @Component({
   selector: '.app-row',
@@ -29,26 +30,26 @@ export class RowComponent {
 
   onAdvance(): boolean {
     if (this.advanceStepIterator === undefined) {
-      console.log('Initializing step iterator');
+      Log.debug('Initializing step iterator');
       this.advanceStepIterator = this.stepComponents[Symbol.iterator]();
     }
-    console.log('Advancing step');
+    Log.debug('Advancing step');
     let advanceStepIteratorResult = this.advanceStepIterator.next();
 
     if (advanceStepIteratorResult.done) {
-      console.log('No more steps to advance');
+      Log.debug('No more steps to advance');
       /*this.stepComponents.forEach((stepComponent) => {
         console.log('Unhighlighting step', stepComponent.step.id);
         stepComponent.unhighlight();
       });*/
 
-      console.log('Reinitializing step iterator');
+      Log.debug('Reinitializing step iterator');
       this.advanceStepIterator = this.stepComponents[Symbol.iterator]();
       advanceStepIteratorResult = this.advanceStepIterator.next();
-      console.log('Advertizing next row');
+      Log.debug('Advertizing next row');
       return true;
     }
-    console.log('Highlighting step', advanceStepIteratorResult.value.step.id);
+    Log.debug('Highlighting step', advanceStepIteratorResult.value.step.id);
     advanceStepIteratorResult.value.highlight();
     return false;
   }
