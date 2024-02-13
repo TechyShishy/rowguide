@@ -23,6 +23,7 @@
     "@angular/ssr": "^17.1.2",
     "express": "^4.18.2",
     "log4js": "^6.9.1",
+    "ngx-logger": "^5.0.12",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
@@ -54,6 +55,9 @@
       "unplugged": true
     },
     "@angular/router@17.1.2": {
+      "unplugged": true
+    },
+    "ngx-logger@5.0.12": {
       "unplugged": true
     },
     "rxjs@7.8.1": {

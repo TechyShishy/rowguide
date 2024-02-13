@@ -3,6 +3,29 @@ li {
 }
 
 ol {
-  height: 80vh;
+  height: calc(100vh - 8rem);
   overflow-y: scroll;
+  margin-top:0;
+  margin-bottom:0;
 }
+
+:host
+ {
+  display: grid;
+  align-items: stretch;
+ }
+
+ .advance-button-container {
+  height: 4rem;
+
+  button {
+    background-color: #667fee;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 0.5rem;
+    color: white;
+    margin: 0.5rem 0.5rem;
+    text-align: center;
+    width: 5rem;
+    height: 3rem;
+  }
+ }

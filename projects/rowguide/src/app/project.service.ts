@@ -10,10 +10,10 @@ import { HUMMINGBIRD } from './hummingbird';
   providedIn: 'root',
 })
 export class ProjectService {
-  constructor() {}
+  constructor(private shorthandService: ShorthandService) {}
 
   getProject(): Observable<Project> {
-    return of(ShorthandService.loadProject(HUMMINGBIRD, ', '));
+    return of(this.shorthandService.loadProject(HUMMINGBIRD, ', '));
     // Fallback to empty NullProject if nothing else is defined
     return of(new NullProject());
   }

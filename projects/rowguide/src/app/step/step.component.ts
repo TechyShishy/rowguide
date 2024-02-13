@@ -1,5 +1,12 @@
-import { Component, HostBinding, HostListener, Input } from '@angular/core';
+import {
+  Component,
+  HostBinding,
+  HostListener,
+  Input,
+  QueryList,
+} from '@angular/core';
 import { Step } from '../step';
+import { HierarchicalList } from '../hierarchical-list';
 
 @Component({
   selector: 'li.app-step',
@@ -8,9 +15,15 @@ import { Step } from '../step';
   templateUrl: './step.component.html',
   styleUrl: './step.component.scss',
 })
-export class StepComponent {
+export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
   @HostBinding('class.highlighted') highlighted = false;
+
+  parent!: HierarchicalList;
+  prev!: HierarchicalList | null;
+  next!: HierarchicalList | null;
+  children!: QueryList<HierarchicalList>;
+
   @HostListener('click', ['$event'])
   onClick(_e: any) {
     this.onToggle();

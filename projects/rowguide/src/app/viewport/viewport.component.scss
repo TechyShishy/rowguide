@@ -1,4 +1,5 @@
 :host {
-  height: 90vh;
-  overflow-y: hidden;
+  height: calc(100vh - 4rem);
+  align-items: stretch;
+  display: grid;
 }

@@ -1,9 +1,11 @@
-import { Component, HostBinding, Input, ViewChildren } from '@angular/core';
+import { Component, Input, QueryList, ViewChildren } from '@angular/core';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
 import { Step } from '../step';
 import { NgFor } from '@angular/common';
-import { Log } from '../log';
+import { NGXLogger } from 'ngx-logger';
+import { HierarchicalList } from '../hierarchical-list';
+import { of } from 'rxjs';
 
 @Component({
   selector: '.app-row',
@@ -12,12 +14,46 @@ import { Log } from '../log';
   templateUrl: './row.component.html',
   styleUrl: './row.component.scss',
 })
-export class RowComponent {
+export class RowComponent implements HierarchicalList {
   @Input() row!: Row;
   @Input() steps!: Array<Step>;
   visible = false;
-  @ViewChildren(StepComponent) stepComponents!: Array<StepComponent>;
+  @ViewChildren(StepComponent) children!: QueryList<StepComponent>;
   advanceStepIterator!: IterableIterator<StepComponent>;
+
+  parent!: HierarchicalList;
+  prev!: HierarchicalList | null;
+  next!: HierarchicalList | null;
+
+  constructor(private logger: NGXLogger) {}
+
+  conditionalInitializeHiearchicalList() {
+    if (this.children === undefined || !(this.children.length > 0)) {
+      return;
+    }
+    if (
+      !this.children.first ||
+      (this.children.first && this.children.first.prev === null)
+    ) {
+      return;
+    }
+    this.children.first.prev = null;
+    let lastChild = null;
+    for (let child of this.children) {
+      child.parent = this;
+      if (child.prev !== null) {
+        if (lastChild !== null) {
+          child.prev = lastChild;
+          child.prev.next = child;
+          child.next = null; // Just in case this is the last child
+        } else {
+          this.logger.debug('Uhhh... no last child?');
+        }
+      }
+      lastChild = child;
+    }
+  }
+
   onToggle() {
     this.visible = !this.visible;
   }
@@ -29,27 +65,33 @@ export class RowComponent {
   }
 
   onAdvance(): boolean {
+    this.conditionalInitializeHiearchicalList();
     if (this.advanceStepIterator === undefined) {
-      Log.debug('Initializing step iterator');
-      this.advanceStepIterator = this.stepComponents[Symbol.iterator]();
+      this.logger.debug('Initializing step iterator');
+      //@ts-expect-error
+      this.advanceStepIterator = this.children[Symbol.iterator]();
     }
-    Log.debug('Advancing step');
+    this.logger.debug('Advancing step');
     let advanceStepIteratorResult = this.advanceStepIterator.next();
 
     if (advanceStepIteratorResult.done) {
-      Log.debug('No more steps to advance');
+      this.logger.debug('No more steps to advance');
       /*this.stepComponents.forEach((stepComponent) => {
         console.log('Unhighlighting step', stepComponent.step.id);
         stepComponent.unhighlight();
       });*/
 
-      Log.debug('Reinitializing step iterator');
-      this.advanceStepIterator = this.stepComponents[Symbol.iterator]();
+      this.logger.debug('Reinitializing step iterator');
+      //@ts-expect-error
+      this.advanceStepIterator = this.children[Symbol.iterator]();
       advanceStepIteratorResult = this.advanceStepIterator.next();
-      Log.debug('Advertizing next row');
+      this.logger.debug('Advertizing next row');
       return true;
     }
-    Log.debug('Highlighting step', advanceStepIteratorResult.value.step.id);
+    this.logger.debug(
+      'Highlighting step',
+      advanceStepIteratorResult.value.step.id
+    );
     advanceStepIteratorResult.value.highlight();
     return false;
   }
