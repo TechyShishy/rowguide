@@ -48,7 +48,6 @@ export class ProjectComponent implements HierarchicalList {
     ) {
       return;
     }
-    this.logger.debug('Got here');
     this.children.first.prev = null;
     let lastChild = null;
     for (let child of this.children) {
