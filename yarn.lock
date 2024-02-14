@@ -327,22 +327,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/platform-server@npm:^17.1.0":
-  version: 17.1.2
-  resolution: "@angular/platform-server@npm:17.1.2"
-  dependencies:
-    tslib: "npm:^2.3.0"
-    xhr2: "npm:^0.2.0"
-  peerDependencies:
-    "@angular/animations": 17.1.2
-    "@angular/common": 17.1.2
-    "@angular/compiler": 17.1.2
-    "@angular/core": 17.1.2
-    "@angular/platform-browser": 17.1.2
-  checksum: 10c0/3832c02ef96ea06bed2f1d6c940d2fe243c0cda0c948230ef2ae4d6a7f7ef52e18417b3f28b5785bc557176237df5c612581743452db5471abfbc85148885e77
-  languageName: node
-  linkType: hard
-
 "@angular/router@npm:^17.1.0":
   version: 17.1.2
   resolution: "@angular/router@npm:17.1.2"
@@ -354,19 +338,6 @@ __metadata:
     "@angular/platform-browser": 17.1.2
     rxjs: ^6.5.3 || ^7.4.0
   checksum: 10c0/a886a7f75310abd92de4d50c1e49294460732b00c56f4196d66e088cb974af85bb7c16eaaa7053b72e23df7cab8768034c65088be59e0e07a64e781f782f24f6
-  languageName: node
-  linkType: hard
-
-"@angular/ssr@npm:^17.1.2":
-  version: 17.1.2
-  resolution: "@angular/ssr@npm:17.1.2"
-  dependencies:
-    critters: "npm:0.0.20"
-    tslib: "npm:^2.3.0"
-  peerDependencies:
-    "@angular/common": ^17.0.0
-    "@angular/core": ^17.0.0
-  checksum: 10c0/b3ee89a06ffd0ab3a01a35216228b477c5d84ad2ed07e8a77e226a5bcb35a8007f61fb564dcda8db013bef80d3cfea175ecdc4d8b2533d96f7a1a45c1acbcc05
   languageName: node
   linkType: hard
 
@@ -2640,7 +2611,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:*, @types/express@npm:^4.17.13, @types/express@npm:^4.17.17":
+"@types/express@npm:*, @types/express@npm:^4.17.13":
   version: 4.17.21
   resolution: "@types/express@npm:4.17.21"
   dependencies:
@@ -2711,15 +2682,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10c0/4886b90278e9c877a84efd3edd4667cd990e032d77268d2a798b99ebc1901ea336fa7dfbe9eaf4ad6ad1da9ce2ec31baf300038a3905838692362eb19904ebde
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^18.18.0":
-  version: 18.19.14
-  resolution: "@types/node@npm:18.19.14"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 10c0/a614e85d3d75e9bb73c1155f77843804506806629d20774e0479e88678efd64ab57f7bb2ba290b226fe732b6aead037ac181db04851a2f37e1c2a14744ffdb96
   languageName: node
   linkType: hard
 
@@ -4572,7 +4534,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.17.3, express@npm:^4.18.2":
+"express@npm:^4.17.3":
   version: 4.18.2
   resolution: "express@npm:4.18.2"
   dependencies:
@@ -7553,13 +7515,8 @@ __metadata:
     "@angular/forms": "npm:^17.1.0"
     "@angular/platform-browser": "npm:^17.1.0"
     "@angular/platform-browser-dynamic": "npm:^17.1.0"
-    "@angular/platform-server": "npm:^17.1.0"
     "@angular/router": "npm:^17.1.0"
-    "@angular/ssr": "npm:^17.1.2"
-    "@types/express": "npm:^4.17.17"
     "@types/jasmine": "npm:~5.1.0"
-    "@types/node": "npm:^18.18.0"
-    express: "npm:^4.18.2"
     jasmine-core: "npm:~5.1.0"
     karma: "npm:~6.4.0"
     karma-chrome-launcher: "npm:~3.2.0"
@@ -8971,13 +8928,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/b672b312f357afba8568b9dbb9e08b9e8a20845659b35fa6b340dc848efe371379f5e22bb1dc89c4b2940d5e2dc52dd1de85dde41776875fce115a448f94754f
-  languageName: node
-  linkType: hard
-
-"xhr2@npm:^0.2.0":
-  version: 0.2.1
-  resolution: "xhr2@npm:0.2.1"
-  checksum: 10c0/eebe95bd0ae9087da9b4dda636abee1f30cf9b424fbe8ebd0c7dcfd9be5db3e4aa634cf1837fa3e82b486aace9396a2dbf6be2dc8084862c8239dccec4e16dca
   languageName: node
   linkType: hard
 

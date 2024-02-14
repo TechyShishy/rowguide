@@ -36,12 +36,7 @@
             "styles": [
               "projects/rowguide/src/styles.scss"
             ],
-            "scripts": [],
-            "server": "projects/rowguide/src/main.server.ts",
-            "prerender": true,
-            "ssr": {
-              "entry": "projects/rowguide/server.ts"
-            }
+            "scripts": []
           },
           "configurations": {
             "production": {
