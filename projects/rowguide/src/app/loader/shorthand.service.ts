@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { Project } from '../project';
 import { Row } from '../row';
 import { BeadProject } from '../bead-project';
-import { Log } from '../log';
-import { LoggerModule, NGXLogger } from 'ngx-logger';
+import { NGXLogger } from 'ngx-logger';
 
 @Injectable({
   providedIn: 'root',
