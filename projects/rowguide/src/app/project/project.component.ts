@@ -1,14 +1,16 @@
-import { Component, QueryList, ViewChildren } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
 import { RowComponent } from '../row/row.component';
 import { NgFor } from '@angular/common';
-import { PROJECT } from '../mock-project';
 import { Row } from '../row';
-import { StepComponent } from '../step/step.component';
 import { ProjectService } from '../project.service';
-import { Log } from '../log';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
-import { last, of } from 'rxjs';
+import { StepComponent } from '../step/step.component';
 
 @Component({
   selector: 'app-project',
@@ -24,6 +26,8 @@ export class ProjectComponent implements HierarchicalList {
 
   advanceRowIterator!: IterableIterator<RowComponent>;
   advanceRowCurrent!: RowComponent;
+
+  currentStep!: StepComponent;
 
   parent = null;
   prev = null;
@@ -58,9 +62,13 @@ export class ProjectComponent implements HierarchicalList {
           this.logger.debug('Uhhh... no last child?');
         }
       }
+      child.conditionalInitializeHiearchicalList();
       lastChild = child;
     }
     this.logger.debug(lastChild);
+    if (this.children.first.children.first) {
+      this.currentStep = this.children.first.children.first;
+    }
   }
 
   ngOnInit() {
@@ -68,73 +76,111 @@ export class ProjectComponent implements HierarchicalList {
       this.rows = project.rows;
     });
   }
-  conditionalInitializeRowIterator() {
-    if (this.advanceRowIterator === undefined) {
-      this.logger.debug('Initializing row iterator');
-      //@ts-expect-error
-      this.advanceRowIterator = this.children[Symbol.iterator]();
-    }
-  }
-  conditionalInitializeCurrentRow() {}
   onAdvanceRow() {
-    this.doAdvanceRow();
-    this.doAdvanceStep();
-  }
-  doAdvanceRow() {
-    // Initialization at first call
-    this.conditionalInitializeRowIterator();
-
-    let advanceRowIteratorResult = this.advanceRowIterator.next();
-    if (advanceRowIteratorResult.done) {
-      this.logger.debug('No more rows to advance');
-      this.children.forEach((rowComponent) => {
-        this.logger.debug('Hiding row', rowComponent.row.id);
-        rowComponent.hide();
-        this.logger.debug('Unhighlighting steps in row', rowComponent.row.id);
-        rowComponent.children.forEach((stepComponent) => {
-          stepComponent.unhighlight();
-        });
-        this.logger.debug(
-          'Reinitializing step iterator for row',
-          rowComponent.row.id
-        );
-        //@ts-expect-error
-        rowComponent.advanceStepIterator =
-          rowComponent.children[Symbol.iterator]();
-      });
-
-      this.logger.debug('Reinitializing row iterator');
-      //@ts-expect-error
-      this.advanceRowIterator = this.children[Symbol.iterator]();
-      advanceRowIteratorResult = this.advanceRowIterator.next();
-    }
-
-    this.advanceRowCurrent = advanceRowIteratorResult.value;
-    this.advanceRowCurrent.show();
+    this.doRowForward();
   }
   onAdvanceStep() {
-    this.doAdvanceStep();
+    const endOfRow = this.doStepForward();
+    if (endOfRow) {
+      const endOfProject = this.doRowForward();
+      if (endOfProject) {
+        this.resetProject(true);
+      }
+    }
   }
-  doAdvanceStep() {
+  @HostListener('keydown.ArrowRight', ['$event'])
+  onRightArrow() {
+    const endOfRow = this.doStepForward();
+    if (endOfRow) {
+      const endOfProject = this.doRowForward();
+      if (endOfProject) {
+        this.resetProject(true);
+      }
+    }
+  }
+  @HostListener('keydown.ArrowLeft', ['$event'])
+  onLeftArrow() {
+    const startOfRow = this.doStepBackward();
+    if (startOfRow) {
+      const startOfProject = this.doRowBackward();
+      if (startOfProject) {
+        this.resetProject(false);
+      }
+      this.doStepEnd();
+    }
+  }
+  @HostListener('keydown.ArrowUp', ['$event'])
+  onUpArrow() {
+    this.doRowBackward();
+  }
+  @HostListener('keydown.ArrowDown', ['$event'])
+  onDownArrow() {
+    this.doRowForward();
+  }
+
+  doStepForward(): boolean {
     this.conditionalInitializeHiearchicalList();
-
-    if (this.advanceRowCurrent === undefined) {
-      this.logger.debug('Initializing current row');
-      this.doAdvanceRow();
+    const nextStep = this.currentStep.next;
+    if (nextStep === null) {
+      return true;
     }
-    this.logger.debug('Advancing steps in current row');
-    let advanceRow = this.advanceRowCurrent.onAdvance();
-    if (!advanceRow) {
-      this.logger.debug('Steps in current row advanced');
-      return;
-    }
-    this.logger.debug('Steps in current row advanced, advancing to next row');
-    this.doAdvanceRow();
-
-    this.logger.debug('Showing next row');
-    this.advanceRowCurrent.show();
-
-    this.logger.debug('Advancing steps in next row');
-    this.advanceRowCurrent.onAdvance();
+    this.currentStep = <StepComponent>nextStep;
+    this.currentStep.highlight();
+    (<RowComponent>this.currentStep.parent).show();
+    return false;
   }
+  doStepBackward(): boolean {
+    this.conditionalInitializeHiearchicalList();
+    this.currentStep.unhighlight();
+    const prevStep = this.currentStep.prev;
+    if (prevStep === null) {
+      return true;
+    }
+    this.currentStep = <StepComponent>prevStep;
+    return false;
+  }
+  doStepEnd() {
+    this.conditionalInitializeHiearchicalList();
+    (<QueryList<StepComponent>>this.currentStep.parent.children).forEach(
+      (stepComponent) => {
+        stepComponent.highlight();
+      }
+    );
+
+    this.currentStep = (<QueryList<StepComponent>>(
+      this.currentStep.parent.children
+    )).last;
+  }
+  doRowForward(): boolean {
+    this.conditionalInitializeHiearchicalList();
+    const currParent = this.currentStep.parent;
+    const nextParent = <RowComponent>currParent.next;
+    if (nextParent === null) {
+      return true;
+    }
+    nextParent.show();
+    nextParent.children.forEach((stepComponent) => {
+      stepComponent.unhighlight();
+    });
+    this.currentStep = (<QueryList<StepComponent>>nextParent.children).first;
+    this.currentStep.highlight();
+    return false;
+  }
+  doRowBackward(): boolean {
+    this.conditionalInitializeHiearchicalList();
+    const currParent = <RowComponent>this.currentStep.parent;
+    currParent.hide();
+    const prevParent = <RowComponent>currParent.prev;
+    if (prevParent === null) {
+      return true;
+    }
+    prevParent.children.forEach((stepComponent) => {
+      stepComponent.unhighlight();
+    });
+    prevParent.show();
+    this.currentStep = (<QueryList<StepComponent>>prevParent.children).first;
+    this.currentStep.highlight();
+    return false;
+  }
+  resetProject(forward: boolean) {}
 }

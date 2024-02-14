@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { Step } from '../step';
 import { HierarchicalList } from '../hierarchical-list';
+import { ProjectComponent } from '../project/project.component';
 
 @Component({
   selector: 'li.app-step',
@@ -22,11 +23,12 @@ export class StepComponent implements HierarchicalList {
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
-  children!: QueryList<HierarchicalList>;
+  children: QueryList<HierarchicalList> = new QueryList<HierarchicalList>();
 
   @HostListener('click', ['$event'])
   onClick(_e: any) {
     this.onToggle();
+    //(<ProjectComponent>this.parent.parent).currentStep = this;
   }
   onToggle() {
     this.highlighted = !this.highlighted;

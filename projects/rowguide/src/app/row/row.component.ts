@@ -1,4 +1,11 @@
-import { Component, Input, QueryList, ViewChildren } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
 import { Step } from '../step';
@@ -25,7 +32,7 @@ export class RowComponent implements HierarchicalList {
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
 
-  constructor(private logger: NGXLogger) {}
+  constructor(private logger: NGXLogger, private ref: ElementRef) {}
 
   conditionalInitializeHiearchicalList() {
     if (this.children === undefined || !(this.children.length > 0)) {
@@ -59,40 +66,12 @@ export class RowComponent implements HierarchicalList {
   }
   show() {
     this.visible = true;
+    this.ref.nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
   hide() {
     this.visible = false;
-  }
-
-  onAdvance(): boolean {
-    this.conditionalInitializeHiearchicalList();
-    if (this.advanceStepIterator === undefined) {
-      this.logger.debug('Initializing step iterator');
-      //@ts-expect-error
-      this.advanceStepIterator = this.children[Symbol.iterator]();
-    }
-    this.logger.debug('Advancing step');
-    let advanceStepIteratorResult = this.advanceStepIterator.next();
-
-    if (advanceStepIteratorResult.done) {
-      this.logger.debug('No more steps to advance');
-      /*this.stepComponents.forEach((stepComponent) => {
-        console.log('Unhighlighting step', stepComponent.step.id);
-        stepComponent.unhighlight();
-      });*/
-
-      this.logger.debug('Reinitializing step iterator');
-      //@ts-expect-error
-      this.advanceStepIterator = this.children[Symbol.iterator]();
-      advanceStepIteratorResult = this.advanceStepIterator.next();
-      this.logger.debug('Advertizing next row');
-      return true;
-    }
-    this.logger.debug(
-      'Highlighting step',
-      advanceStepIteratorResult.value.step.id
-    );
-    advanceStepIteratorResult.value.highlight();
-    return false;
   }
 }
