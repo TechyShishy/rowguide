@@ -1,0 +1,16 @@
+{
+  "name": "electron",
+  "version": "0.0.0",
+  "dependencies": {
+    "electron-serve": "^1.3.0",
+    "rowguide": "0.0.0"
+  },
+  "scripts": {
+    "start": "NODE_OPTIONS=\"--require $(pwd)/../../.pnp.cjs\" electron .",
+    "build": "NODE_OPTIONS=\"--require $(pwd)/../../.pnp.cjs\" electron-builder build -wlm --publish=never"
+  },
+  "devDependencies": {
+    "electron": "28.2.2",
+    "electron-builder": "24.9.1"
+  }
+}

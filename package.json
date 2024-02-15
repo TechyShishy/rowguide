@@ -1,54 +1,63 @@
 {
-  "name": "rowguide",
-  "version": "0.0.0",
+  "name": "rowguide-monorepo",
+  "packageManager": "yarn@4.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
-  },
-  "private": true,
-  "dependencies": {
-    "@angular/animations": "^17.1.0",
-    "@angular/common": "^17.1.0",
-    "@angular/compiler": "^17.1.0",
-    "@angular/core": "^17.1.0",
-    "@angular/forms": "^17.1.0",
-    "@angular/platform-browser": "^17.1.0",
-    "@angular/platform-browser-dynamic": "^17.1.0",
-    "@angular/router": "^17.1.0",
-    "log4js": "^6.9.1",
-    "ngx-logger": "^5.0.12",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.14.3"
+    "rowguide:start": "yarn workspace rowguide start",
+    "electron:start": "yarn workspace electron start",
+    "rowguide:build": "yarn workspace rowguide build",
+    "electron:build": "yarn workspace electron build",
+    "build": "yarn run rowguide:build && yarn run electron:build"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^17.1.2",
+    "@angular-devkit/build-angular": "^17.2.0",
     "@angular/cli": "^17.1.1",
+    "@angular/common": "^17.2.0",
+    "@angular/compiler": "^17.1.0",
     "@angular/compiler-cli": "^17.1.0",
+    "@angular/core": "^17.2.0",
+    "@angular/platform-browser": "^17.2.0",
+    "@angular/router": "^17.2.0",
     "@types/jasmine": "~5.1.0",
+    "dmg-builder": "^24.13.0",
+    "dmg-license": "^1.0.11",
+    "electron": "^28.2.2",
+    "electron-builder": "24.9.1",
+    "iconv-corefoundation": "^1.1.7",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.3.2"
+    "ngx-logger": "^5.0.12",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.6.2",
+    "typescript": "~5.3.2",
+    "zone.js": "^0.14.4"
   },
-  "packageManager": "yarn@4.1.0+sha256.81a00df816059803e6b5148acf03ce313cad36b7f6e5af6efa040a15981a6ffb",
   "dependenciesMeta": {
-    "@angular/common@17.1.2": {
+    "@angular-devkit/build-angular@17.2.0": {
       "unplugged": true
     },
-    "@angular/core@17.1.2": {
+    "@angular/common@17.2.0": {
       "unplugged": true
     },
-    "@angular/platform-browser@17.1.2": {
+    "@angular/core@17.2.0": {
       "unplugged": true
     },
-    "@angular/router@17.1.2": {
+    "@angular/platform-browser@17.2.0": {
+      "unplugged": true
+    },
+    "@angular/router@17.2.0": {
+      "unplugged": true
+    },
+    "app-builder-lib@24.13.0": {
+      "unplugged": true
+    },
+    "app-builder-lib@24.9.1": {
       "unplugged": true
     },
     "ngx-logger@5.0.12": {

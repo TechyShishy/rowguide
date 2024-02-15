@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { Project } from '../project';
 import { Row } from '../row';
 import { BeadProject } from '../bead-project';
@@ -8,7 +8,7 @@ import { NGXLogger } from 'ngx-logger';
   providedIn: 'root',
 })
 export class ShorthandService {
-  constructor(private logger: NGXLogger) {}
+  constructor(@Inject(NGXLogger) private logger: NGXLogger) {}
 
   loadProject(projectString: string, delimiter: string = ' '): Project {
     this.logger.debug('Loading project from string', projectString);

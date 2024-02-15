@@ -3,7 +3,6 @@ import {
   ElementRef,
   Input,
   QueryList,
-  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { Row } from '../row';
@@ -12,7 +11,6 @@ import { Step } from '../step';
 import { NgFor } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
-import { of } from 'rxjs';
 
 @Component({
   selector: '.app-row',

@@ -29,7 +29,8 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+/packages/*/dist
+/packages/*/.angular/cache
 .sass-cache/
 /connect.lock
 /coverage
@@ -54,3 +55,6 @@ Thumbs.db
 
 #!.yarn/cache
 .pnp.*
+
+/release
+
