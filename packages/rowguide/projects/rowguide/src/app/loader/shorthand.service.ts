@@ -8,7 +8,7 @@ import { NGXLogger } from 'ngx-logger';
   providedIn: 'root',
 })
 export class ShorthandService {
-  constructor(@Inject(NGXLogger) private logger: NGXLogger) {}
+  constructor(private logger: NGXLogger) {}
 
   loadProject(projectString: string, delimiter: string = ' '): Project {
     this.logger.debug('Loading project from string', projectString);

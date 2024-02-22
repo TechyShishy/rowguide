@@ -1,12 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ViewportComponent } from './viewport/viewport.component';
-import { NavbarComponent } from './navbar/navbar.component';
+import { MatTabGroup, MatTab } from '@angular/material/tabs';
+import { ProjectSelectorComponent } from './project-selector/project-selector.component';
+import { ProjectComponent } from './project/project.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [NavbarComponent, RouterOutlet, ViewportComponent],
+  imports: [
+    RouterOutlet,
+    ProjectComponent,
+    ProjectSelectorComponent,
+    MatTabGroup,
+    MatTab,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

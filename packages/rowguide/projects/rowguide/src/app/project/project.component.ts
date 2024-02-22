@@ -71,6 +71,7 @@ export class ProjectComponent implements HierarchicalList {
   }
 
   ngOnInit() {
+    this.rows = [];
     this.projectService.getProject().subscribe((project) => {
       this.rows = project.rows;
     });
