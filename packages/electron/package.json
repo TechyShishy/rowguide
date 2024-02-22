@@ -7,10 +7,11 @@
   },
   "scripts": {
     "start": "NODE_OPTIONS=\"--require $(pwd)/../../.pnp.cjs\" electron .",
-    "build": "NODE_OPTIONS=\"--require $(pwd)/../../.pnp.cjs\" electron-builder build -wlm --publish=never"
+    "build": "tsc -p tsconfig.electron.json && electron-builder build -l --publish=never"
   },
   "devDependencies": {
     "electron": "28.2.2",
-    "electron-builder": "24.9.1"
+    "electron-builder": "24.9.1",
+    "typescript": "^5.3.3"
   }
 }

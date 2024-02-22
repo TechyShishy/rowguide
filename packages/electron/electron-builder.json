@@ -1,5 +1,6 @@
 {
-  "asar": true,
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "asar": false,
   "directories": {
     "output": "../../release/"
   },
@@ -9,10 +10,19 @@
     "!*.map",
     "!package.json",
     "!package-lock.json",
+    "!tsconfig.json",
+    "!tsconfig.*.json",
     {
-      "from": "../rowguide/dist",
+      "from": "../../dist",
       "filter": [
-        "**/*"
+        "**/*",
+        "!electron"
+      ]
+    },
+    {
+      "from": "../../dist/electron",
+      "filter": [
+        "index.js"
       ]
     }
   ],
@@ -31,4 +41,5 @@
       "AppImage"
     ]
   }
+
 }

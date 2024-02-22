@@ -181,5 +181,5 @@ export class ProjectComponent implements HierarchicalList {
     this.currentStep.highlight();
     return false;
   }
-  resetProject(forward: boolean) {}
+  resetProject(_forward: boolean) {}
 }

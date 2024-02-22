@@ -8,6 +8,7 @@
 
 # Node
 /node_modules
+/packages/*/node_modules
 npm-debug.log
 yarn-error.log
 
@@ -31,6 +32,7 @@ yarn-error.log
 # Miscellaneous
 /packages/*/dist
 /packages/*/.angular/cache
+/release
 .sass-cache/
 /connect.lock
 /coverage
@@ -56,5 +58,4 @@ Thumbs.db
 #!.yarn/cache
 .pnp.*
 
-/release
 

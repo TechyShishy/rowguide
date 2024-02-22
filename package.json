@@ -5,11 +5,13 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "yarn run rowguide:start",
     "rowguide:start": "yarn workspace rowguide start",
     "electron:start": "yarn workspace electron start",
     "rowguide:build": "yarn workspace rowguide build",
     "electron:build": "yarn workspace electron build",
-    "build": "yarn run rowguide:build && yarn run electron:build"
+    "build": "yarn run rowguide:build && yarn run electron:build",
+    "package": "yarn run rowguide:build && yarn workspace rowguide package"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.2.0",
