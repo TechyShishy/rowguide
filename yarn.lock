@@ -5678,7 +5678,6 @@ __metadata:
     verror: "npm:^1.10.0"
   bin:
     dmg-license: bin/dmg-license.js
-  checksum: 10c0/feef35cfb45270a72daadcca9584be5cb840f924448b9d4e543fcd61f1b6d471151049f277c91de1d8b003fad6203d0176066a5f427a01df5fb073402cb8c8b7
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -9693,7 +9692,6 @@ __metadata:
     "@angular/router": "npm:^17.2.2"
     "@types/jasmine": "npm:~5.1.0"
     dmg-builder: "npm:^24.13.0"
-    dmg-license: "npm:^1.0.11"
     electron: "npm:^28.2.2"
     electron-builder: "npm:24.9.1"
     iconv-corefoundation: "npm:^1.1.7"

@@ -17,6 +17,11 @@ ol {
 
  .advance-button-container {
   height: 4rem;
+  display: grid;
+  align-items: center;
+  grid-template-columns: repeat(4, 1fr);
+  padding-left: 30%;
+  padding-right: 30%;
 
   button {
     background-color: #667fee;

@@ -76,6 +76,12 @@ export class ProjectComponent implements HierarchicalList {
       this.rows = project.rows;
     });
   }
+  ngAfterViewInit() {
+    this.conditionalInitializeHiearchicalList();
+    this.children.changes.subscribe((children) => {
+      this.conditionalInitializeHiearchicalList();
+    });
+  }
   onAdvanceRow() {
     this.doRowForward();
   }
@@ -86,6 +92,19 @@ export class ProjectComponent implements HierarchicalList {
       if (endOfProject) {
         this.resetProject(true);
       }
+    }
+  }
+  onRetreatRow() {
+    this.doRowBackward();
+  }
+  onRetreatStep() {
+    const startOfRow = this.doStepBackward();
+    if (startOfRow) {
+      const startOfProject = this.doRowBackward();
+      if (startOfProject) {
+        this.resetProject(false);
+      }
+      this.doStepEnd();
     }
   }
   @HostListener('keydown.ArrowRight', ['$event'])
@@ -120,23 +139,27 @@ export class ProjectComponent implements HierarchicalList {
 
   doStepForward(): boolean {
     this.conditionalInitializeHiearchicalList();
+    this.currentStep.isCurrentStep = false;
     const nextStep = this.currentStep.next;
     if (nextStep === null) {
       return true;
     }
     this.currentStep = <StepComponent>nextStep;
     this.currentStep.highlight();
+    this.currentStep.isCurrentStep = true;
     (<RowComponent>this.currentStep.parent).show();
     return false;
   }
   doStepBackward(): boolean {
     this.conditionalInitializeHiearchicalList();
     this.currentStep.unhighlight();
+    this.currentStep.isCurrentStep = false;
     const prevStep = this.currentStep.prev;
     if (prevStep === null) {
       return true;
     }
     this.currentStep = <StepComponent>prevStep;
+    this.currentStep.isCurrentStep = true;
     return false;
   }
   doStepEnd() {
@@ -153,6 +176,7 @@ export class ProjectComponent implements HierarchicalList {
   }
   doRowForward(): boolean {
     this.conditionalInitializeHiearchicalList();
+    this.currentStep.isCurrentStep = false;
     const currParent = this.currentStep.parent;
     const nextParent = <RowComponent>currParent.next;
     if (nextParent === null) {
@@ -164,6 +188,7 @@ export class ProjectComponent implements HierarchicalList {
     });
     this.currentStep = (<QueryList<StepComponent>>nextParent.children).first;
     this.currentStep.highlight();
+    this.currentStep.isCurrentStep = true;
     return false;
   }
   doRowBackward(): boolean {
@@ -174,12 +199,11 @@ export class ProjectComponent implements HierarchicalList {
     if (prevParent === null) {
       return true;
     }
-    prevParent.children.forEach((stepComponent) => {
-      stepComponent.unhighlight();
-    });
+    //prevParent.children.forEach((stepComponent) => {});
     prevParent.show();
     this.currentStep = (<QueryList<StepComponent>>prevParent.children).first;
     this.currentStep.highlight();
+    this.currentStep.isCurrentStep = true;
     return false;
   }
   resetProject(_forward: boolean) {}

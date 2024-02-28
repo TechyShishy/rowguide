@@ -19,6 +19,7 @@ import { ProjectComponent } from '../project/project.component';
 export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
   @HostBinding('class.highlighted') highlighted = false;
+  @HostBinding('class.current') isCurrentStep = false;
 
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
@@ -28,7 +29,7 @@ export class StepComponent implements HierarchicalList {
   @HostListener('click', ['$event'])
   onClick(_e: any) {
     this.onToggle();
-    //(<ProjectComponent>this.parent.parent).currentStep = this;
+    (<ProjectComponent>this.parent.parent).currentStep = this;
   }
   onToggle() {
     this.highlighted = !this.highlighted;

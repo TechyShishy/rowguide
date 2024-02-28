@@ -24,7 +24,6 @@
     "@angular/router": "^17.2.2",
     "@types/jasmine": "~5.1.0",
     "dmg-builder": "^24.13.0",
-    "dmg-license": "^1.0.11",
     "electron": "^28.2.2",
     "electron-builder": "24.9.1",
     "iconv-corefoundation": "^1.1.7",
