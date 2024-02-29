@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rowguide</string>
+    <string name="title_activity_main">Rowguide</string>
+    <string name="package_name">com.techyshishy.rowguide</string>
+    <string name="custom_url_scheme">com.techyshishy.rowguide</string>
+</resources>

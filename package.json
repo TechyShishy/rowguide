@@ -70,5 +70,10 @@
     "tslib@2.6.2": {
       "unplugged": true
     }
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.7.0",
+    "@capacitor/cli": "^5.7.0",
+    "@capacitor/core": "^5.7.0"
   }
 }
