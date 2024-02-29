@@ -1,4 +1,4 @@
-<button type="button" (click)="onToggle()">Row {{row.id}}</button>
+<button mat-flat-button color="primary" type="button" (click)="onToggle()">Row {{row.id}}</button>
 <ol [hidden]="!visible">
   <li class="app-step" *ngFor="let step of steps; index as i" [step]="step"></li>
 </ol>

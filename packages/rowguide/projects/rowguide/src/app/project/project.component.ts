@@ -11,11 +11,12 @@ import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
 import { StepComponent } from '../step/step.component';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-project',
   standalone: true,
-  imports: [NgFor, RowComponent],
+  imports: [NgFor, RowComponent, MatButtonModule],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
 })

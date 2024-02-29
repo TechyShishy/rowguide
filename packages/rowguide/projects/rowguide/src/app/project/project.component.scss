@@ -18,18 +18,13 @@ ol {
  .advance-button-container {
   height: 4rem;
   display: grid;
-  align-items: center;
+  justify-items: center;
   grid-template-columns: repeat(4, 1fr);
-  padding-left: 30%;
-  padding-right: 30%;
+  padding-left: 15%;
+  padding-right: 15%;
 
   button {
-    background-color: #667fee;
-    border-color: rgba(0, 0, 0, 0);
-    border-radius: 0.5rem;
-    color: white;
-    margin: 0.5rem 0.5rem;
-    text-align: center;
+    margin: 0.5rem 0rem;
     width: 5rem;
     height: 3rem;
   }

@@ -11,11 +11,12 @@ import { Step } from '../step';
 import { NgFor } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: '.app-row',
   standalone: true,
-  imports: [NgFor, StepComponent],
+  imports: [NgFor, StepComponent, MatButtonModule],
   templateUrl: './row.component.html',
   styleUrl: './row.component.scss',
 })
