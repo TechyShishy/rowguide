@@ -2,12 +2,12 @@ import { Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NGXLogger } from 'ngx-logger';
 import { ngfModule } from 'angular-file';
-import { of } from 'rxjs';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { ShorthandService } from '../loader/shorthand.service';
 import { ProjectService } from '../project.service';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-project-selector',
@@ -17,6 +17,7 @@ import { ProjectService } from '../project.service';
     ngfModule,
     MatInputModule,
     MatFormFieldModule,
+    MatCardModule,
     FormsModule,
   ],
   templateUrl: './project-selector.component.html',

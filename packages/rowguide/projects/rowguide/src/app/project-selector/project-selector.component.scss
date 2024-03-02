@@ -1,0 +1,14 @@
+form {
+  display: grid;
+
+  button, mat-form-field, mat-card {
+    margin: 0 1rem 1rem 1rem;
+  }
+
+  mat-card {
+    padding: 1rem;
+  }
+  textarea {
+    min-height: 10rem;
+  }
+}
