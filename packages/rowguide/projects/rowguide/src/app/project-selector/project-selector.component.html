@@ -1,1 +1,12 @@
-<p>project-selector works!</p>
+<form>
+  <p>{{file.name}}</p>
+  <button mat-raised-button color="primary" ngfSelect [(file)]="file">
+    Choose File
+  </button>
+  <button mat-raised-button color="primary" (click)="updateFile()">Import File</button>
+  <mat-form-field>
+    <textarea name="fileData" matInput>{{fileData}}</textarea>
+  </mat-form-field>
+  <button mat-raised-button color="primary" (click)="loadProject()">Load Project</button>
+</form>
+
