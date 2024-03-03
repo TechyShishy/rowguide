@@ -21,6 +21,7 @@ export class StepComponent implements HierarchicalList {
   @HostBinding('class.highlighted') highlighted = false;
   @HostBinding('class.current') isCurrentStep = false;
 
+  index: number = 0;
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;

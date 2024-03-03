@@ -31,6 +31,7 @@ export class ProjectComponent implements HierarchicalList {
 
   currentStep!: StepComponent;
 
+  index: number = 0;
   parent = null;
   prev = null;
   next = null;
@@ -52,7 +53,9 @@ export class ProjectComponent implements HierarchicalList {
     }
     this.children.first.prev = null;
     let lastChild = null;
+    let rowIndex = 0;
     for (let child of this.children) {
+      child.index = rowIndex++;
       child.parent = this;
       if (child.prev !== null) {
         if (lastChild !== null) {
@@ -77,9 +80,22 @@ export class ProjectComponent implements HierarchicalList {
     this.projectService.ready.subscribe(() => {
       this.rows = this.projectService.project.rows;
     });
+
+    this.projectService.loadProject();
   }
   ngAfterViewInit() {
     this.conditionalInitializeHiearchicalList();
+    const currentPosition = this.projectService.loadCurrentPosition();
+
+    // TODO: This causes NG0100: ExpressionChangedAfterItHasBeenCheckedError
+    if (currentPosition) {
+      while (currentPosition.row > this.currentStep.parent.index) {
+        this.doRowForward();
+      }
+      while (currentPosition.step > this.currentStep.index) {
+        this.doStepForward();
+      }
+    }
     this.children.changes.subscribe((children) => {
       this.conditionalInitializeHiearchicalList();
     });
@@ -150,6 +166,10 @@ export class ProjectComponent implements HierarchicalList {
     this.currentStep.highlight();
     this.currentStep.isCurrentStep = true;
     (<RowComponent>this.currentStep.parent).show();
+    this.projectService.savePosition(
+      this.currentStep.parent.index,
+      this.currentStep.index
+    );
     return false;
   }
   doStepBackward(): boolean {
@@ -162,6 +182,10 @@ export class ProjectComponent implements HierarchicalList {
     }
     this.currentStep = <StepComponent>prevStep;
     this.currentStep.isCurrentStep = true;
+    this.projectService.savePosition(
+      this.currentStep.parent.index,
+      this.currentStep.index
+    );
     return false;
   }
   doStepEnd() {
