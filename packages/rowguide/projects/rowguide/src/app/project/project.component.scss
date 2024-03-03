@@ -19,13 +19,18 @@ ol {
   height: 4rem;
   display: grid;
   justify-items: center;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   padding-left: 15%;
   padding-right: 15%;
 
-  button {
+  button, mat-card {
     margin: 0.5rem 0rem;
     width: 5rem;
     height: 3rem;
+  }
+
+  mat-card {
+    align-items: center;
+    justify-content: center;
   }
  }

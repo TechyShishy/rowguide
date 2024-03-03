@@ -26,6 +26,7 @@ export class StepComponent implements HierarchicalList {
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
   children: QueryList<HierarchicalList> = new QueryList<HierarchicalList>();
+  beadCount: number = 0;
 
   @HostListener('click', ['$event'])
   onClick(_e: any) {

@@ -13,11 +13,12 @@ import { HierarchicalList } from '../hierarchical-list';
 import { StepComponent } from '../step/step.component';
 import { MatButtonModule } from '@angular/material/button';
 import { of } from 'rxjs';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-project',
   standalone: true,
-  imports: [NgFor, RowComponent, MatButtonModule],
+  imports: [NgFor, RowComponent, MatButtonModule, MatCardModule],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
 })
@@ -29,7 +30,7 @@ export class ProjectComponent implements HierarchicalList {
   advanceRowIterator!: IterableIterator<RowComponent>;
   advanceRowCurrent!: RowComponent;
 
-  currentStep!: StepComponent;
+  currentStep: StepComponent = new StepComponent();
 
   index: number = 0;
   parent = null;

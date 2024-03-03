@@ -25,7 +25,6 @@ export class RowComponent implements HierarchicalList {
   @Input() steps!: Array<Step>;
   visible = false;
   @ViewChildren(StepComponent) children!: QueryList<StepComponent>;
-  advanceStepIterator!: IterableIterator<StepComponent>;
 
   index: number = 0;
   parent!: HierarchicalList;
@@ -50,14 +49,22 @@ export class RowComponent implements HierarchicalList {
     for (let child of this.children) {
       child.index = stepIndex++;
       child.parent = this;
+      // First child will have a null prev
       if (child.prev !== null) {
+        // To make the compiler happy
         if (lastChild !== null) {
           child.prev = lastChild;
           child.prev.next = child;
           child.next = null; // Just in case this is the last child
+
+          child.beadCount +=
+            (<StepComponent>child.prev).beadCount + child.step.count;
         } else {
           this.logger.debug('Uhhh... no last child?');
         }
+      } else {
+        // First child
+        child.beadCount = child.step.count;
       }
       lastChild = child;
     }
