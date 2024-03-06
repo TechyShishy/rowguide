@@ -1,4 +1,8 @@
-<button mat-flat-button color="primary" type="button" (click)="onToggle()">Row {{row.id}}</button>
+<button mat-flat-button color="primary" type="button" (click)="onToggle()">{{settingsService.combine12 ? (row.id === 1 ?
+  'Rows 1 & 2' : 'Row ' + (row.id + 1)) : 'Row ' + row.id}}</button>
+<button mat-flat-button *ngIf="settingsService.lrdesignators" color="{{row.id % 2 ? 'primary' : 'accent'}}">
+  {{row.id % 2 ? 'L' : 'R' }}
+</button>
 <ol [hidden]="!visible">
   <li class="app-step" *ngFor="let step of steps; index as i" [step]="step"></li>
 </ol>

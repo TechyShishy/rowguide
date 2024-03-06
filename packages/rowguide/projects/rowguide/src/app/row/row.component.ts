@@ -8,15 +8,17 @@ import {
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
 import { Step } from '../step';
-import { NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
 import { MatButtonModule } from '@angular/material/button';
+import { SettingsService } from '../settings.service';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: '.app-row',
   standalone: true,
-  imports: [NgFor, StepComponent, MatButtonModule],
+  imports: [CommonModule, StepComponent, MatButtonModule, MatCardModule],
   templateUrl: './row.component.html',
   styleUrl: './row.component.scss',
 })
@@ -31,7 +33,11 @@ export class RowComponent implements HierarchicalList {
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
 
-  constructor(private logger: NGXLogger, private ref: ElementRef) {}
+  constructor(
+    public settingsService: SettingsService,
+    private logger: NGXLogger,
+    private ref: ElementRef
+  ) {}
 
   conditionalInitializeHiearchicalList() {
     if (this.children === undefined || !(this.children.length > 0)) {

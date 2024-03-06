@@ -14,6 +14,7 @@ import { StepComponent } from '../step/step.component';
 import { MatButtonModule } from '@angular/material/button';
 import { of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-project',
@@ -39,6 +40,7 @@ export class ProjectComponent implements HierarchicalList {
 
   constructor(
     private projectService: ProjectService,
+    private settingsService: SettingsService,
     private logger: NGXLogger
   ) {}
 
@@ -81,7 +83,6 @@ export class ProjectComponent implements HierarchicalList {
     this.projectService.ready.subscribe(() => {
       this.rows = this.projectService.project.rows;
     });
-
     this.projectService.loadProject();
   }
   ngAfterViewInit() {

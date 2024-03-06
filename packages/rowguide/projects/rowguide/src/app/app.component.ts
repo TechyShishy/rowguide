@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { MatTabGroup, MatTab } from '@angular/material/tabs';
 import { ProjectSelectorComponent } from './project-selector/project-selector.component';
 import { ProjectComponent } from './project/project.component';
+import { SettingsComponent } from './settings/settings.component';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +12,7 @@ import { ProjectComponent } from './project/project.component';
     RouterOutlet,
     ProjectComponent,
     ProjectSelectorComponent,
+    SettingsComponent,
     MatTabGroup,
     MatTab,
   ],
