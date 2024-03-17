@@ -20,8 +20,10 @@
     "@angular/platform-browser": "^17.2.2",
     "@angular/platform-browser-dynamic": "^17.2.2",
     "@angular/router": "^17.2.2",
+    "js-file-download": "^0.4.12",
     "log4js": "^6.9.1",
     "ngx-logger": "^5.0.12",
+    "pako": "^2.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
@@ -32,6 +34,7 @@
     "@angular/cli": "^17.2.2",
     "@angular/compiler": "^17.2.2",
     "@angular/compiler-cli": "^17.2.2",
+    "@types/pako": "^2",
     "typescript": "^5.3.3"
   }
 }

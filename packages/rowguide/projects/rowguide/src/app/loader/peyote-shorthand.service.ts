@@ -7,7 +7,7 @@ import { NGXLogger } from 'ngx-logger';
 @Injectable({
   providedIn: 'root',
 })
-export class ShorthandService {
+export class PeyoteShorthandService {
   constructor(private logger: NGXLogger) {}
 
   loadProject(projectString: string, delimiter: string = ' '): Project {

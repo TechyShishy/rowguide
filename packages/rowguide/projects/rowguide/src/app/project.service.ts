@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Project } from './project';
 import { Subject } from 'rxjs';
-import { ShorthandService } from './loader/shorthand.service';
+import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { NullProject } from './null-project';
 
 @Injectable({
@@ -10,7 +10,7 @@ import { NullProject } from './null-project';
 export class ProjectService {
   project: Project;
   ready: Subject<boolean> = new Subject<boolean>();
-  constructor(private shorthandService: ShorthandService) {
+  constructor(private peyoteShorthandService: PeyoteShorthandService) {
     this.project = new NullProject();
   }
   savePosition(row: number, step: number) {

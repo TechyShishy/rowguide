@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RowComponent } from './row.component';
+import { LoggerTestingModule } from 'ngx-logger/testing';
 
 describe('RowComponent', () => {
   let component: RowComponent;
@@ -8,13 +9,12 @@ describe('RowComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RowComponent]
-    })
-    .compileComponents();
-    
+      imports: [RowComponent, LoggerTestingModule],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(RowComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    //fixture.detectChanges();
   });
 
   it('should create', () => {

@@ -5,9 +5,11 @@ import { ngfModule } from 'angular-file';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
-import { ShorthandService } from '../loader/shorthand.service';
+import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
+import { gzip } from 'pako';
+import fileDownload from 'js-file-download';
 
 @Component({
   selector: 'app-project-selector',
@@ -29,7 +31,7 @@ export class ProjectSelectorComponent {
 
   constructor(
     private logger: NGXLogger,
-    private shorthandService: ShorthandService,
+    private peyoteShorthandService: PeyoteShorthandService,
     private projectService: ProjectService
   ) {}
   updateFile() {
@@ -39,10 +41,17 @@ export class ProjectSelectorComponent {
     });
   }
   loadProject() {
-    this.projectService.project = this.shorthandService.loadProject(
+    this.projectService.project = this.peyoteShorthandService.loadProject(
       this.fileData,
       ', '
     );
     this.projectService.ready.next(true);
+  }
+  saveProject() {
+    fileDownload(
+      gzip(JSON.stringify(this.projectService.project)),
+      'project.rgp',
+      'application/x-rowguide-project'
+    );
   }
 }

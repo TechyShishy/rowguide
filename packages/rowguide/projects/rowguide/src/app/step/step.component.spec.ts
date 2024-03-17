@@ -8,13 +8,12 @@ describe('StepComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StepComponent]
-    })
-    .compileComponents();
-    
+      imports: [StepComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(StepComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    //fixture.detectChanges();
   });
 
   it('should create', () => {

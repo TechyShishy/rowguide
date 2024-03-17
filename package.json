@@ -23,6 +23,7 @@
     "@angular/platform-browser": "^17.2.2",
     "@angular/router": "^17.2.2",
     "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.11.25",
     "angular-file": "^4.0.2",
     "dmg-builder": "^24.13.0",
     "electron": "^28.2.2",
