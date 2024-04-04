@@ -10,6 +10,9 @@ import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
 import { gzip } from 'pako';
 import fileDownload from 'js-file-download';
+import { CommonModule } from '@angular/common';
+import { Project } from '../project';
+import { IndexedDBService } from '../indexed-db.service';
 
 @Component({
   selector: 'app-project-selector',
@@ -21,6 +24,7 @@ import fileDownload from 'js-file-download';
     MatFormFieldModule,
     MatCardModule,
     FormsModule,
+    CommonModule,
   ],
   templateUrl: './project-selector.component.html',
   styleUrl: './project-selector.component.scss',
@@ -28,17 +32,20 @@ import fileDownload from 'js-file-download';
 export class ProjectSelectorComponent {
   file: File = new File([], '');
   fileData: string = '';
+  projects: Project[] = [];
 
   constructor(
     private logger: NGXLogger,
     private peyoteShorthandService: PeyoteShorthandService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private indexedDBService: IndexedDBService
   ) {}
   updateFile() {
     this.file.text().then((text) => {
       this.logger.debug('File text: ', text);
       this.fileData = text;
     });
+    this.loadProject();
   }
   loadProject() {
     this.projectService.project = this.peyoteShorthandService.loadProject(
@@ -46,6 +53,14 @@ export class ProjectSelectorComponent {
       ', '
     );
     this.projectService.ready.next(true);
+  }
+  loadProjects() {
+    this.indexedDBService.loadProjects().then((projects) => {
+      this.projects = projects;
+    });
+  }
+  saveProjects() {
+    this.indexedDBService.saveProjects(this.projects);
   }
   saveProject() {
     fileDownload(
