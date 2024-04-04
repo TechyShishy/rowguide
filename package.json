@@ -11,7 +11,8 @@
     "rowguide:build": "yarn workspace rowguide build",
     "electron:build": "yarn workspace electron build",
     "capacitor:sync": "yarn run rowguide:build && npx cap sync",
-    "capacitor:assembleDebug": "yarn run capacitor:sync && cd android && ./gradlew assembleDebug"
+    "capacitor:assembleDebug": "yarn run capacitor:sync && cd android && ./gradlew assembleDebug",
+    "capacitor:bundleRelease": "yarn run capacitor:sync && cd android && ./gradlew bundleRelease"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.2.1",
