@@ -1,7 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { Project } from '../project';
 import { Row } from '../row';
-import { BeadProject } from '../bead-project';
 import { NGXLogger } from 'ngx-logger';
 
 @Injectable({
@@ -10,9 +9,9 @@ import { NGXLogger } from 'ngx-logger';
 export class PeyoteShorthandService {
   constructor(private logger: NGXLogger) {}
 
-  loadProject(projectString: string, delimiter: string = ' '): Project {
+  toRGP(projectString: string, delimiter: string = ' '): Project {
     this.logger.debug('Loading project from string', projectString);
-    let project: BeadProject = { id: 0, rows: [] };
+    let project = { rows: [] } as Project;
     let lineNum = 1;
     projectString.split('\n').forEach((line) => {
       this.logger.trace('Line:', line);

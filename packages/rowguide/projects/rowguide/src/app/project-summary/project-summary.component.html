@@ -1,0 +1,8 @@
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>{{project.name}}</mat-panel-title>
+    <mat-panel-description>{{project.rows.length}} Rows</mat-panel-description>
+  </mat-expansion-panel-header>
+  <input matInput type="text" [(ngModel)]="project.name" (change)="saveName()">
+  <button mat-raised-button color="primary" (click)="loadProject()">Load Project</button>
+</mat-expansion-panel>

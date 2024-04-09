@@ -3,14 +3,12 @@
   <button mat-raised-button color="primary" ngfSelect [(file)]="file">
     Choose File
   </button>
-  <button mat-raised-button color="primary" (click)="updateFile()">Import File</button>
-  <mat-form-field>
-    <textarea name="fileData" matInput>{{fileData}}</textarea>
-  </mat-form-field>
-  <button mat-raised-button color="primary" (click)="loadProject()">Load Project</button>
-  <ul>
-    <li class="app-project-selector-project" *ngFor="let project of projects">{{project.id}}</li>
-  </ul>
-  <button mat-raised-button color="primary" (click)="saveProject()">Export Project</button>
+  <button mat-raised-button color="primary" (click)="importFile()">Import File</button>
+  <mat-accordion>
+    <app-project-summary *ngFor="let project of projects" [project]="project">
+      
+    </app-project-summary>
+  </mat-accordion>
+  <button mat-raised-button color="primary" (click)="downloadProject()">Download Project</button>
 </form>
 

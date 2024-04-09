@@ -83,7 +83,7 @@ export class ProjectComponent implements HierarchicalList {
     this.projectService.ready.subscribe(() => {
       this.rows = this.projectService.project.rows;
     });
-    this.projectService.loadProject();
+    this.projectService.loadCurrentProject();
   }
   ngAfterViewInit() {
     this.conditionalInitializeHiearchicalList();
@@ -168,7 +168,7 @@ export class ProjectComponent implements HierarchicalList {
     this.currentStep.highlight();
     this.currentStep.isCurrentStep = true;
     (<RowComponent>this.currentStep.parent).show();
-    this.projectService.savePosition(
+    this.projectService.saveCurrentPosition(
       this.currentStep.parent.index,
       this.currentStep.index
     );
@@ -184,7 +184,7 @@ export class ProjectComponent implements HierarchicalList {
     }
     this.currentStep = <StepComponent>prevStep;
     this.currentStep.isCurrentStep = true;
-    this.projectService.savePosition(
+    this.projectService.saveCurrentPosition(
       this.currentStep.parent.index,
       this.currentStep.index
     );

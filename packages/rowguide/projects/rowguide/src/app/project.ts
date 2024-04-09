@@ -1,6 +1,7 @@
 import { Row } from './row';
 
 export interface Project {
-  id: number;
+  id?: number;
+  name?: string;
   rows: Array<Row>;
 }

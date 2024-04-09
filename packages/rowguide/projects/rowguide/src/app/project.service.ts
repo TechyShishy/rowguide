@@ -13,7 +13,7 @@ export class ProjectService {
   constructor(private peyoteShorthandService: PeyoteShorthandService) {
     this.project = new NullProject();
   }
-  savePosition(row: number, step: number) {
+  saveCurrentPosition(row: number, step: number) {
     localStorage.setItem(
       'currentProject',
       JSON.stringify(<CurrentProject>{
@@ -23,7 +23,7 @@ export class ProjectService {
     );
   }
   loadCurrentPosition(): Position | null {
-    const parsed = this.loadCurrentProject();
+    const parsed = this._loadCurrentProject();
     if (!parsed) {
       return null;
     }
@@ -32,7 +32,7 @@ export class ProjectService {
     }
     return parsed.position;
   }
-  loadCurrentProject(): CurrentProject | null {
+  _loadCurrentProject(): CurrentProject | null {
     const data = localStorage.getItem('currentProject');
     if (!data) {
       return null;
@@ -43,13 +43,18 @@ export class ProjectService {
     }
     return parsed;
   }
-  loadProject() {
-    const currentProject = this.loadCurrentProject();
+  loadCurrentProject() {
+    const currentProject = this._loadCurrentProject();
     if (!currentProject) {
       return;
     }
     this.project = currentProject.project;
     this.ready.next(true);
+  }
+  loadPeyote(data: string): Project {
+    this.project = this.peyoteShorthandService.toRGP(data, ', ');
+    this.ready.next(true);
+    return this.project;
   }
 }
 

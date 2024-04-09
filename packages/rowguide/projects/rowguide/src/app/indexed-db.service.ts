@@ -12,21 +12,35 @@ export class IndexedDBService {
   async loadProjects(): Promise<Project[]> {
     const db = await openDB<ProjectDb>('rowguide', 1, {
       upgrade(db, oldVersion, newVersion, transaction, event) {
-        db.createObjectStore('projects');
+        db.createObjectStore('projects', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
       },
     });
     return db.getAll('projects');
   }
-  async saveProjects(projects: Project[]): Promise<void> {
+  async addProject(project: Project): Promise<void> {
     const db = await openDB<ProjectDb>('rowguide', 1, {
       upgrade(db, oldVersion, newVersion, transaction, event) {
-        db.createObjectStore('projects');
+        db.createObjectStore('projects', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
       },
     });
-    const tx = db.transaction('projects', 'readwrite');
-    const os = tx.objectStore('projects');
-    for (const project of projects) {
-      os.put(project, project.id.toString());
-    }
+    db.add('projects', project);
+  }
+  updateProject(project: Project): void {
+    openDB<ProjectDb>('rowguide', 1, {
+      upgrade(db, oldVersion, newVersion, transaction, event) {
+        db.createObjectStore('projects', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+      },
+    }).then((db) => {
+      db.put('projects', project);
+    });
   }
 }
