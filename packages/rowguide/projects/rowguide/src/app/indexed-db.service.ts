@@ -43,4 +43,17 @@ export class IndexedDBService {
       db.put('projects', project);
     });
   }
+  deleteProject(project: Project): void {
+    openDB<ProjectDb>('rowguide', 1, {
+      upgrade(db, oldVersion, newVersion, transaction, event) {
+        db.createObjectStore('projects', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+      },
+    }).then((db) => {
+      if (project.id === undefined) return;
+      db.delete('projects', project.id);
+    });
+  }
 }

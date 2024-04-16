@@ -1,4 +1,4 @@
-import { Component, Input, Output } from '@angular/core';
+import { Component, ElementRef, Input, Output } from '@angular/core';
 import { Project } from '../project';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
@@ -7,11 +7,20 @@ import { MatInputModule } from '@angular/material/input';
 import { IndexedDBService } from '../indexed-db.service';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
+import { MatButtonModule } from '@angular/material/button';
+import fileDownload from 'js-file-download';
+import { gzip } from 'pako';
 
 @Component({
   selector: 'app-project-summary',
   standalone: true,
-  imports: [MatExpansionModule, MatCardModule, MatInputModule, FormsModule],
+  imports: [
+    MatExpansionModule,
+    MatCardModule,
+    MatInputModule,
+    FormsModule,
+    MatButtonModule,
+  ],
   templateUrl: './project-summary.component.html',
   styleUrl: './project-summary.component.scss',
 })
@@ -20,7 +29,8 @@ export class ProjectSummaryComponent {
 
   constructor(
     private indexedDBService: IndexedDBService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private ref: ElementRef
   ) {}
 
   saveName() {
@@ -30,6 +40,18 @@ export class ProjectSummaryComponent {
   loadProject() {
     this.projectService.project = this.project;
     this.projectService.saveCurrentPosition(0, 0);
-    this.projectService.ready.next(true);
+    this.projectService.loadReady.next(true);
+  }
+  deleteProject() {
+    this.indexedDBService.deleteProject(this.project);
+    // TODO: This feels hacky.  Find a better way to trigger a refresh of the project list.
+    this.ref.nativeElement.hidden = true;
+  }
+  downloadProject() {
+    fileDownload(
+      gzip(JSON.stringify(this.project)),
+      'project.rgp',
+      'application/x-rowguide-project'
+    );
   }
 }

@@ -1,8 +1,10 @@
 import {
   Component,
   ElementRef,
+  HostListener,
   Input,
   QueryList,
+  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { Row } from '../row';
@@ -14,21 +16,38 @@ import { HierarchicalList } from '../hierarchical-list';
 import { MatButtonModule } from '@angular/material/button';
 import { SettingsService } from '../settings.service';
 import { MatCardModule } from '@angular/material/card';
+import {
+  MatExpansionModule,
+  MatExpansionPanel,
+} from '@angular/material/expansion';
+import { MatChipsModule } from '@angular/material/chips';
+import { Project } from '../project';
+import { ProjectComponent } from '../project/project.component';
 
 @Component({
-  selector: '.app-row',
+  selector: 'app-row',
   standalone: true,
-  imports: [CommonModule, StepComponent, MatButtonModule, MatCardModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardModule,
+    MatExpansionModule,
+    MatChipsModule,
+    StepComponent,
+  ],
   templateUrl: './row.component.html',
   styleUrl: './row.component.scss',
 })
 export class RowComponent implements HierarchicalList {
   @Input() row!: Row;
   @Input() steps!: Array<Step>;
+  @Input() project!: ProjectComponent;
   visible = false;
   @ViewChildren(StepComponent) children!: QueryList<StepComponent>;
+  @ViewChild(MatExpansionPanel) panel!: MatExpansionPanel;
+  markFirstStep = false;
 
-  index: number = 0;
+  @Input() index: number = 0;
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
@@ -39,54 +58,37 @@ export class RowComponent implements HierarchicalList {
     private ref: ElementRef
   ) {}
 
-  conditionalInitializeHiearchicalList() {
-    if (this.children === undefined || !(this.children.length > 0)) {
-      return;
-    }
-    if (
-      !this.children.first ||
-      (this.children.first && this.children.first.prev === null)
-    ) {
-      return;
-    }
-    this.children.first.prev = null;
-    let lastChild = null;
-    let stepIndex = 0;
-    for (let child of this.children) {
-      child.index = stepIndex++;
-      child.parent = this;
-      // First child will have a null prev
-      if (child.prev !== null) {
-        // To make the compiler happy
-        if (lastChild !== null) {
-          child.prev = lastChild;
-          child.prev.next = child;
-          child.next = null; // Just in case this is the last child
-
-          child.beadCount +=
-            (<StepComponent>child.prev).beadCount + child.step.count;
-        } else {
-          this.logger.debug('Uhhh... no last child?');
-        }
-      } else {
-        // First child
-        child.beadCount = child.step.count;
+  ngAfterViewInit() {
+    this.panel.afterExpand.subscribe(() => {
+      if (this.markFirstStep) {
+        this.project.currentStep = this.children.first;
+        this.children.first.isCurrentStep = true;
+        this.show();
+        this.markFirstStep = false;
       }
-      lastChild = child;
-    }
+      if (this.children.last.beadCount === 0) {
+        let prevCount = 0;
+        for (let step of this.children) {
+          step.beadCount = step.step.count + prevCount;
+          prevCount = step.beadCount;
+        }
+      }
+    });
   }
 
   onToggle() {
     this.visible = !this.visible;
   }
   show() {
-    this.visible = true;
-    this.ref.nativeElement.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    this.panel.open();
+    const prevRow = this.project.children.get(this.index - 1);
+    if (prevRow !== undefined) {
+      prevRow.ref.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
   }
-  hide() {
-    this.visible = false;
-  }
+
+  hide() {}
 }

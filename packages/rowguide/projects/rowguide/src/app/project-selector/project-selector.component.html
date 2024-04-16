@@ -1,14 +1,16 @@
 <form>
-  <mat-card>{{file.name}}</mat-card>
-  <button mat-raised-button color="primary" ngfSelect [(file)]="file">
-    Choose File
-  </button>
-  <button mat-raised-button color="primary" (click)="importFile()">Import File</button>
   <mat-accordion>
-    <app-project-summary *ngFor="let project of projects" [project]="project">
-      
-    </app-project-summary>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Import Project</mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-card>{{file.name}}</mat-card>
+      <button mat-raised-button color="primary" ngfSelect [(file)]="file">
+        Choose File
+      </button>
+      <button mat-raised-button color="primary" (click)="importFile()">Import File</button>
+    </mat-expansion-panel>
+    <app-project-summary *ngFor="let project of projects" [project]="project"></app-project-summary>
   </mat-accordion>
-  <button mat-raised-button color="primary" (click)="downloadProject()">Download Project</button>
 </form>
 

@@ -48,7 +48,7 @@ export class ProjectSelectorComponent {
       this.logger.debug('File text: ', text);
       this.fileData = text;
       this.saveProjectToIndexedDB(
-        this.projectService.loadPeyote(this.fileData)
+        this.projectService.loadPeyote(this.file.name, this.fileData)
       );
       this.loadProjectsFromIndexedDB();
     });
@@ -66,11 +66,5 @@ export class ProjectSelectorComponent {
   saveProjectToIndexedDB(project: Project) {
     this.indexedDBService.addProject(project);
   }
-  downloadProject() {
-    fileDownload(
-      gzip(JSON.stringify(this.projectService.project)),
-      'project.rgp',
-      'application/x-rowguide-project'
-    );
-  }
+
 }

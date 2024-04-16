@@ -2,6 +2,7 @@ import {
   Component,
   HostListener,
   QueryList,
+  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { RowComponent } from '../row/row.component';
@@ -15,11 +16,20 @@ import { MatButtonModule } from '@angular/material/button';
 import { of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { SettingsService } from '../settings.service';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { sanity } from '../sanity';
+import { Step } from '../step';
 
 @Component({
   selector: 'app-project',
   standalone: true,
-  imports: [NgFor, RowComponent, MatButtonModule, MatCardModule],
+  imports: [
+    NgFor,
+    RowComponent,
+    MatButtonModule,
+    MatCardModule,
+    MatExpansionModule,
+  ],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
 })
@@ -27,11 +37,10 @@ export class ProjectComponent implements HierarchicalList {
   rows!: Array<Row>;
 
   @ViewChildren(RowComponent) children!: QueryList<RowComponent>;
+  currentStep: StepComponent = <StepComponent>{};
 
   advanceRowIterator!: IterableIterator<RowComponent>;
   advanceRowCurrent!: RowComponent;
-
-  currentStep: StepComponent = new StepComponent();
 
   index: number = 0;
   parent = null;
@@ -44,63 +53,29 @@ export class ProjectComponent implements HierarchicalList {
     private logger: NGXLogger
   ) {}
 
-  conditionalInitializeHiearchicalList() {
-    if (this.children === undefined || !(this.children.length > 0)) {
-      return;
-    }
-    if (
-      !this.children.first ||
-      (this.children.first && this.children.first.prev === null)
-    ) {
-      return;
-    }
-    this.children.first.prev = null;
-    let lastChild = null;
-    let rowIndex = 0;
-    for (let child of this.children) {
-      child.index = rowIndex++;
-      child.parent = this;
-      if (child.prev !== null) {
-        if (lastChild !== null) {
-          child.prev = lastChild;
-          child.prev.next = child;
-          child.next = null; // Just in case this is the last child
-        } else {
-          this.logger.debug('Uhhh... no last child?');
-        }
-      }
-      child.conditionalInitializeHiearchicalList();
-      lastChild = child;
-    }
-    this.logger.debug(lastChild);
-    if (this.children.first.children.first) {
-      this.currentStep = this.children.first.children.first;
-    }
-  }
-
   ngOnInit() {
     this.rows = [];
-    this.projectService.ready.subscribe(() => {
+    this.projectService.loadReady.subscribe(() => {
       this.rows = this.projectService.project.rows;
     });
     this.projectService.loadCurrentProject();
   }
   ngAfterViewInit() {
-    this.conditionalInitializeHiearchicalList();
+    //this.conditionalInitializeHiearchicalList();
     const currentPosition = this.projectService.loadCurrentPosition();
 
-    // TODO: This causes NG0100: ExpressionChangedAfterItHasBeenCheckedError
     if (currentPosition) {
-      while (currentPosition.row > this.currentStep.parent.index) {
-        this.doRowForward();
+      const currRow = this.children.get(currentPosition.row);
+      if (currRow === null || currRow === undefined) {
+        return;
       }
-      while (currentPosition.step > this.currentStep.index) {
-        this.doStepForward();
+      const currStep = currRow.children.get(currentPosition.step);
+      if (currStep === null || currStep === undefined) {
+        return;
       }
+      this.currentStep = currStep;
+      this.currentStep.row.show();
     }
-    this.children.changes.subscribe((children) => {
-      this.conditionalInitializeHiearchicalList();
-    });
   }
   onAdvanceRow() {
     this.doRowForward();
@@ -157,82 +132,97 @@ export class ProjectComponent implements HierarchicalList {
     this.doRowForward();
   }
 
+  sanityPresumptiveStep() {
+    if (sanity) {
+      const presumptiveStep = this.currentStep.row.children.get(
+        this.currentStep.index
+      );
+      if (presumptiveStep !== this.currentStep) {
+        throw new Error(
+          'Sanity check failed, presumptive step is not current step'
+        );
+      }
+    }
+  }
+  sanityPresumptiveRow() {
+    if (sanity) {
+      const presumptiveRow = this.currentStep.row.project.children.get(
+        this.currentStep.row.index
+      );
+      if (presumptiveRow !== this.currentStep.row) {
+        throw new Error(
+          'Sanity check failed, presumptive row is not current row'
+        );
+      }
+    }
+  }
+
   doStepForward(): boolean {
-    this.conditionalInitializeHiearchicalList();
     this.currentStep.isCurrentStep = false;
-    const nextStep = this.currentStep.next;
-    if (nextStep === null) {
+    this.sanityPresumptiveStep();
+    const nextStep = this.currentStep.row.children.get(
+      this.currentStep.index + 1
+    );
+    if (nextStep === null || nextStep === undefined) {
       return true;
     }
-    this.currentStep = <StepComponent>nextStep;
-    this.currentStep.highlight();
+    this.currentStep = nextStep;
     this.currentStep.isCurrentStep = true;
-    (<RowComponent>this.currentStep.parent).show();
+    this.currentStep.row.show();
     this.projectService.saveCurrentPosition(
-      this.currentStep.parent.index,
+      this.currentStep.row.index,
       this.currentStep.index
     );
     return false;
   }
   doStepBackward(): boolean {
-    this.conditionalInitializeHiearchicalList();
-    this.currentStep.unhighlight();
     this.currentStep.isCurrentStep = false;
-    const prevStep = this.currentStep.prev;
-    if (prevStep === null) {
+    this.sanityPresumptiveStep();
+    const prevStep = this.currentStep.row.children.get(
+      this.currentStep.index - 1
+    );
+    if (prevStep === null || prevStep === undefined) {
       return true;
     }
-    this.currentStep = <StepComponent>prevStep;
+    this.currentStep = prevStep;
     this.currentStep.isCurrentStep = true;
+    this.currentStep.row.show();
     this.projectService.saveCurrentPosition(
-      this.currentStep.parent.index,
+      this.currentStep.row.index,
       this.currentStep.index
     );
     return false;
   }
   doStepEnd() {
-    this.conditionalInitializeHiearchicalList();
-    (<QueryList<StepComponent>>this.currentStep.parent.children).forEach(
-      (stepComponent) => {
-        stepComponent.highlight();
-      }
-    );
 
-    this.currentStep = (<QueryList<StepComponent>>(
-      this.currentStep.parent.children
-    )).last;
+    this.currentStep = this.currentStep.row.children.last;
   }
   doRowForward(): boolean {
-    this.conditionalInitializeHiearchicalList();
     this.currentStep.isCurrentStep = false;
-    const currParent = this.currentStep.parent;
-    const nextParent = <RowComponent>currParent.next;
-    if (nextParent === null) {
+    this.currentStep.row.hide();
+    const currParent = this.currentStep.row;
+    this.sanityPresumptiveRow();
+    const nextParent = currParent.project.children.get(currParent.index + 1);
+    if (nextParent === null || nextParent === undefined) {
       return true;
     }
     nextParent.show();
-    nextParent.children.forEach((stepComponent) => {
-      stepComponent.unhighlight();
-    });
-    this.currentStep = (<QueryList<StepComponent>>nextParent.children).first;
-    this.currentStep.highlight();
-    this.currentStep.isCurrentStep = true;
+    nextParent.markFirstStep = true;
     return false;
   }
   doRowBackward(): boolean {
-    this.conditionalInitializeHiearchicalList();
-    const currParent = <RowComponent>this.currentStep.parent;
-    currParent.hide();
-    const prevParent = <RowComponent>currParent.prev;
-    if (prevParent === null) {
+    this.currentStep.isCurrentStep = false;
+    this.currentStep.row.hide();
+    const currParent = this.currentStep.row;
+    this.sanityPresumptiveRow();
+    const prevParent = currParent.project.children.get(currParent.index - 1);
+    if (prevParent === null || prevParent === undefined) {
       return true;
     }
-    //prevParent.children.forEach((stepComponent) => {});
     prevParent.show();
-    this.currentStep = (<QueryList<StepComponent>>prevParent.children).first;
-    this.currentStep.highlight();
-    this.currentStep.isCurrentStep = true;
+    prevParent.markFirstStep = true;
     return false;
   }
+  
   resetProject(_forward: boolean) {}
 }

@@ -1,6 +1,6 @@
-<ol>
-  <li class="app-row" *ngFor="let row of rows; index as i" [row]="row" [steps]="row.steps"></li>
-</ol>
+<mat-accordion>
+  <app-row *ngFor="let row of rows; index as i" [index]="i" [row]="row" [steps]="row.steps" [project]="this"></app-row>
+</mat-accordion>
 <div class="advance-button-container">
   <button mat-raised-button color="primary" type="button" (click)="onRetreatRow()">Retreat Row</button>
   <button mat-raised-button color="primary" type="button" (click)="onRetreatStep()">Retreat Step</button>

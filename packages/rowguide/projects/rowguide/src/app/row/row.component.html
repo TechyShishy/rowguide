@@ -1,8 +1,16 @@
-<button mat-flat-button color="primary" type="button" (click)="onToggle()">{{settingsService.combine12 ? (row.id === 1 ?
-  'Rows 1 & 2' : 'Row ' + (row.id + 1)) : 'Row ' + row.id}}</button>
-<button mat-flat-button *ngIf="settingsService.lrdesignators" color="{{row.id % 2 ? 'primary' : 'accent'}}">
-  {{row.id % 2 ? 'L' : 'R' }}
-</button>
-<ol [hidden]="!visible">
-  <li class="app-step" *ngFor="let step of steps; index as i" [step]="step"></li>
-</ol>
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      {{settingsService.combine12 ? (row.id === 1 ? 'Rows 1 & 2' : 'Row ' + (row.id + 1)) : 'Row ' + row.id}}
+    </mat-panel-title>
+    <mat-panel-description *ngIf="settingsService.lrdesignators">
+      {{(settingsService.combine12 ? row.id + 1 : row.id) % 2 ? 'L' : 'R' }}
+    </mat-panel-description>
+  </mat-expansion-panel-header>
+  <ng-template matExpansionPanelContent>
+    <mat-chip-set>
+      <app-step *ngFor="let step of steps; index as i" [step]="step" [index]="i" [row]="this"></app-step>
+    </mat-chip-set>
+  </ng-template>
+</mat-expansion-panel>
+

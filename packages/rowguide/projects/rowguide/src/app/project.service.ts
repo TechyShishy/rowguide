@@ -3,13 +3,17 @@ import { Project } from './project';
 import { Subject } from 'rxjs';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { NullProject } from './null-project';
+import { StepComponent } from './step/step.component';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProjectService {
   project: Project;
-  ready: Subject<boolean> = new Subject<boolean>();
+  loadReady: Subject<boolean> = new Subject<boolean>();
+  stepReady: Subject<boolean> = new Subject<boolean>();
+  currentPosition: Position = { row: 0, step: 0 };
+  currentStep!: StepComponent;
   constructor(private peyoteShorthandService: PeyoteShorthandService) {
     this.project = new NullProject();
   }
@@ -49,11 +53,12 @@ export class ProjectService {
       return;
     }
     this.project = currentProject.project;
-    this.ready.next(true);
+    this.loadReady.next(true);
   }
-  loadPeyote(data: string): Project {
+  loadPeyote(projectName: string, data: string): Project {
     this.project = this.peyoteShorthandService.toRGP(data, ', ');
-    this.ready.next(true);
+    this.project.name = projectName;
+    this.loadReady.next(true);
     return this.project;
   }
 }

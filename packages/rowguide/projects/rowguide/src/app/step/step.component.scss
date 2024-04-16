@@ -1,6 +1,6 @@
 $step-height: 3rem;
 
-:host {
+/*:host {
   color: rgba(255, 255, 255, 255);
   font-size: x-large;
   background-color: #4ab9ec;
@@ -13,10 +13,48 @@ $step-height: 3rem;
   height: $step-height;
   text-align: center;
   cursor: pointer;
+}*/
+
+:host(.current) > mat-chip {
+  background-color: #8b2b28;
+  color: white;
 }
-
-
+:host:has(~ ::ng-deep .current) > mat-chip {
+  background-color: yellow;
+  font-weight: bold;
+  --mdc-chip-label-text-color: rgba(0, 0, 0, 255);
+}
 span {
   height: $step-height;
   line-height: $step-height;
+}
+
+.mat-mdc-standard-chip {
+  // --mdc-chip-disabled-label-text-color: #212121;
+   --mdc-chip-elevated-container-color: #4ab9ec;
+  // --mdc-chip-elevated-selected-container-color: #e0e0e0;
+  // --mdc-chip-elevated-disabled-container-color: #e0e0e0;
+  // --mdc-chip-flat-disabled-selected-container-color: #e0e0e0;
+  // --mdc-chip-focus-state-layer-color: black;
+  // --mdc-chip-hover-state-layer-color: black;
+  // --mdc-chip-selected-hover-state-layer-color: black;
+  // --mdc-chip-focus-state-layer-opacity: 0.12;
+  // --mdc-chip-selected-focus-state-layer-color: black;
+  // --mdc-chip-selected-focus-state-layer-opacity: 0.12;
+   --mdc-chip-label-text-color: white;
+  // --mdc-chip-selected-label-text-color: #212121;
+  // --mdc-chip-with-icon-icon-color: #212121;
+  // --mdc-chip-with-icon-disabled-icon-color: #212121;
+  // --mdc-chip-with-icon-selected-icon-color: #212121;
+  // --mdc-chip-with-trailing-icon-disabled-trailing-icon-color: #212121;
+  // --mdc-chip-with-trailing-icon-trailing-icon-color: #212121;
+  // --mat-chip-selected-disabled-trailing-icon-color: #212121;
+  // --mat-chip-selected-trailing-icon-color: #212121;
+
+
+  // --mdc-chip-label-text-font: Roboto, sans-serif;
+  // --mdc-chip-label-text-line-height: 20px;
+   --mdc-chip-label-text-size: 20px;
+  // --mdc-chip-label-text-tracking: 0.0178571429em;
+   --mdc-chip-label-text-weight: 900;
 }

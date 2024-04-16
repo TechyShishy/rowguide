@@ -3,6 +3,11 @@
     <mat-panel-title>{{project.name}}</mat-panel-title>
     <mat-panel-description>{{project.rows.length}} Rows</mat-panel-description>
   </mat-expansion-panel-header>
-  <input matInput type="text" [(ngModel)]="project.name" (change)="saveName()">
+  <mat-form-field>
+    <mat-label>Project Name</mat-label>
+    <input matInput type="text" [(ngModel)]="project.name" (change)="saveName()">
+  </mat-form-field>
   <button mat-raised-button color="primary" (click)="loadProject()">Load Project</button>
+  <button mat-raised-button color="warn" (click)="deleteProject()">Delete Project</button>
+  <button mat-raised-button color="primary" (click)="downloadProject()">Download Project</button>
 </mat-expansion-panel>

@@ -8,38 +8,38 @@ import {
 import { Step } from '../step';
 import { HierarchicalList } from '../hierarchical-list';
 import { ProjectComponent } from '../project/project.component';
+import { MatChipsModule } from '@angular/material/chips';
+import { ProjectService } from '../project.service';
+import { RowComponent } from '../row/row.component';
 
 @Component({
-  selector: 'li.app-step',
+  selector: 'app-step',
   standalone: true,
-  imports: [],
+  imports: [MatChipsModule],
   templateUrl: './step.component.html',
   styleUrl: './step.component.scss',
 })
 export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
-  @HostBinding('class.highlighted') highlighted = false;
+  highlighted: boolean = false;
   @HostBinding('class.current') isCurrentStep = false;
 
-  index: number = 0;
+  @Input() index: number = 0;
+  @Input() row!: RowComponent;
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
   children: QueryList<HierarchicalList> = new QueryList<HierarchicalList>();
   beadCount: number = 0;
 
+  constructor(private projectService: ProjectService) {}
+
   @HostListener('click', ['$event'])
   onClick(_e: any) {
-    this.onToggle();
-    (<ProjectComponent>this.parent.parent).currentStep = this;
-  }
-  onToggle() {
-    this.highlighted = !this.highlighted;
-  }
-  highlight() {
-    this.highlighted = true;
-  }
-  unhighlight() {
-    this.highlighted = false;
+    if (this.row.project.currentStep) {
+      this.row.project.currentStep.isCurrentStep = false;
+    }
+    this.row.project.currentStep = this;
+    this.isCurrentStep = true;
   }
 }
