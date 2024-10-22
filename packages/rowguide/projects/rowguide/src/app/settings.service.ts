@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 
 @Injectable({
@@ -6,8 +6,8 @@ import { Subject } from 'rxjs';
 })
 export class SettingsService {
   ready: Subject<boolean> = new Subject<boolean>();
-  combine12: boolean = false;
-  lrdesignators: boolean = false;
+  @Input() combine12: boolean = false;
+  @Input() lrdesignators: boolean = false;
 
   constructor() {}
   saveSettings(settings: Settings) {
