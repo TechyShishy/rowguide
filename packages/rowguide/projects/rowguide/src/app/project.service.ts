@@ -10,8 +10,7 @@ import { StepComponent } from './step/step.component';
 })
 export class ProjectService {
   project: Project;
-  loadReady: Subject<boolean> = new Subject<boolean>();
-  stepReady: Subject<boolean> = new Subject<boolean>();
+  ready: Subject<boolean> = new Subject<boolean>();
   currentPosition: Position = { row: 0, step: 0 };
   currentStep!: StepComponent;
   constructor(private peyoteShorthandService: PeyoteShorthandService) {

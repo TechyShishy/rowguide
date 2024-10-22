@@ -55,7 +55,7 @@ export class ProjectComponent implements HierarchicalList {
 
   ngOnInit() {
     this.rows = [];
-    this.projectService.loadReady.subscribe(() => {
+    this.projectService.ready.subscribe(() => {
       this.rows = this.projectService.project.rows;
     });
     this.projectService.loadCurrentProject();
@@ -223,6 +223,6 @@ export class ProjectComponent implements HierarchicalList {
     prevParent.markFirstStep = true;
     return false;
   }
-  
+
   resetProject(_forward: boolean) {}
 }
