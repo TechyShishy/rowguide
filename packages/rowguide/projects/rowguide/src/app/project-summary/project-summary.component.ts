@@ -10,6 +10,7 @@ import { ProjectService } from '../project.service';
 import { MatButtonModule } from '@angular/material/button';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
+import { FlamService } from '../flam.service';
 
 @Component({
   selector: 'app-project-summary',
@@ -30,6 +31,7 @@ export class ProjectSummaryComponent {
   constructor(
     private indexedDBService: IndexedDBService,
     private projectService: ProjectService,
+    private flamService: FlamService,
     private ref: ElementRef
   ) {}
 
@@ -40,7 +42,8 @@ export class ProjectSummaryComponent {
   loadProject() {
     this.projectService.project = this.project;
     this.projectService.saveCurrentPosition(0, 0);
-    this.projectService.loadReady.next(true);
+    this.projectService.loadCurrentProject();
+    this.flamService.inititalizeFLAM(true);
   }
   deleteProject() {
     this.indexedDBService.deleteProject(this.project);

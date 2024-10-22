@@ -24,6 +24,12 @@ $step-height: 3rem;
   font-weight: bold;
   --mdc-chip-label-text-color: rgba(0, 0, 0, 255);
 }
+:host(.first) > mat-chip {
+  --mdc-chip-label-text-color: green;
+}
+:host(.last) > mat-chip {
+  --mdc-chip-label-text-color: red;
+}
 span {
   height: $step-height;
   line-height: $step-height;

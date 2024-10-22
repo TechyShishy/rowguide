@@ -8,6 +8,7 @@ export class SettingsService {
   ready: Subject<boolean> = new Subject<boolean>();
   @Input() combine12: boolean = false;
   @Input() lrdesignators: boolean = false;
+  @Input() flammarkers: boolean = false;
 
   constructor() {}
   saveSettings(settings: Settings) {
@@ -20,6 +21,7 @@ export class SettingsService {
       let s = JSON.parse(settings);
       this.combine12 = s.combine12;
       this.lrdesignators = s.lrdesignators;
+      this.flammarkers = s.flammarkers;
     }
   }
 }
@@ -27,4 +29,5 @@ export class SettingsService {
 export class Settings {
   combine12: boolean = false;
   lrdesignators: boolean = false;
+  flammarkers: boolean = false;
 }

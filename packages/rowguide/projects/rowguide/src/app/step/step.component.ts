@@ -11,6 +11,8 @@ import { ProjectComponent } from '../project/project.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { ProjectService } from '../project.service';
 import { RowComponent } from '../row/row.component';
+import { FlamService } from '../flam.service';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-step',
@@ -23,6 +25,8 @@ export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
   highlighted: boolean = false;
   @HostBinding('class.current') isCurrentStep = false;
+  @HostBinding('class.first') isFirstStep = false;
+  @HostBinding('class.last') isLastStep = false;
 
   @Input() index: number = 0;
   @Input() row!: RowComponent;
@@ -32,7 +36,20 @@ export class StepComponent implements HierarchicalList {
   children: QueryList<HierarchicalList> = new QueryList<HierarchicalList>();
   beadCount: number = 0;
 
-  constructor(private projectService: ProjectService) {}
+  constructor(
+    private flamService: FlamService,
+    private settingsService: SettingsService
+  ) {}
+
+  ngOnInit() {
+    if (this.settingsService.flammarkers) {
+      this.isFirstStep = this.flamService.isFirstStep(this.row.index,this.step);
+      this.isLastStep = this.flamService.isLastStep(this.row.index, this.step);
+    } else {
+      this.isFirstStep = false;
+      this.isLastStep = false;
+    }
+  }
 
   @HostListener('click', ['$event'])
   onClick(_e: any) {
