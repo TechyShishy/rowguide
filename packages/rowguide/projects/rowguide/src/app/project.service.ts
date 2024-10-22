@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { NullProject } from './null-project';
 import { StepComponent } from './step/step.component';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,8 +14,14 @@ export class ProjectService {
   ready: Subject<boolean> = new Subject<boolean>();
   currentPosition: Position = { row: 0, step: 0 };
   currentStep!: StepComponent;
-  constructor(private peyoteShorthandService: PeyoteShorthandService) {
+  constructor(
+    private peyoteShorthandService: PeyoteShorthandService,
+    private settingsService: SettingsService
+  ) {
     this.project = new NullProject();
+    this.settingsService.ready.subscribe(() => {
+      this.loadCurrentProject();
+    });
   }
   saveCurrentPosition(row: number, step: number) {
     localStorage.setItem(
@@ -52,12 +59,12 @@ export class ProjectService {
       return;
     }
     this.project = currentProject.project;
-    this.loadReady.next(true);
+    this.ready.next(true);
   }
   loadPeyote(projectName: string, data: string): Project {
     this.project = this.peyoteShorthandService.toRGP(data, ', ');
     this.project.name = projectName;
-    this.loadReady.next(true);
+    this.ready.next(true);
     return this.project;
   }
 }

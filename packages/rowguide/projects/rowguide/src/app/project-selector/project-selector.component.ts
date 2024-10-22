@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
-import { gzip } from 'pako';
+import { inflate } from 'pako';
 import fileDownload from 'js-file-download';
 import { CommonModule } from '@angular/common';
 import { Project } from '../project';
@@ -44,13 +44,27 @@ export class ProjectSelectorComponent {
     private indexedDBService: IndexedDBService
   ) {}
   importFile() {
-    this.file.text().then((text) => {
-      this.logger.debug('File text: ', text);
-      this.fileData = text;
-      this.saveProjectToIndexedDB(
-        this.projectService.loadPeyote(this.file.name, this.fileData)
-      );
-      this.loadProjectsFromIndexedDB();
+    this.file.arrayBuffer().then((buffer) => {
+      const gzipHeader = Uint8Array.from([0x1f, 0x8b]);
+      const bufHeader = new Uint8Array(buffer.slice(0, 2));
+      if (bufHeader[0] === gzipHeader[0] && bufHeader[1] === gzipHeader[1]) {
+        this.logger.debug('Gzip file detected');
+        const projectArray = inflate(buffer);
+        const decoder = new TextDecoder();
+        const projectString = decoder.decode(projectArray);
+        const importProject = JSON.parse(projectString);
+        this.saveProjectToIndexedDB(importProject);
+        this.loadProjectsFromIndexedDB();
+      } else {
+        this.file.text().then((text) => {
+          this.logger.debug('File text: ', text);
+          this.fileData = text;
+          this.saveProjectToIndexedDB(
+            this.projectService.loadPeyote(this.file.name, this.fileData)
+          );
+          this.loadProjectsFromIndexedDB();
+        });
+      }
     });
 
     // TODO: Do something to move the user to the project view
