@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+apply from: "signing.gradle"
+
 android {
     namespace "com.techyshishy.rowguide"
     compileSdkVersion rootProject.ext.compileSdkVersion
