@@ -1,5 +1,3 @@
-$step-height: 3rem;
-
 /*:host {
   color: rgba(255, 255, 255, 255);
   font-size: x-large;
@@ -16,12 +14,26 @@ $step-height: 3rem;
 }*/
 
 :host(.current) > mat-chip {
-  background-color: #8b2b28;
-  color: white;
+  --mdc-chip-elevated-container-color: #8b2b28;
+  --mdc-chip-label-text-color: white;
+  --mdc-chip-label-text-size: 2rem;
+  --mdc-chip-container-height: 64px;
 }
+:host(.current) + ::ng-deep app-step > mat-chip,
+:host(.current) + ::ng-deep app-step + app-step > mat-chip
+{
+  --mdc-chip-label-text-size: 1.5rem;
+  --mdc-chip-container-height: 48px;
+}
+:host:has( + ::ng-deep app-step.current) > mat-chip,
+:host:has( + ::ng-deep app-step + app-step.current) > mat-chip {
+  --mdc-chip-label-text-size: 1.5rem;
+  --mdc-chip-container-height: 48px;
+}
+
 :host:has(~ ::ng-deep .current) > mat-chip {
-  background-color: yellow;
-  font-weight: bold;
+  --mdc-chip-elevated-container-color: yellow;
+  --mdc-chip-label-text-weight: bold;
   --mdc-chip-label-text-color: rgba(0, 0, 0, 255);
 }
 :host(.first) > mat-chip {
@@ -29,10 +41,6 @@ $step-height: 3rem;
 }
 :host(.last) > mat-chip {
   --mdc-chip-label-text-color: red;
-}
-span {
-  height: $step-height;
-  line-height: $step-height;
 }
 
 .mat-mdc-standard-chip {
