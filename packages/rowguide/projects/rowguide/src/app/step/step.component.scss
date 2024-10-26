@@ -33,10 +33,15 @@
 
 :host:has(~ ::ng-deep .current) > mat-chip {
   --mdc-chip-elevated-container-color: yellow;
-  --mdc-chip-label-text-weight: bold;
-  --mdc-chip-label-text-color: rgba(0, 0, 0, 255);
+  --mdc-chip-label-text-color: black;
 }
 :host(.first) > mat-chip {
+  --mdc-chip-label-text-color: rgb(128, 255, 128);
+}
+:host(.first.current) > mat-chip {
+  --mdc-chip-label-text-color: rgb(0, 255, 0);
+}
+:host(.first):has(~ ::ng-deep .current) > mat-chip {
   --mdc-chip-label-text-color: green;
 }
 :host(.last) > mat-chip {
