@@ -41,9 +41,9 @@ export class ProjectSummaryComponent {
 
   loadProject() {
     this.projectService.project = this.project;
+    this.flamService.inititalizeFLAM(true);
     this.projectService.saveCurrentPosition(0, 0);
     this.projectService.loadCurrentProject();
-    this.flamService.inititalizeFLAM(true);
   }
   deleteProject() {
     this.indexedDBService.deleteProject(this.project);

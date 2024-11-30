@@ -4,6 +4,7 @@ import { MatTabGroup, MatTab } from '@angular/material/tabs';
 import { ProjectSelectorComponent } from './project-selector/project-selector.component';
 import { ProjectComponent } from './project/project.component';
 import { SettingsComponent } from './settings/settings.component';
+import { ProjectInspectorComponent } from './project-inspector/project-inspector.component';
 import { ProjectService } from './project.service';
 import { Project } from './project';
 
@@ -14,6 +15,7 @@ import { Project } from './project';
     RouterOutlet,
     ProjectComponent,
     ProjectSelectorComponent,
+    ProjectInspectorComponent,
     SettingsComponent,
     MatTabGroup,
     MatTab,
