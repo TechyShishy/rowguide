@@ -26,10 +26,12 @@ export class SettingsComponent {
   combine12Control = new FormControl(false);
   lrdesignatorsControl = new FormControl(false);
   flammarkersControl = new FormControl(false);
+  ppinspectorControl = new FormControl(false);
   settings = this.formBuilder.group({
     combine12: this.combine12Control,
     lrdesignators: this.lrdesignatorsControl,
     flammarkers: this.flammarkersControl,
+    ppinspector: this.ppinspectorControl,
   });
 
   constructor(
@@ -41,12 +43,14 @@ export class SettingsComponent {
     this.combine12Control.setValue(this.settingsService.combine12);
     this.lrdesignatorsControl.setValue(this.settingsService.lrdesignators);
     this.flammarkersControl.setValue(this.settingsService.flammarkers);
+    this.ppinspectorControl.setValue(this.settingsService.ppinspector);
 
     this.settings.valueChanges.subscribe((value) => {
       this.settingsService.saveSettings(<Settings>{
         combine12: value.combine12,
         lrdesignators: value.lrdesignators,
         flammarkers: value.flammarkers,
+        ppinspector: value.ppinspector,
       });
       projectService.loadCurrentProject();
     });

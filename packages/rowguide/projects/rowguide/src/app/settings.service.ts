@@ -9,6 +9,7 @@ export class SettingsService {
   @Input() combine12: boolean = false;
   @Input() lrdesignators: boolean = false;
   @Input() flammarkers: boolean = false;
+  @Input() ppinspector: boolean = false;
 
   constructor() {}
   saveSettings(settings: Settings) {
@@ -22,6 +23,7 @@ export class SettingsService {
       this.combine12 = s.combine12;
       this.lrdesignators = s.lrdesignators;
       this.flammarkers = s.flammarkers;
+      this.ppinspector = s.ppinspector;
     }
   }
 }

@@ -5,6 +5,7 @@ import { CommonModule, NgFor, NgForOf } from '@angular/common';
 import { FLAMRow } from '../flamrow';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-project-inspector',
@@ -15,7 +16,10 @@ import { MatListModule } from '@angular/material/list';
 })
 export class ProjectInspectorComponent {
   flam: Array<FLAMRow> = [];
-  constructor(public flamService: FlamService) {}
+  constructor(
+    public flamService: FlamService,
+    public settingsService: SettingsService
+  ) {}
   ngOnInit() {
     this.flamService.inititalizeFLAM(true);
     this.flam = Object.values(this.flamService.flam);

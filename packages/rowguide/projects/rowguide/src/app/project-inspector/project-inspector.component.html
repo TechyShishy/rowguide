@@ -1,6 +1,15 @@
 <mat-card>
   FLAM:
   <mat-list>
-    <mat-list-item *ngFor="let flamRow of flam">{{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}</mat-list-item>
+    <ng-template [ngIf]="!settingsService.ppinspector">
+      <mat-list-item *ngFor="let flamRow of flam">
+        {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
+      </mat-list-item>
+    </ng-template>
+    <ng-template [ngIf]="settingsService.ppinspector">
+      <mat-list-item *ngFor="let flamRow of flam">
+        {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
+      </mat-list-item>
+    </ng-template>
   </mat-list>
 </mat-card>
