@@ -91,9 +91,6 @@ export class ProjectSelectorComponent {
             for (const pageText of texts) {
               text += '\n' + pageText;
             }
-            this.logger.debug('Start of Extracted Text');
-            this.logger.debug(text);
-            this.logger.debug('End of Extracted Text');
             text = text.replace(/\*\*\*.*\*\*\*/g, '');
             const match = text.match(/(Row 1&2 .*)(?:Row \d|\Z)/s);
 
