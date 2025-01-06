@@ -31,7 +31,7 @@ ROW 28: ↙ 28 squares
 ROW 29: ↗ 29 squares
 1xGy, 1xBk, 1xWh, 1xBk, 1xWh, 1xBk, 2xWh, 2xBk, 19xGy`;
     const project = service.loadProject(projectString);
-    console.log(project.rows[0].steps);
+    //console.log(project.rows[0].steps);
     expect(project).toBeTruthy();
   });
 });
