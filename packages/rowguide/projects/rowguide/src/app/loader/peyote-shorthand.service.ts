@@ -20,8 +20,11 @@ export class PeyoteShorthandService {
     let lineNum = 1;
     projectString.split('\n').forEach((line) => {
       this.logger.trace('Line:', line);
-      const row: Row = this.createRow(line, lineNum++, delimiter);
-      project.rows.push(row);
+      const row: Row = this.createRow(line, lineNum, delimiter);
+      if (row.steps.length > 0) {
+        project.rows.push(row);
+        lineNum++;
+      }
     });
 
     return project;

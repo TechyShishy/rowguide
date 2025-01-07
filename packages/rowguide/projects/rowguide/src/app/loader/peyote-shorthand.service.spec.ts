@@ -63,14 +63,12 @@ describe('PeyoteShorthandService', () => {
     const projectString = 'invalid step\n(1)stepA';
     const project: Project = service.toRGP(projectString);
 
+    expect(project.rows.length).toBe(1);
+
     const firstRow: Row = project.rows[0];
     expect(firstRow.id).toBe(1);
-    expect(firstRow.steps.length).toBe(0);
-
-    const secondRow: Row = project.rows[1];
-    expect(secondRow.id).toBe(2);
-    expect(secondRow.steps.length).toBe(1);
-    expect(secondRow.steps[0]).toEqual({
+    expect(firstRow.steps.length).toBe(1);
+    expect(firstRow.steps[0]).toEqual({
       count: 1,
       description: 'stepA',
       id: 1,
@@ -174,9 +172,7 @@ describe('PeyoteShorthandService', () => {
     const projectString = 'no steps here';
     const project: Project = service.toRGP(projectString);
 
-    expect(project.rows.length).toBe(1);
-    const firstRow: Row = project.rows[0];
-    expect(firstRow.id).toBe(1);
-    expect(firstRow.steps.length).toBe(0);
+;
+    expect(project.rows.length).toBe(0);
   });
 });
