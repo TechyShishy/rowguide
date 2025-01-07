@@ -172,7 +172,76 @@ describe('PeyoteShorthandService', () => {
     const projectString = 'no steps here';
     const project: Project = service.toRGP(projectString);
 
-;
     expect(project.rows.length).toBe(0);
+  });
+
+  it('should handle multiple step formats', () => {
+    const projectString = '(1)stepA 2(stepB)\n3(stepC) (4)stepD';
+    const project: Project = service.toRGP(projectString);
+
+    expect(project.rows.length).toBe(2);
+
+    const firstRow: Row = project.rows[0];
+    expect(firstRow.id).toBe(1);
+    expect(firstRow.steps.length).toBe(2);
+    expect(firstRow.steps[0]).toEqual({
+      count: 1,
+      description: 'stepA',
+      id: 1,
+    });
+    expect(firstRow.steps[1]).toEqual({
+      count: 2,
+      description: 'stepB',
+      id: 2,
+    });
+
+    const secondRow: Row = project.rows[1];
+    expect(secondRow.id).toBe(2);
+    expect(secondRow.steps.length).toBe(2);
+    expect(secondRow.steps[0]).toEqual({
+      count: 3,
+      description: 'stepC',
+      id: 1,
+    });
+    expect(secondRow.steps[1]).toEqual({
+      count: 4,
+      description: 'stepD',
+      id: 2,
+    });
+  });
+
+  it('should handle descriptions with numbers', () => {
+    const projectString = '(1)step1 (2)step2\n(3)step3 (4)step4';
+    const project: Project = service.toRGP(projectString);
+
+    expect(project.rows.length).toBe(2);
+
+    const firstRow: Row = project.rows[0];
+    expect(firstRow.id).toBe(1);
+    expect(firstRow.steps.length).toBe(2);
+    expect(firstRow.steps[0]).toEqual({
+      count: 1,
+      description: 'step1',
+      id: 1,
+    });
+    expect(firstRow.steps[1]).toEqual({
+      count: 2,
+      description: 'step2',
+      id: 2,
+    });
+
+    const secondRow: Row = project.rows[1];
+    expect(secondRow.id).toBe(2);
+    expect(secondRow.steps.length).toBe(2);
+    expect(secondRow.steps[0]).toEqual({
+      count: 3,
+      description: 'step3',
+      id: 1,
+    });
+    expect(secondRow.steps[1]).toEqual({
+      count: 4,
+      description: 'step4',
+      id: 2,
+    });
   });
 });

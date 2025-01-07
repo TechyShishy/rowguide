@@ -49,7 +49,19 @@ export class PeyoteShorthandService {
   }
 
   private matchStep(step: string): RegExpMatchArray | null {
-    return step.match(/^\(([0-9]+)\)([a-zA-Z]+)/);
+    const patterns = [
+      /^\(([0-9]+)\)([a-zA-Z0-91]+)/, // (1)stepA
+      /^([0-9]+)\(([a-zA-Z0-9]+)\)/, // 1(stepA)
+    ];
+
+    for (const pattern of patterns) {
+      const match = step.match(pattern);
+      if (match) {
+        return match;
+      }
+    }
+
+    return null;
   }
 
   private createStep(stepMatch: RegExpMatchArray, stepNum: number) {
