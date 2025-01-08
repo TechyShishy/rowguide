@@ -1,11 +1,11 @@
 import {
   Component,
   ElementRef,
-  HostListener,
   Input,
   QueryList,
   ViewChild,
   ViewChildren,
+  AfterViewInit,
 } from '@angular/core';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
@@ -21,7 +21,6 @@ import {
   MatExpansionPanel,
 } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
-import { Project } from '../project';
 import { ProjectComponent } from '../project/project.component';
 
 @Component({
@@ -36,18 +35,19 @@ import { ProjectComponent } from '../project/project.component';
     StepComponent,
   ],
   templateUrl: './row.component.html',
-  styleUrl: './row.component.scss',
+  styleUrls: ['./row.component.scss'],
 })
-export class RowComponent implements HierarchicalList {
+export class RowComponent implements HierarchicalList, AfterViewInit {
   @Input() row!: Row;
-  @Input() steps!: Array<Step>;
+  @Input() steps!: Step[];
   @Input() project!: ProjectComponent;
-  visible = false;
+  @Input() index: number = 0;
+
   @ViewChildren(StepComponent) children!: QueryList<StepComponent>;
   @ViewChild(MatExpansionPanel) panel!: MatExpansionPanel;
-  markFirstStep = false;
 
-  @Input() index: number = 0;
+  visible = false;
+  markFirstStep = false;
   parent!: HierarchicalList;
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
@@ -59,30 +59,45 @@ export class RowComponent implements HierarchicalList {
   ) {}
 
   ngAfterViewInit() {
-    this.panel.afterExpand.subscribe(() => {
-      if (this.markFirstStep) {
-        this.project.currentStep = this.children.first;
-        this.children.first.isCurrentStep = true;
-        this.show();
-        this.markFirstStep = false;
-      }
-      if (this.children.last.beadCount === 0) {
-        let prevCount = 0;
-        for (let step of this.children) {
-          step.beadCount = step.step.count + prevCount;
-          prevCount = step.beadCount;
-        }
-      }
+    this.panel.afterExpand.subscribe(() => this.handlePanelExpand());
+  }
+
+  private handlePanelExpand() {
+    if (this.markFirstStep) {
+      this.setFirstStepAsCurrent();
+    }
+    if (this.children.last.beadCount === 0) {
+      this.updateBeadCounts();
+    }
+  }
+
+  private setFirstStepAsCurrent() {
+    this.project.currentStep = this.children.first;
+    this.children.first.isCurrentStep = true;
+    this.show();
+    this.markFirstStep = false;
+  }
+
+  private updateBeadCounts() {
+    let prevCount = 0;
+    this.children.forEach((step) => {
+      step.beadCount = step.step.count + prevCount;
+      prevCount = step.beadCount;
     });
   }
 
   onToggle() {
     this.visible = !this.visible;
   }
+
   show() {
     this.panel.open();
+    this.scrollToPreviousRow();
+  }
+
+  private scrollToPreviousRow() {
     const prevRow = this.project.children.get(this.index - 1);
-    if (prevRow !== undefined) {
+    if (prevRow) {
       prevRow.ref.nativeElement.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
