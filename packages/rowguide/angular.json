@@ -46,6 +46,10 @@
           },
           "configurations": {
             "production": {
+              "outputPath": "../../dist/rowguide",
+              "index": "projects/rowguide/src/index.html",
+              "browser": "projects/rowguide/src/main.ts",
+              "tsConfig": "projects/rowguide/tsconfig.app.json",
               "sourceMap": true,
               "budgets": [
                 {
@@ -62,6 +66,10 @@
               "outputHashing": "all"
             },
             "development": {
+              "outputPath": "../../dist/rowguide",
+              "index": "projects/rowguide/src/index.html",
+              "browser": "projects/rowguide/src/main.ts",
+              "tsConfig": "projects/rowguide/tsconfig.app.json",
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
