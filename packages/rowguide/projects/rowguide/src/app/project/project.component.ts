@@ -14,6 +14,7 @@ import { HierarchicalList } from '../hierarchical-list';
 import { StepComponent } from '../step/step.component';
 import { MatButtonModule } from '@angular/material/button';
 import { of } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { SettingsService } from '../settings.service';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -49,8 +50,8 @@ export class ProjectComponent implements HierarchicalList {
 
   constructor(
     private projectService: ProjectService,
-    private settingsService: SettingsService,
-    private logger: NGXLogger
+    private logger: NGXLogger,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -60,21 +61,39 @@ export class ProjectComponent implements HierarchicalList {
     });
     this.projectService.loadCurrentProject();
   }
-  ngAfterViewInit() {
-    //this.conditionalInitializeHiearchicalList();
+  private initialized = false;
+
+  ngAfterViewChecked() {
+    if (this.initialized) {
+      return;
+    }
+
     const currentPosition = this.projectService.loadCurrentPosition();
 
     if (currentPosition) {
       const currRow = this.children.get(currentPosition.row);
+
       if (currRow === null || currRow === undefined) {
         return;
       }
+
+      currRow.show();
       const currStep = currRow.children.get(currentPosition.step);
+
       if (currStep === null || currStep === undefined) {
         return;
       }
       this.currentStep = currStep;
-      this.currentStep.row.show();
+      const isLastStepInRow = this.currentStep.index === this.currentStep.row.children.length - 1;
+      if (isLastStepInRow) {
+        this.doStepBackward();
+        this.doStepForward();
+      } else {
+        this.doStepForward();
+        this.doStepBackward();
+      }
+      this.cdr.detectChanges();
+      this.initialized = true;
     }
   }
   onAdvanceRow() {
@@ -194,7 +213,6 @@ export class ProjectComponent implements HierarchicalList {
     return false;
   }
   doStepEnd() {
-
     this.currentStep = this.currentStep.row.children.last;
   }
   doRowForward(): boolean {

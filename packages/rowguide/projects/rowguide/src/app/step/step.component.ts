@@ -38,12 +38,16 @@ export class StepComponent implements HierarchicalList {
 
   constructor(
     private flamService: FlamService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private projectService: ProjectService
   ) {}
 
   ngOnInit() {
     if (this.settingsService.flammarkers) {
-      this.isFirstStep = this.flamService.isFirstStep(this.row.index,this.step);
+      this.isFirstStep = this.flamService.isFirstStep(
+        this.row.index,
+        this.step
+      );
       this.isLastStep = this.flamService.isLastStep(this.row.index, this.step);
     } else {
       this.isFirstStep = false;
@@ -58,5 +62,6 @@ export class StepComponent implements HierarchicalList {
     }
     this.row.project.currentStep = this;
     this.isCurrentStep = true;
+    this.projectService.saveCurrentPosition(this.row.index, this.index);
   }
 }
