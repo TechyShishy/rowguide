@@ -1,15 +1,46 @@
-<mat-card>
-  FLAM:
-  <mat-list>
-    <ng-template [ngIf]="!settingsService.ppinspector">
-      <mat-list-item *ngFor="let flamRow of flam">
-        {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
-      </mat-list-item>
-    </ng-template>
-    <ng-template [ngIf]="settingsService.ppinspector">
-      <mat-list-item *ngFor="let flamRow of flam">
-        {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
-      </mat-list-item>
-    </ng-template>
-  </mat-list>
+<mat-card class="flam">
+  <mat-card-title>FLAM</mat-card-title>
+  <mat-card-content>
+    <mat-list>
+      <ng-template [ngIf]="!settingsService.ppinspector">
+        <mat-list-item *ngFor="let flamRow of flam">
+          {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
+        </mat-list-item>
+      </ng-template>
+      <ng-template [ngIf]="settingsService.ppinspector">
+        <mat-list-item class="ppinspector" *ngFor="let flamRow of flam">
+          {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
+        </mat-list-item>
+        </ng-template>
+        </mat-list>
+  </mat-card-content>
+  </mat-card>
+  <mat-card class="project-summary">
+    <mat-card-title>Project Summary</mat-card-title>
+    <mat-card-content>
+      <mat-list>
+      <ng-template [ngIf]="!settingsService.ppinspector">
+        <mat-list-item>Name: {{projectService.project.name}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project.rows.length + 1}}</mat-list-item>
+      </ng-template>
+      <ng-template [ngIf]="settingsService.ppinspector">
+        <mat-list-item>Name: {{projectService.project.name}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project.rows.length + 1}}</mat-list-item>
+      </ng-template>
+    </mat-list>
+  </mat-card-content>
+  </mat-card>
+  <mat-card class="saved-position">
+  <mat-card-title>Saved Position</mat-card-title>
+  <mat-card-content>
+    <mat-list>
+      <ng-template [ngIf]="!settingsService.ppinspector">
+        <mat-list-item>{{ projectService.currentPosition.row }}, {{ projectService.currentPosition.step }}</mat-list-item>
+      </ng-template>
+      <ng-template [ngIf]="settingsService.ppinspector">
+        <mat-list-item>Row: {{ projectService.currentPosition.row + 1 }}</mat-list-item>
+        <mat-list-item>Step: {{ projectService.currentPosition.step + 1 }}</mat-list-item>
+        </ng-template>
+        </mat-list>
+        </mat-card-content>
 </mat-card>
