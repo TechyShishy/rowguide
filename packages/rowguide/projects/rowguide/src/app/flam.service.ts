@@ -17,6 +17,7 @@ export class FlamService {
   flam: FLAM = {};
 
   inititalizeFLAM(force: boolean = false) {
+    this.logger.debug(Object.keys(this.flam));
     if (force == false && Object.keys(this.flam).length != 0) return;
     this.flam = this.generateFLAM(this.projectService.project);
   }
@@ -41,9 +42,11 @@ export class FlamService {
     this.logger.debug('Generated FLAM:', JSON.stringify(flam));
     return flam;
   }
+
   isFirstStep(row: number, step: Step): boolean {
     this.inititalizeFLAM();
     if (
+      this.flam[step.description] &&
       this.flam[step.description].firstAppearance[0] == row &&
       this.flam[step.description].firstAppearance[1] == step.id - 1
     ) {
@@ -52,9 +55,11 @@ export class FlamService {
       return false;
     }
   }
+
   isLastStep(row: number, step: Step): boolean {
     this.inititalizeFLAM();
     if (
+      this.flam[step.description] &&
       this.flam[step.description].lastAppearance[0] == row &&
       this.flam[step.description].lastAppearance[1] == step.id - 1
     ) {

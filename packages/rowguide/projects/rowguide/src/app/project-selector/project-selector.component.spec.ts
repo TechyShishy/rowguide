@@ -1,19 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
 import { ProjectService } from '../project.service';
 import { IndexedDBService } from '../indexed-db.service';
+import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
+import { FlamService } from '../flam.service';
+import { NGXLogger } from 'ngx-logger';
+import { LoggerTestingModule } from 'ngx-logger/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { of } from 'rxjs';
+import * as pako from 'pako';
 import { Project } from '../project';
-import pako from 'pako';
-import { PdfjslibService } from '../pdfjslib.service';
 
 describe('ProjectSelectorComponent', () => {
   let component: ProjectSelectorComponent;
   let fixture: ComponentFixture<ProjectSelectorComponent>;
   let projectServiceSpy: jasmine.SpyObj<ProjectService>;
   let indexedDBServiceSpy: jasmine.SpyObj<IndexedDBService>;
-  let pdfjsLibServiceSpy: jasmine.SpyObj<PdfjslibService>;
+  let beadtoolPdfServiceSpy: jasmine.SpyObj<BeadtoolPdfService>;
+  let flamServiceSpy: jasmine.SpyObj<FlamService>;
 
   beforeEach(async () => {
     projectServiceSpy = jasmine.createSpyObj('ProjectService', ['loadPeyote']);
@@ -21,20 +25,22 @@ describe('ProjectSelectorComponent', () => {
       'loadProjects',
       'addProject',
     ]);
-    pdfjsLibServiceSpy = jasmine.createSpyObj('pdfjsLibService', [
-      'getDocument',
+    beadtoolPdfServiceSpy = jasmine.createSpyObj('BeadtoolPdfService', [
+      'loadDocument',
     ]);
+    flamServiceSpy = jasmine.createSpyObj('FlamService', ['inititalizeFLAM']);
 
     await TestBed.configureTestingModule({
       imports: [
         ProjectSelectorComponent,
         LoggerTestingModule,
-        BrowserAnimationsModule, // Add this line
+        BrowserAnimationsModule,
       ],
       providers: [
         { provide: ProjectService, useValue: projectServiceSpy },
         { provide: IndexedDBService, useValue: indexedDBServiceSpy },
-        { provide: PdfjslibService, useValue: pdfjsLibServiceSpy },
+        { provide: BeadtoolPdfService, useValue: beadtoolPdfServiceSpy },
+        { provide: FlamService, useValue: flamServiceSpy },
       ],
     }).compileComponents();
 
@@ -85,31 +91,31 @@ describe('ProjectSelectorComponent', () => {
       'test.pdf'
     );
     component.file = mockFile;
-    pdfjsLibServiceSpy.getDocument.and.returnValue({
-      promise: Promise.resolve({
-        numPages: 1,
-        getPage: () =>
-          Promise.resolve({
-            getTextContent: () =>
-              Promise.resolve({
-                items: [
-                  { str: 'Row 1&2 (L) (1)A, (2)B' },
-                  { str: 'Row 3 (R) (3)C, (1)A' },
-                ],
-              }),
-          }),
-      }),
-    } as any);
 
-    const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
-    projectServiceSpy.loadPeyote.and.returnValue(mockProject);
+    beadtoolPdfServiceSpy.loadDocument.and.returnValue(
+      Promise.resolve('PDF file content')
+    );
+    projectServiceSpy.loadPeyote.and.returnValue({
+      rows: [
+        {
+          id: 1,
+          steps: [
+            { id: 1, count: 1, description: 'Step A' },
+            { id: 2, count: 1, description: 'Step B' },
+          ],
+        },
+      ],
+    });
 
     await component.importFile();
 
+    expect(beadtoolPdfServiceSpy.loadDocument).toHaveBeenCalled();
     expect(projectServiceSpy.loadPeyote).toHaveBeenCalledWith(
       'test.pdf',
-      '(1)A, (2)B\n(3)C, (1)A'
+      'PDF file content'
     );
+    expect(flamServiceSpy.inititalizeFLAM).toHaveBeenCalledWith(true);
+    expect(indexedDBServiceSpy.addProject).toHaveBeenCalled();
   });
 
   it('should process plain text file', async () => {

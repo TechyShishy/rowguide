@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NGXLogger } from 'ngx-logger';
 import { ngfModule } from 'angular-file';
@@ -6,21 +6,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule } from '@angular/forms';
-import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
 import { inflate } from 'pako';
-import fileDownload from 'js-file-download';
 import { CommonModule } from '@angular/common';
 import { Project } from '../project';
 import { IndexedDBService } from '../indexed-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
-import {
-  TextContent,
-  TextItem,
-  TextMarkedContent,
-} from 'pdfjs-dist/types/src/display/api';
-import { PdfjslibService } from '../pdfjslib.service';
+import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
+import { FlamService } from '../flam.service';
 
 @Component({
   selector: 'app-project-selector',
@@ -48,7 +42,8 @@ export class ProjectSelectorComponent {
     private logger: NGXLogger,
     private projectService: ProjectService,
     private indexedDBService: IndexedDBService,
-    private pdfJsLibService: PdfjslibService
+    private flamService: FlamService,
+    private beadtoolPdfService: BeadtoolPdfService
   ) {}
   async importFile() {
     const buffer = await this.file.arrayBuffer();
@@ -71,42 +66,12 @@ export class ProjectSelectorComponent {
       bufHeader[3] === pdfHeader[3]
     ) {
       this.logger.debug('PDF file detected');
-
-      const loadingTask = this.pdfJsLibService.getDocument({
-        data: buffer,
-      });
-      const pdfDoc = await loadingTask.promise;
-      const textPromises = [];
-
-      for (let i = 1; i <= pdfDoc.numPages; i++) {
-        const page = await pdfDoc.getPage(i);
-        const textContent = await page.getTextContent({
-          includeMarkedContent: false,
-        });
-        const pageText = textContent.items
-          .map((item: TextItem | TextMarkedContent) => {
-            const textItem = item as TextItem;
-            return textItem.str;
-          })
-          .join('\n');
-        textPromises.push(pageText);
-      }
-
-      const texts = await Promise.all(textPromises);
-      let text = texts.join('\n');
-      text = text.replace(/\*\*\*.*\*\*\*/g, '');
-      const match = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
-
-      if (match) {
-        let unwrappedText = match[1].replace(/,\n+/g, ', ');
-        const rgsFileText = unwrappedText.replace(
-          /^Row [&\d]+ \([LR]\)\s*/gm,
-          ''
-        );
-        this.fileData = rgsFileText;
+      this.fileData = await this.beadtoolPdfService.loadDocument(buffer);
+      if (this.fileData !== '') {
         this.saveProjectToIndexedDB(
           this.projectService.loadPeyote(this.file.name, this.fileData)
         );
+        this.flamService.inititalizeFLAM(true);
         this.loadProjectsFromIndexedDB();
       } else {
         this.logger.debug('Section not found');

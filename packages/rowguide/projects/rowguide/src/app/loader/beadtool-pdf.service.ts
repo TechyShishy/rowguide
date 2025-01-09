@@ -1,0 +1,54 @@
+import { Injectable } from '@angular/core';
+import { PdfjslibService } from '../pdfjslib.service';
+import { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
+import { NGXLogger } from 'ngx-logger';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class BeadtoolPdfService {
+  constructor(
+    private pdfJsLibService: PdfjslibService,
+    private logger: NGXLogger
+  ) {}
+
+  async loadDocument(buffer: ArrayBuffer) {
+    const loadingTask = this.pdfJsLibService.getDocument({
+      data: buffer,
+    });
+    const pdfDoc = await loadingTask.promise;
+    const textPromises = [];
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const textContent = await page.getTextContent({
+        includeMarkedContent: false,
+      });
+      const pageText = textContent.items
+        .map((item: TextItem | TextMarkedContent) => {
+          const textItem = item as TextItem;
+          return textItem.str;
+        })
+        .join('\n');
+      textPromises.push(pageText);
+    }
+
+    const texts = await Promise.all(textPromises);
+    let text = texts.join('\n');
+    this.logger.debug('PDF text:', text);
+    text = text.replace(/\*\*\*.*\*\*\*/g, '');
+    text = text.replace(
+      /\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/g,
+      '\n'
+    );
+    text = text.replace(/,\n+/g, ', ');
+    const match = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
+
+    if (match) {
+      const rgsFileText = match[1].replace(/^Row [&\d]+ \([LR]\)\s*/gm, '');
+      return rgsFileText;
+    } else {
+      return '';
+    }
+  }
+}
