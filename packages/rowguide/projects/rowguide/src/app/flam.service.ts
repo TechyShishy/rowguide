@@ -17,7 +17,6 @@ export class FlamService {
   flam: FLAM = {};
 
   inititalizeFLAM(force: boolean = false) {
-    this.logger.debug(Object.keys(this.flam));
     if (force == false && Object.keys(this.flam).length != 0) return;
     this.flam = this.generateFLAM(this.projectService.project);
   }

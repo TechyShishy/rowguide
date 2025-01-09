@@ -6,6 +6,7 @@ import {
   ViewChild,
   ViewChildren,
   AfterViewInit,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { Row } from '../row';
 import { StepComponent } from '../step/step.component';
@@ -55,7 +56,8 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   constructor(
     public settingsService: SettingsService,
     private logger: NGXLogger,
-    private ref: ElementRef
+    private ref: ElementRef,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit() {
@@ -92,6 +94,7 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
 
   show() {
     this.panel.open();
+    this.cdr.detectChanges();
     this.scrollToPreviousRow();
   }
 

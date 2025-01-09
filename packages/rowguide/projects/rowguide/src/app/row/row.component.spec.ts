@@ -61,6 +61,7 @@ describe('RowComponent', () => {
     component.panel = mockPanel;
     component.markFirstStep = true;
     component.index = 1;
+    component.row = { id: 1 } as Row;
 
     component['setFirstStepAsCurrent']();
 
@@ -76,9 +77,9 @@ describe('RowComponent', () => {
 
   it('should update bead counts', () => {
     const step1 = jasmine.createSpyObj('StepComponent', ['step']);
-    step1.step = { count: 1 } as Step;
+    step1.step = { id: 1, count: 1, description: 'stepA' } as Step;
     const step2 = jasmine.createSpyObj('StepComponent', ['step']);
-    step2.step = { count: 2 } as Step;
+    step2.step = { id: 2, count: 2, description: 'stepB' } as Step;
     component.children = new QueryList<StepComponent>();
     component.children.reset([step1, step2]);
 
