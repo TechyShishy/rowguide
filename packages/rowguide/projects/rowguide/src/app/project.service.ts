@@ -31,6 +31,7 @@ export class ProjectService {
         position: <Position>{ row: row, step: step },
       })
     );
+    this.currentPosition = <Position>{ row: row, step: step };
   }
   loadCurrentPosition(): Position | null {
     const parsed = this._loadCurrentProject();

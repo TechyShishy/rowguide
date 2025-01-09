@@ -21,10 +21,10 @@ export class BeadtoolPdfService {
 
     for (let i = 1; i <= pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i);
-      const textContent = await page.getTextContent({
+      const textContent: { items: (TextItem | TextMarkedContent)[] } = await page.getTextContent({
         includeMarkedContent: false,
       });
-      const pageText = textContent.items
+      const pageText: string = textContent.items
         .map((item: TextItem | TextMarkedContent) => {
           const textItem = item as TextItem;
           return textItem.str;
