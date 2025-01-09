@@ -10,6 +10,7 @@ export class SettingsService {
   @Input() lrdesignators: boolean = false;
   @Input() flammarkers: boolean = false;
   @Input() ppinspector: boolean = false;
+  @Input() zoom: boolean = false;
 
   constructor() {}
   saveSettings(settings: Settings) {
@@ -24,6 +25,7 @@ export class SettingsService {
       this.lrdesignators = s.lrdesignators;
       this.flammarkers = s.flammarkers;
       this.ppinspector = s.ppinspector;
+      this.zoom = s.zoom;
     }
   }
 }
@@ -32,4 +34,6 @@ export class Settings {
   combine12: boolean = false;
   lrdesignators: boolean = false;
   flammarkers: boolean = false;
+  ppinspector: boolean = false;
+  zoom: boolean = false;
 }

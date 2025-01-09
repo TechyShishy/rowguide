@@ -21,6 +21,8 @@ import { SettingsService, Settings } from './settings.service';
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
+        ppinspector: true,
+        zoom: true,
       };
       service.saveSettings(settings);
       const savedSettings = JSON.parse(localStorage.getItem('settings')!);
@@ -32,12 +34,16 @@ import { SettingsService, Settings } from './settings.service';
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
+        ppinspector: true,
+        zoom: true,
       };
       localStorage.setItem('settings', JSON.stringify(settings));
       service.loadSettings();
       expect(service.combine12).toBe(true);
       expect(service.lrdesignators).toBe(true);
       expect(service.flammarkers).toBe(true);
+      expect(service.ppinspector).toBe(true);
+      expect(service.zoom).toBe(true);
     });
 
     it('should emit ready event after saving settings', (done) => {
@@ -49,6 +55,8 @@ import { SettingsService, Settings } from './settings.service';
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
+        ppinspector: true,
+        zoom: true,
       };
       service.saveSettings(settings);
     });

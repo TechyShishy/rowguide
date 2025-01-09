@@ -25,6 +25,7 @@ export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
   highlighted: boolean = false;
   @HostBinding('class.current') isCurrentStep = false;
+  @HostBinding('class.zoom') isZoomed = false;
   @HostBinding('class.first') isFirstStep = false;
   @HostBinding('class.last') isLastStep = false;
 
@@ -52,6 +53,9 @@ export class StepComponent implements HierarchicalList {
     } else {
       this.isFirstStep = false;
       this.isLastStep = false;
+    }
+    if (this.settingsService.zoom) {
+      this.isZoomed = true;
     }
   }
 

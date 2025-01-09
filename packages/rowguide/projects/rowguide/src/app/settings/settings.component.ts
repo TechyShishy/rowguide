@@ -27,11 +27,14 @@ export class SettingsComponent {
   lrdesignatorsControl = new FormControl(false);
   flammarkersControl = new FormControl(false);
   ppinspectorControl = new FormControl(false);
+  zoomControl = new FormControl(false);
+
   settings = this.formBuilder.group({
     combine12: this.combine12Control,
     lrdesignators: this.lrdesignatorsControl,
     flammarkers: this.flammarkersControl,
     ppinspector: this.ppinspectorControl,
+    zoom: this.zoomControl,
   });
 
   constructor(
@@ -44,6 +47,7 @@ export class SettingsComponent {
     this.lrdesignatorsControl.setValue(this.settingsService.lrdesignators);
     this.flammarkersControl.setValue(this.settingsService.flammarkers);
     this.ppinspectorControl.setValue(this.settingsService.ppinspector);
+    this.zoomControl.setValue(this.settingsService.zoom);
 
     this.settings.valueChanges.subscribe((value) => {
       this.settingsService.saveSettings(<Settings>{
@@ -51,6 +55,7 @@ export class SettingsComponent {
         lrdesignators: value.lrdesignators,
         flammarkers: value.flammarkers,
         ppinspector: value.ppinspector,
+        zoom: value.zoom,
       });
       projectService.loadCurrentProject();
     });
