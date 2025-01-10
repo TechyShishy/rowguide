@@ -12,11 +12,11 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.0.6",
-    "@angular/cdk": "18.2.14",
+    "@angular/cdk": "19.0.5",
     "@angular/common": "^19.0.6",
-    "@angular/core": "^18.2.13",
+    "@angular/core": "^19.0.6",
     "@angular/forms": "^19.0.6",
-    "@angular/material": "18.2.14",
+    "@angular/material": "19.0.5",
     "@angular/platform-browser": "^19.0.6",
     "@angular/platform-browser-dynamic": "^19.0.6",
     "@angular/router": "^19.0.6",
@@ -28,12 +28,12 @@
     "pdfjs-dist": "^4.10.38",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.3"
+    "zone.js": "~0.15.0"
   },
   "packageManager": "yarn@4.1.0+sha256.81a00df816059803e6b5148acf03ce313cad36b7f6e5af6efa040a15981a6ffb",
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.12",
-    "@angular/cli": "^18.2.12",
+    "@angular-devkit/build-angular": "^19.0.7",
+    "@angular/cli": "^19.0.7",
     "@angular/compiler": "^19.0.6",
     "@angular/compiler-cli": "^19.0.6",
     "@types/jasmine": "~5.1.0",
