@@ -32,16 +32,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular-devkit/architect@npm:0.1702.1":
-  version: 0.1702.1
-  resolution: "@angular-devkit/architect@npm:0.1702.1"
-  dependencies:
-    "@angular-devkit/core": "npm:17.2.1"
-    rxjs: "npm:7.8.1"
-  checksum: 10c0/ff7f0849dad9e8ee5a92c8707dfacd9266ba65dfe083e5e9e11f1c50c658bc6771179edb412e2181d15d41747eb9c8bc42b2c41b5ed1e22f52d2b5771fc74b5d
-  languageName: node
-  linkType: hard
-
 "@angular-devkit/architect@npm:0.1702.2":
   version: 0.1702.2
   resolution: "@angular-devkit/architect@npm:0.1702.2"
@@ -164,118 +154,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular-devkit/build-angular@npm:^17.2.1":
-  version: 17.2.1
-  resolution: "@angular-devkit/build-angular@npm:17.2.1"
-  dependencies:
-    "@ampproject/remapping": "npm:2.2.1"
-    "@angular-devkit/architect": "npm:0.1702.1"
-    "@angular-devkit/build-webpack": "npm:0.1702.1"
-    "@angular-devkit/core": "npm:17.2.1"
-    "@babel/core": "npm:7.23.9"
-    "@babel/generator": "npm:7.23.6"
-    "@babel/helper-annotate-as-pure": "npm:7.22.5"
-    "@babel/helper-split-export-declaration": "npm:7.22.6"
-    "@babel/plugin-transform-async-generator-functions": "npm:7.23.9"
-    "@babel/plugin-transform-async-to-generator": "npm:7.23.3"
-    "@babel/plugin-transform-runtime": "npm:7.23.9"
-    "@babel/preset-env": "npm:7.23.9"
-    "@babel/runtime": "npm:7.23.9"
-    "@discoveryjs/json-ext": "npm:0.5.7"
-    "@ngtools/webpack": "npm:17.2.1"
-    "@vitejs/plugin-basic-ssl": "npm:1.1.0"
-    ansi-colors: "npm:4.1.3"
-    autoprefixer: "npm:10.4.17"
-    babel-loader: "npm:9.1.3"
-    babel-plugin-istanbul: "npm:6.1.1"
-    browserslist: "npm:^4.21.5"
-    copy-webpack-plugin: "npm:11.0.0"
-    critters: "npm:0.0.20"
-    css-loader: "npm:6.10.0"
-    esbuild: "npm:0.20.0"
-    esbuild-wasm: "npm:0.20.0"
-    fast-glob: "npm:3.3.2"
-    http-proxy-middleware: "npm:2.0.6"
-    https-proxy-agent: "npm:7.0.2"
-    inquirer: "npm:9.2.14"
-    jsonc-parser: "npm:3.2.1"
-    karma-source-map-support: "npm:1.4.0"
-    less: "npm:4.2.0"
-    less-loader: "npm:11.1.0"
-    license-webpack-plugin: "npm:4.0.2"
-    loader-utils: "npm:3.2.1"
-    magic-string: "npm:0.30.7"
-    mini-css-extract-plugin: "npm:2.8.0"
-    mrmime: "npm:2.0.0"
-    open: "npm:8.4.2"
-    ora: "npm:5.4.1"
-    parse5-html-rewriting-stream: "npm:7.0.0"
-    picomatch: "npm:4.0.1"
-    piscina: "npm:4.3.1"
-    postcss: "npm:8.4.35"
-    postcss-loader: "npm:8.1.0"
-    resolve-url-loader: "npm:5.0.0"
-    rxjs: "npm:7.8.1"
-    sass: "npm:1.70.0"
-    sass-loader: "npm:14.1.0"
-    semver: "npm:7.6.0"
-    source-map-loader: "npm:5.0.0"
-    source-map-support: "npm:0.5.21"
-    terser: "npm:5.27.0"
-    tree-kill: "npm:1.2.2"
-    tslib: "npm:2.6.2"
-    undici: "npm:6.6.2"
-    vite: "npm:5.0.12"
-    watchpack: "npm:2.4.0"
-    webpack: "npm:5.90.1"
-    webpack-dev-middleware: "npm:6.1.1"
-    webpack-dev-server: "npm:4.15.1"
-    webpack-merge: "npm:5.10.0"
-    webpack-subresource-integrity: "npm:5.1.0"
-  peerDependencies:
-    "@angular/compiler-cli": ^17.0.0
-    "@angular/localize": ^17.0.0
-    "@angular/platform-server": ^17.0.0
-    "@angular/service-worker": ^17.0.0
-    "@web/test-runner": ^0.18.0
-    browser-sync: ^3.0.2
-    jest: ^29.5.0
-    jest-environment-jsdom: ^29.5.0
-    karma: ^6.3.0
-    ng-packagr: ^17.0.0
-    protractor: ^7.0.0
-    tailwindcss: ^2.0.0 || ^3.0.0
-    typescript: ">=5.2 <5.4"
-  dependenciesMeta:
-    esbuild:
-      optional: true
-  peerDependenciesMeta:
-    "@angular/localize":
-      optional: true
-    "@angular/platform-server":
-      optional: true
-    "@angular/service-worker":
-      optional: true
-    "@web/test-runner":
-      optional: true
-    browser-sync:
-      optional: true
-    jest:
-      optional: true
-    jest-environment-jsdom:
-      optional: true
-    karma:
-      optional: true
-    ng-packagr:
-      optional: true
-    protractor:
-      optional: true
-    tailwindcss:
-      optional: true
-  checksum: 10c0/74f4b56f6aa64b69fed8eb5b1a39ea4cdb3e5a692a7ab1d1b1a48c48e2a22339df9029a0df713c07e92a6ab3ce5f88d3a6fce9c70da7ff84e67ebb1af73b7db2
-  languageName: node
-  linkType: hard
-
 "@angular-devkit/build-webpack@npm:0.1702.0":
   version: 0.1702.0
   resolution: "@angular-devkit/build-webpack@npm:0.1702.0"
@@ -286,19 +164,6 @@ __metadata:
     webpack: ^5.30.0
     webpack-dev-server: ^4.0.0
   checksum: 10c0/96f1515041c35584d7f9dcb68b5433bcb0a3a3c8ce4efa9113f7d902ef23211db266aaf5b368cbb9c844f6a5aa072c30c62d2702d69d8375fbeb772abc54cd6d
-  languageName: node
-  linkType: hard
-
-"@angular-devkit/build-webpack@npm:0.1702.1":
-  version: 0.1702.1
-  resolution: "@angular-devkit/build-webpack@npm:0.1702.1"
-  dependencies:
-    "@angular-devkit/architect": "npm:0.1702.1"
-    rxjs: "npm:7.8.1"
-  peerDependencies:
-    webpack: ^5.30.0
-    webpack-dev-server: ^4.0.0
-  checksum: 10c0/3fe771273bac593941a1afe2a0896a20bc029258c6c13c1df9883eda28168713358b15996d315cda30505b3828084c7ed8dbc79bb1bc0a1573fb4d04e98ab495
   languageName: node
   linkType: hard
 
@@ -321,25 +186,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular-devkit/core@npm:17.2.1":
-  version: 17.2.1
-  resolution: "@angular-devkit/core@npm:17.2.1"
-  dependencies:
-    ajv: "npm:8.12.0"
-    ajv-formats: "npm:2.1.1"
-    jsonc-parser: "npm:3.2.1"
-    picomatch: "npm:4.0.1"
-    rxjs: "npm:7.8.1"
-    source-map: "npm:0.7.4"
-  peerDependencies:
-    chokidar: ^3.5.2
-  peerDependenciesMeta:
-    chokidar:
-      optional: true
-  checksum: 10c0/f458293f6627ff1ad47caed2677617179bb2ac2f38ea26cbe108a6fad83a3b9100a8657b2b8f41681ca63649b2fe031a525dbb8ed9b9c148acce0fc19098a435
-  languageName: node
-  linkType: hard
-
 "@angular-devkit/core@npm:17.2.2":
   version: 17.2.2
   resolution: "@angular-devkit/core@npm:17.2.2"
@@ -356,19 +202,6 @@ __metadata:
     chokidar:
       optional: true
   checksum: 10c0/39ee1946a584a07fcc394006e8c482c946341b3ab3c8a5fb26ada29a2f12b30f34161230ba315c1add79b5602393a4a6f71860960d7d12548c74c2802972b0a7
-  languageName: node
-  linkType: hard
-
-"@angular-devkit/schematics@npm:17.2.1":
-  version: 17.2.1
-  resolution: "@angular-devkit/schematics@npm:17.2.1"
-  dependencies:
-    "@angular-devkit/core": "npm:17.2.1"
-    jsonc-parser: "npm:3.2.1"
-    magic-string: "npm:0.30.7"
-    ora: "npm:5.4.1"
-    rxjs: "npm:7.8.1"
-  checksum: 10c0/596c93b7ddbde63a6b414f8ef6a7e595a425d3342b1396baecf805b9da07a514f7cbadbdc6254554baaa64fd612cfc6cc4eff6ae95fb148d005fb7c0e50b233c
   languageName: node
   linkType: hard
 
@@ -410,34 +243,6 @@ __metadata:
     parse5:
       optional: true
   checksum: 10c0/64ff36a35ac9efe7c118af0c55685908a9478fa212073ae5b7d30e2b7f5c5505954f3afe0f1156984b12b5fe61a21f3758b8217179971d134c6cd1b4056011ff
-  languageName: node
-  linkType: hard
-
-"@angular/cli@npm:^17.2.1":
-  version: 17.2.1
-  resolution: "@angular/cli@npm:17.2.1"
-  dependencies:
-    "@angular-devkit/architect": "npm:0.1702.1"
-    "@angular-devkit/core": "npm:17.2.1"
-    "@angular-devkit/schematics": "npm:17.2.1"
-    "@schematics/angular": "npm:17.2.1"
-    "@yarnpkg/lockfile": "npm:1.1.0"
-    ansi-colors: "npm:4.1.3"
-    ini: "npm:4.1.1"
-    inquirer: "npm:9.2.14"
-    jsonc-parser: "npm:3.2.1"
-    npm-package-arg: "npm:11.0.1"
-    npm-pick-manifest: "npm:9.0.0"
-    open: "npm:8.4.2"
-    ora: "npm:5.4.1"
-    pacote: "npm:17.0.6"
-    resolve: "npm:1.22.8"
-    semver: "npm:7.6.0"
-    symbol-observable: "npm:4.0.0"
-    yargs: "npm:17.7.2"
-  bin:
-    ng: bin/ng.js
-  checksum: 10c0/aec5b8c0d5e6ffa6f2dba404804dad5a4eaff2c9a00fec29af224c8fc332c3f85b88f6fefc0bbc40939f0dd8c95b62448bd246b55f839a5bc216dec7cbb6b308
   languageName: node
   linkType: hard
 
@@ -3634,17 +3439,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ngtools/webpack@npm:17.2.1":
-  version: 17.2.1
-  resolution: "@ngtools/webpack@npm:17.2.1"
-  peerDependencies:
-    "@angular/compiler-cli": ^17.0.0
-    typescript: ">=5.2 <5.4"
-    webpack: ^5.54.0
-  checksum: 10c0/5b8a8e0533465aff80ae2afa09343d9f1faddfb4f76496f62ef75698032cb0992a1e7bfe6f160d0f55bfd806be2b51eaee33b2efd14598896563bce814b05dc5
-  languageName: node
-  linkType: hard
-
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -3861,17 +3655,6 @@ __metadata:
   version: 4.10.0
   resolution: "@rollup/rollup-win32-x64-msvc@npm:4.10.0"
   conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@schematics/angular@npm:17.2.1":
-  version: 17.2.1
-  resolution: "@schematics/angular@npm:17.2.1"
-  dependencies:
-    "@angular-devkit/core": "npm:17.2.1"
-    "@angular-devkit/schematics": "npm:17.2.1"
-    jsonc-parser: "npm:3.2.1"
-  checksum: 10c0/036cb1f35ac97bfd7f766595d440204ff85441abe48fdf1608862036e9165e67019c1f1dda03a0c966a3619f06fd744356598c47afd667cb7e629be8625adfc1
   languageName: node
   linkType: hard
 
@@ -10225,56 +10008,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "rowguide-monorepo@workspace:."
   dependencies:
-    "@angular-devkit/build-angular": "npm:^17.2.1"
-    "@angular/cli": "npm:^17.2.1"
-    "@angular/common": "npm:^17.2.2"
-    "@angular/compiler": "npm:^17.2.2"
-    "@angular/compiler-cli": "npm:^17.2.2"
-    "@angular/core": "npm:^17.2.2"
-    "@angular/platform-browser": "npm:^17.2.2"
-    "@angular/router": "npm:^17.2.2"
     "@capacitor/android": "npm:^5.7.0"
     "@capacitor/cli": "npm:^5.7.0"
     "@capacitor/core": "npm:^5.7.0"
-    "@types/jasmine": "npm:~5.1.0"
-    "@types/node": "npm:^20.11.25"
-    angular-file: "npm:^4.0.2"
     dmg-builder: "npm:^24.13.0"
     electron: "npm:^28.2.2"
     electron-builder: "npm:24.9.1"
     iconv-corefoundation: "npm:^1.1.7"
-    jasmine-core: "npm:~5.1.0"
-    karma: "npm:~6.4.0"
-    karma-chrome-launcher: "npm:~3.2.0"
-    karma-coverage: "npm:~2.2.0"
-    karma-jasmine: "npm:~5.1.0"
-    karma-jasmine-html-reporter: "npm:~2.1.0"
-    ngx-logger: "npm:^5.0.12"
-    rxjs: "npm:^7.8.1"
-    tslib: "npm:^2.6.2"
     typescript: "npm:~5.3.2"
-    zone.js: "npm:^0.14.4"
-  dependenciesMeta:
-    "@angular-devkit/build-angular@17.2.0":
-      unplugged: true
-    "@angular/common@17.2.0":
-      unplugged: true
-    "@angular/core@17.2.0":
-      unplugged: true
-    "@angular/platform-browser@17.2.0":
-      unplugged: true
-    "@angular/router@17.2.0":
-      unplugged: true
-    app-builder-lib@24.13.0:
-      unplugged: true
-    app-builder-lib@24.9.1:
-      unplugged: true
-    ngx-logger@5.0.12:
-      unplugged: true
-    rxjs@7.8.1:
-      unplugged: true
-    tslib@2.6.2:
-      unplugged: true
   languageName: unknown
   linkType: soft
 
@@ -10295,9 +10036,18 @@ __metadata:
     "@angular/platform-browser": "npm:^17.2.2"
     "@angular/platform-browser-dynamic": "npm:^17.2.2"
     "@angular/router": "npm:^17.2.2"
+    "@types/jasmine": "npm:~5.1.0"
+    "@types/node": "npm:^20.11.25"
     "@types/pako": "npm:^2"
+    angular-file: "npm:^4.0.2"
     idb: "npm:^8.0.0"
+    jasmine-core: "npm:~5.1.0"
     js-file-download: "npm:^0.4.12"
+    karma: "npm:~6.4.0"
+    karma-chrome-launcher: "npm:~3.2.0"
+    karma-coverage: "npm:~2.2.0"
+    karma-jasmine: "npm:~5.1.0"
+    karma-jasmine-html-reporter: "npm:~2.1.0"
     log4js: "npm:^6.9.1"
     ngx-logger: "npm:^5.0.12"
     pako: "npm:^2.1.0"
@@ -11952,7 +11702,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zone.js@npm:^0.14.4, zone.js@npm:~0.14.3":
+"zone.js@npm:~0.14.3":
   version: 0.14.4
   resolution: "zone.js@npm:0.14.4"
   dependencies:
