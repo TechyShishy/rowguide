@@ -12,15 +12,12 @@ import { SettingsService } from './settings.service';
 export class ProjectService {
   project: Project;
   ready: Subject<boolean> = new Subject<boolean>();
-  currentPosition$: BehaviorSubject<Position> = new BehaviorSubject<Position>({
-    row: 0,
-    step: 0,
-  });
-  currentPositionRow$: BehaviorSubject<number> = new BehaviorSubject(
-    this.currentPosition$.value.row
+  currentPosition: Position = <Position>{ row: 0, step: 0 };
+  currentPositionRow$: BehaviorSubject<number> = new BehaviorSubject<number>(
+    this.currentPosition.row
   );
-  currentPositionStep$: BehaviorSubject<number> = new BehaviorSubject(
-    this.currentPosition$.value.step
+  currentPositionStep$: BehaviorSubject<number> = new BehaviorSubject<number>(
+    this.currentPosition.step
   );
   currentStep!: StepComponent;
   constructor(
@@ -40,7 +37,8 @@ export class ProjectService {
         position: <Position>{ row: row, step: step },
       })
     );
-    this.currentPosition$.next(<Position>{ row: row, step: step });
+    this.currentPositionRow$.next(row);
+    this.currentPositionStep$.next(step);
   }
   loadCurrentPosition(): Position | null {
     const parsed = this._loadCurrentProject();
