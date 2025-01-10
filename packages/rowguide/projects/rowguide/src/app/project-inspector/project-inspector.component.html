@@ -35,11 +35,11 @@
   <mat-card-content>
     <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector">
-        <mat-list-item>{{ projectService.currentPosition.row }}, {{ projectService.currentPosition.step }}</mat-list-item>
+        <mat-list-item>{{ projectService.currentPositionRow$ }}, {{ projectService.currentPositionStep$ }}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector">
-        <mat-list-item>Row: {{ projectService.currentPosition.row + 1 }}</mat-list-item>
-        <mat-list-item>Step: {{ projectService.currentPosition.step + 1 }}</mat-list-item>
+        <mat-list-item>Row: {{ ( ( projectService.currentPositionRow$ | async ) ?? 0 ) + 1 }}</mat-list-item>
+        <mat-list-item>Step: {{ ( ( projectService.currentPositionStep$ | async ) ?? 0 ) + 1 }}</mat-list-item>
         </ng-template>
         </mat-list>
         </mat-card-content>

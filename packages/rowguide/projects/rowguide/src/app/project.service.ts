@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Project } from './project';
-import { Subject } from 'rxjs';
+import { Subject, BehaviorSubject } from 'rxjs';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { NullProject } from './null-project';
 import { StepComponent } from './step/step.component';
@@ -12,7 +12,16 @@ import { SettingsService } from './settings.service';
 export class ProjectService {
   project: Project;
   ready: Subject<boolean> = new Subject<boolean>();
-  currentPosition: Position = { row: 0, step: 0 };
+  currentPosition$: BehaviorSubject<Position> = new BehaviorSubject<Position>({
+    row: 0,
+    step: 0,
+  });
+  currentPositionRow$: BehaviorSubject<number> = new BehaviorSubject(
+    this.currentPosition$.value.row
+  );
+  currentPositionStep$: BehaviorSubject<number> = new BehaviorSubject(
+    this.currentPosition$.value.step
+  );
   currentStep!: StepComponent;
   constructor(
     private peyoteShorthandService: PeyoteShorthandService,
@@ -31,7 +40,7 @@ export class ProjectService {
         position: <Position>{ row: row, step: step },
       })
     );
-    this.currentPosition = <Position>{ row: row, step: step };
+    this.currentPosition$.next(<Position>{ row: row, step: step });
   }
   loadCurrentPosition(): Position | null {
     const parsed = this._loadCurrentProject();
