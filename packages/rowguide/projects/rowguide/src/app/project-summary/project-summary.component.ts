@@ -13,17 +13,16 @@ import { gzip } from 'pako';
 import { FlamService } from '../flam.service';
 
 @Component({
-  selector: 'app-project-summary',
-  standalone: true,
-  imports: [
-    MatExpansionModule,
-    MatCardModule,
-    MatInputModule,
-    FormsModule,
-    MatButtonModule,
-  ],
-  templateUrl: './project-summary.component.html',
-  styleUrl: './project-summary.component.scss',
+    selector: 'app-project-summary',
+    imports: [
+        MatExpansionModule,
+        MatCardModule,
+        MatInputModule,
+        FormsModule,
+        MatButtonModule,
+    ],
+    templateUrl: './project-summary.component.html',
+    styleUrl: './project-summary.component.scss'
 })
 export class ProjectSummaryComponent {
   @Input() project!: Project;

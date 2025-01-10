@@ -15,11 +15,10 @@ import { FlamService } from '../flam.service';
 import { SettingsService } from '../settings.service';
 
 @Component({
-  selector: 'app-step',
-  standalone: true,
-  imports: [MatChipsModule],
-  templateUrl: './step.component.html',
-  styleUrl: './step.component.scss',
+    selector: 'app-step',
+    imports: [MatChipsModule],
+    templateUrl: './step.component.html',
+    styleUrl: './step.component.scss'
 })
 export class StepComponent implements HierarchicalList {
   @Input() step!: Step;

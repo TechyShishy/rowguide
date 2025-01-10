@@ -10,11 +10,10 @@ import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 
 @Component({
-  selector: 'app-project-inspector',
-  standalone: true,
-  imports: [CommonModule, MatCardModule, MatListModule],
-  templateUrl: './project-inspector.component.html',
-  styleUrls: ['./project-inspector.component.scss'],
+    selector: 'app-project-inspector',
+    imports: [CommonModule, MatCardModule, MatListModule],
+    templateUrl: './project-inspector.component.html',
+    styleUrls: ['./project-inspector.component.scss']
 })
 export class ProjectInspectorComponent implements OnInit {
   flam: Array<FLAMRow> = [];

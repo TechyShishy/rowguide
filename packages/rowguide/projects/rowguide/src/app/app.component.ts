@@ -9,19 +9,18 @@ import { ProjectService } from './project.service';
 import { Project } from './project';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [
-    RouterOutlet,
-    ProjectComponent,
-    ProjectSelectorComponent,
-    ProjectInspectorComponent,
-    SettingsComponent,
-    MatTabGroup,
-    MatTab,
-  ],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+    selector: 'app-root',
+    imports: [
+        RouterOutlet,
+        ProjectComponent,
+        ProjectSelectorComponent,
+        ProjectInspectorComponent,
+        SettingsComponent,
+        MatTabGroup,
+        MatTab,
+    ],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'rowguide';

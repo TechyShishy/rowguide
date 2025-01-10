@@ -25,18 +25,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { ProjectComponent } from '../project/project.component';
 
 @Component({
-  selector: 'app-row',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatExpansionModule,
-    MatChipsModule,
-    StepComponent,
-  ],
-  templateUrl: './row.component.html',
-  styleUrls: ['./row.component.scss'],
+    selector: 'app-row',
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        MatCardModule,
+        MatExpansionModule,
+        MatChipsModule,
+        StepComponent,
+    ],
+    templateUrl: './row.component.html',
+    styleUrls: ['./row.component.scss']
 })
 export class RowComponent implements HierarchicalList, AfterViewInit {
   @Input() row!: Row;

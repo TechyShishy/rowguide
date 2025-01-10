@@ -11,16 +11,15 @@ import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 
 @Component({
-  selector: 'app-settings',
-  standalone: true,
-  imports: [
-    FormsModule,
-    MatSlideToggleModule,
-    ReactiveFormsModule,
-    MatCardModule,
-  ],
-  templateUrl: './settings.component.html',
-  styleUrl: './settings.component.scss',
+    selector: 'app-settings',
+    imports: [
+        FormsModule,
+        MatSlideToggleModule,
+        ReactiveFormsModule,
+        MatCardModule,
+    ],
+    templateUrl: './settings.component.html',
+    styleUrl: './settings.component.scss'
 })
 export class SettingsComponent {
   combine12Control = new FormControl(false);

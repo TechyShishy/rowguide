@@ -22,17 +22,16 @@ import { sanity } from '../sanity';
 import { Step } from '../step';
 
 @Component({
-  selector: 'app-project',
-  standalone: true,
-  imports: [
-    NgFor,
-    RowComponent,
-    MatButtonModule,
-    MatCardModule,
-    MatExpansionModule,
-  ],
-  templateUrl: './project.component.html',
-  styleUrl: './project.component.scss',
+    selector: 'app-project',
+    imports: [
+        NgFor,
+        RowComponent,
+        MatButtonModule,
+        MatCardModule,
+        MatExpansionModule,
+    ],
+    templateUrl: './project.component.html',
+    styleUrl: './project.component.scss'
 })
 export class ProjectComponent implements HierarchicalList {
   rows!: Array<Row>;

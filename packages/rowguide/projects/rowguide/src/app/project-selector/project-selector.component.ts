@@ -17,21 +17,20 @@ import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
 
 @Component({
-  selector: 'app-project-selector',
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    ngfModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatCardModule,
-    FormsModule,
-    CommonModule,
-    ProjectSummaryComponent,
-    MatExpansionModule,
-  ],
-  templateUrl: './project-selector.component.html',
-  styleUrl: './project-selector.component.scss',
+    selector: 'app-project-selector',
+    imports: [
+        MatButtonModule,
+        ngfModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatCardModule,
+        FormsModule,
+        CommonModule,
+        ProjectSummaryComponent,
+        MatExpansionModule,
+    ],
+    templateUrl: './project-selector.component.html',
+    styleUrl: './project-selector.component.scss'
 })
 export class ProjectSelectorComponent {
   file: File = new File([], '');
