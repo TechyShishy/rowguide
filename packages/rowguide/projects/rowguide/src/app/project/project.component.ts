@@ -20,18 +20,19 @@ import { SettingsService } from '../settings.service';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { sanity } from '../sanity';
 import { Step } from '../step';
+import { Position } from '../position';
 
 @Component({
-    selector: 'app-project',
-    imports: [
-        NgFor,
-        RowComponent,
-        MatButtonModule,
-        MatCardModule,
-        MatExpansionModule,
-    ],
-    templateUrl: './project.component.html',
-    styleUrl: './project.component.scss'
+  selector: 'app-project',
+  imports: [
+    NgFor,
+    RowComponent,
+    MatButtonModule,
+    MatCardModule,
+    MatExpansionModule,
+  ],
+  templateUrl: './project.component.html',
+  styleUrl: './project.component.scss',
 })
 export class ProjectComponent implements HierarchicalList {
   rows!: Array<Row>;
@@ -62,12 +63,13 @@ export class ProjectComponent implements HierarchicalList {
   }
   private initialized = false;
 
-  ngAfterViewChecked() {
+  async ngAfterViewChecked() {
     if (this.initialized) {
       return;
     }
 
-    const currentPosition = this.projectService.loadCurrentPosition();
+    let currentPosition: Position = <Position>{ row: 0, step: 0 };
+    //currentPosition = await this.projectService.loadCurrentPosition() ?? <Position>{ row: 0, step: 0 };
 
     if (currentPosition) {
       const currRow = this.children.get(currentPosition.row);
@@ -83,7 +85,8 @@ export class ProjectComponent implements HierarchicalList {
         return;
       }
       this.currentStep = currStep;
-      const isLastStepInRow = this.currentStep.index === this.currentStep.row.children.length - 1;
+      const isLastStepInRow =
+        this.currentStep.index === this.currentStep.row.children.length - 1;
       if (isLastStepInRow) {
         this.doStepBackward();
         this.doStepForward();

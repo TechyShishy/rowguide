@@ -15,22 +15,23 @@ import { IndexedDBService } from '../indexed-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
+import { ProjectDbService } from '../project-db.service';
 
 @Component({
-    selector: 'app-project-selector',
-    imports: [
-        MatButtonModule,
-        ngfModule,
-        MatInputModule,
-        MatFormFieldModule,
-        MatCardModule,
-        FormsModule,
-        CommonModule,
-        ProjectSummaryComponent,
-        MatExpansionModule,
-    ],
-    templateUrl: './project-selector.component.html',
-    styleUrl: './project-selector.component.scss'
+  selector: 'app-project-selector',
+  imports: [
+    MatButtonModule,
+    ngfModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatCardModule,
+    FormsModule,
+    CommonModule,
+    ProjectSummaryComponent,
+    MatExpansionModule,
+  ],
+  templateUrl: './project-selector.component.html',
+  styleUrl: './project-selector.component.scss',
 })
 export class ProjectSelectorComponent {
   file: File = new File([], '');
@@ -42,7 +43,8 @@ export class ProjectSelectorComponent {
     private projectService: ProjectService,
     private indexedDBService: IndexedDBService,
     private flamService: FlamService,
-    private beadtoolPdfService: BeadtoolPdfService
+    private beadtoolPdfService: BeadtoolPdfService,
+    private projectDbService: ProjectDbService
   ) {}
   async importFile() {
     const buffer = await this.file.arrayBuffer();
@@ -65,11 +67,18 @@ export class ProjectSelectorComponent {
       bufHeader[3] === pdfHeader[3]
     ) {
       this.logger.debug('PDF file detected');
-      this.fileData = await this.beadtoolPdfService.loadDocument(buffer);
+      const bufferCopy = buffer.slice(0); // Ensure the buffer is not detached
+      const bufferCopy2 = buffer.slice(0); // Ensure the buffer is not detached
+      this.fileData = await this.beadtoolPdfService.loadDocument(bufferCopy);
       if (this.fileData !== '') {
-        this.saveProjectToIndexedDB(
-          this.projectService.loadPeyote(this.file.name, this.fileData)
+        const project = this.projectService.loadPeyote(
+          this.file.name,
+          this.fileData
         );
+        project.image = await this.beadtoolPdfService.renderFrontPage(
+          bufferCopy2
+        );
+        this.saveProjectToIndexedDB(project);
         this.flamService.inititalizeFLAM(true);
         this.loadProjectsFromIndexedDB();
       } else {
@@ -95,7 +104,7 @@ export class ProjectSelectorComponent {
   }
 
   async loadProjectsFromIndexedDB() {
-    this.projects = await this.indexedDBService.loadProjects();
+    this.projects = await this.projectDbService.getProjects();
   }
 
   ngAfterViewInit() {

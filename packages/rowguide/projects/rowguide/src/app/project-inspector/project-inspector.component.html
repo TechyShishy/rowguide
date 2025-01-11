@@ -41,7 +41,13 @@
       <ng-template [ngIf]="settingsService.ppinspector">
         <mat-list-item>Row: {{ ( ( projectService.currentPositionRow$ | async ) ?? 0 ) + 1 }}</mat-list-item>
         <mat-list-item>Step: {{ ( ( projectService.currentPositionStep$ | async ) ?? 0 ) + 1 }}</mat-list-item>
-        </ng-template>
-        </mat-list>
-        </mat-card-content>
+      </ng-template>
+      </mat-list>
+      </mat-card-content>
+</mat-card>
+<mat-card class="project-image">
+  <mat-card-title>Project Image</mat-card-title>
+  <mat-card-content>
+    <img [src]="image$ | async">
+  </mat-card-content>
 </mat-card>

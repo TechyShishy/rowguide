@@ -21,9 +21,10 @@ export class BeadtoolPdfService {
 
     for (let i = 1; i <= pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i);
-      const textContent: { items: (TextItem | TextMarkedContent)[] } = await page.getTextContent({
-        includeMarkedContent: false,
-      });
+      const textContent: { items: (TextItem | TextMarkedContent)[] } =
+        await page.getTextContent({
+          includeMarkedContent: false,
+        });
       const pageText: string = textContent.items
         .map((item: TextItem | TextMarkedContent) => {
           const textItem = item as TextItem;
@@ -49,6 +50,50 @@ export class BeadtoolPdfService {
       return rgsFileText;
     } else {
       return '';
+    }
+  }
+
+  async renderFrontPage(buffer: ArrayBuffer): Promise<ArrayBuffer> {
+    const loadingTask = this.pdfJsLibService.getDocument({
+      data: buffer,
+    });
+    const pdfDoc = await loadingTask.promise;
+    const page = await pdfDoc.getPage(1);
+    const viewport = page.getViewport({
+      offsetX: 0,
+      offsetY: 0,
+      scale: 1,
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const canvasContext = canvas.getContext('2d');
+    if (canvasContext) {
+      const renderedPage = page.render({ canvasContext, viewport });
+      await renderedPage.promise;
+      this.logger.debug('Rendered page to canvas');
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              if (reader.result) {
+                resolve(reader.result as ArrayBuffer);
+              } else {
+                this.logger.error('Failed to read blob as ArrayBuffer');
+                reject('Failed to read blob as ArrayBuffer');
+              }
+            };
+            reader.readAsArrayBuffer(blob);
+          } else {
+            this.logger.error('Failed to create blob from canvas');
+            reject('Failed to create blob from canvas');
+          }
+        });
+      });
+    } else {
+      this.logger.error('Failed to get canvas context');
+      return Promise.reject('Failed to get canvas context');
     }
   }
 }

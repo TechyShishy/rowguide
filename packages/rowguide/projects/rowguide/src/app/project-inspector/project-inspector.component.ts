@@ -12,6 +12,8 @@ import { MatListModule } from '@angular/material/list';
 import { SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
+import { ProjectDbService } from '../project-db.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-project-inspector',
@@ -21,17 +23,19 @@ import { NGXLogger } from 'ngx-logger';
 })
 export class ProjectInspectorComponent implements OnInit {
   flam: Array<FLAMRow> = [];
+  image$: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   constructor(
     public flamService: FlamService,
     public settingsService: SettingsService,
     public projectService: ProjectService,
     public logger: NGXLogger,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private projectDbService: ProjectDbService
   ) {}
 
   ngOnInit() {
-    this.flamService.inititalizeFLAM(true);
+    //this.flamService.inititalizeFLAM(true);
     this.flam = Object.values(this.flamService.flam);
 
     // Subscribe to observables and mark for check
@@ -41,5 +45,26 @@ export class ProjectInspectorComponent implements OnInit {
     this.projectService.currentPositionStep$.subscribe(() => {
       this.cdr.detectChanges();
     });
+    this.projectService.project$.subscribe(async () => {
+      //this.logger.debug('Project ID: ', this.projectService.project$.value.id);
+      await this.loadProjectImage();
+    });
+  }
+
+  private async loadProjectImage() {
+    const project = await this.projectDbService.getProject(
+      this.projectService.project.id ?? 0
+    );
+    this.logger.debug('Project: ', project);
+    if (project?.image) {
+      this.logger.debug('Byte Length: ', project.image);
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.image$.next(reader.result as string);
+        this.logger.debug('Image Data URL:', reader.result as string);
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(new Blob([project.image], { type: 'image/png' }));
+    }
   }
 }
