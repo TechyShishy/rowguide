@@ -18,7 +18,7 @@ export class FlamService {
 
   inititalizeFLAM(force: boolean = false) {
     if (force == false && Object.keys(this.flam).length != 0) return;
-    this.flam = this.generateFLAM(this.projectService.project);
+    this.flam = this.generateFLAM(this.projectService.project$.value);
   }
 
   generateFLAM(project: Project): FLAM {
@@ -38,7 +38,7 @@ export class FlamService {
         }
       }
     }
-    this.logger.debug('Generated FLAM:', JSON.stringify(flam));
+    this.logger.trace('Generated FLAM:', JSON.stringify(flam));
     return flam;
   }
 

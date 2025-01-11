@@ -14,9 +14,8 @@ import { IndexedDBService } from './indexed-db.service';
   providedIn: 'root',
 })
 export class ProjectService {
-  project: Project = new NullProject();
   project$: BehaviorSubject<Project> = new BehaviorSubject<Project>(
-    this.project
+    new NullProject()
   );
   ready: Subject<boolean> = new Subject<boolean>();
   currentPosition: Position = <Position>{ row: 0, step: 0 };
@@ -41,10 +40,10 @@ export class ProjectService {
   saveCurrentPosition(row: number, step: number) {
     localStorage.setItem(
       'currentProject',
-      JSON.stringify(<CurrentProject>{ id: this.project.id })
+      JSON.stringify(<CurrentProject>{ id: this.project$.value.id })
     );
 
-    this.indexedDBService.addProject(this.project);
+    this.indexedDBService.addProject(this.project$.value);
     this.currentPositionRow$.next(row);
     this.currentPositionStep$.next(step);
   }
@@ -53,7 +52,7 @@ export class ProjectService {
     if (!parsed) {
       return null;
     }
-    if (this.project.id !== parsed.id) {
+    if (this.project$.value.id !== parsed.id) {
       return null;
     }
     const position = (await this.projectDbService.getProject(parsed.id))
@@ -80,18 +79,19 @@ export class ProjectService {
       return;
     }
     this.logger.debug('Current Project: ', currentProject.id);
-    this.project =
+    this.project$.next(
       (await this.projectDbService.getProject(currentProject.id ?? 0)) ??
-      new NullProject();
+        new NullProject()
+    );
     //this.project = currentProject.project;
-    this.project$.next(this.project);
     this.ready.next(true);
   }
   loadPeyote(projectName: string, data: string): Project {
-    this.project = this.peyoteShorthandService.toRGP(data, ', ');
-    this.project.name = projectName;
+    const project = this.peyoteShorthandService.toRGP(data, ', ');
+    project.name = projectName;
+    this.project$.next(project);
     this.ready.next(true);
-    return this.project;
+    return this.project$.value;
   }
 }
 

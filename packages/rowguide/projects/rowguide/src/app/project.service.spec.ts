@@ -48,7 +48,7 @@ describe('ProjectService', () => {
   });
 
   it('should initialize with a NullProject', () => {
-    expect(service.project).toBeInstanceOf(NullProject);
+    expect(service.project$.value).toBeInstanceOf(NullProject);
   });
 
   it('should save the current position', () => {
@@ -87,7 +87,7 @@ describe('ProjectService', () => {
       JSON.stringify({ project, position: { row: 1, step: 2 } })
     );
     service.loadCurrentProject();
-    expect(service.project).toEqual(jasmine.objectContaining(project));
+    expect(service.project$.value).toEqual(jasmine.objectContaining(project));
   });
 
   it('should load Peyote project', () => {
@@ -98,7 +98,7 @@ describe('ProjectService', () => {
 
     service.loadPeyote(projectName, data);
 
-    expect(service.project).toEqual(project);
-    expect(service.project.name).toBe(projectName);
+    expect(service.project$.value).toEqual(project);
+    expect(service.project$.value.name).toBe(projectName);
   });
 });

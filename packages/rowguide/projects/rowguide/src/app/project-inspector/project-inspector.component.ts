@@ -53,15 +53,12 @@ export class ProjectInspectorComponent implements OnInit {
 
   private async loadProjectImage() {
     const project = await this.projectDbService.getProject(
-      this.projectService.project.id ?? 0
+      this.projectService.project$.value.id ?? 0
     );
-    this.logger.debug('Project: ', project);
     if (project?.image) {
-      this.logger.debug('Byte Length: ', project.image);
       const reader = new FileReader();
       reader.onload = () => {
         this.image$.next(reader.result as string);
-        this.logger.debug('Image Data URL:', reader.result as string);
         this.cdr.detectChanges();
       };
       reader.readAsDataURL(new Blob([project.image], { type: 'image/png' }));

@@ -20,12 +20,12 @@
     <mat-card-content>
       <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector">
-        <mat-list-item>Name: {{projectService.project.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project.rows.length + 1}}</mat-list-item>
+        <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector">
-        <mat-list-item>Name: {{projectService.project.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project.rows.length + 1}}</mat-list-item>
+        <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
       </ng-template>
     </mat-list>
   </mat-card-content>
