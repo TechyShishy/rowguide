@@ -18,13 +18,6 @@ export class ProjectService {
     new NullProject()
   );
   ready: Subject<boolean> = new Subject<boolean>();
-  currentPosition: Position = <Position>{ row: 0, step: 0 };
-  currentPositionRow$: BehaviorSubject<number> = new BehaviorSubject<number>(
-    this.currentPosition.row
-  );
-  currentPositionStep$: BehaviorSubject<number> = new BehaviorSubject<number>(
-    this.currentPosition.step
-  );
   currentStep!: StepComponent;
   constructor(
     private peyoteShorthandService: PeyoteShorthandService,
@@ -42,10 +35,10 @@ export class ProjectService {
       'currentProject',
       JSON.stringify(<CurrentProject>{ id: this.project$.value.id })
     );
-
-    this.indexedDBService.addProject(this.project$.value);
-    this.currentPositionRow$.next(row);
-    this.currentPositionStep$.next(step);
+    let project = this.project$.value;
+    project.position = { row, step };
+    this.project$.next(project);
+    this.indexedDBService.updateProject(this.project$.value);
   }
   async loadCurrentPosition(): Promise<Position | null> {
     const parsed = this._loadCurrentProject();
@@ -78,11 +71,11 @@ export class ProjectService {
     if (!currentProject) {
       return;
     }
-    this.logger.debug('Current Project: ', currentProject.id);
-    this.project$.next(
-      (await this.projectDbService.getProject(currentProject.id ?? 0)) ??
-        new NullProject()
-    );
+    const project =
+      (await this.projectDbService.getProject(currentProject.id)) ??
+      new NullProject();
+
+    this.project$.next(project);
     //this.project = currentProject.project;
     this.ready.next(true);
   }

@@ -37,15 +37,7 @@ export class ProjectInspectorComponent implements OnInit {
   ngOnInit() {
     //this.flamService.inititalizeFLAM(true);
     this.flam = Object.values(this.flamService.flam);
-
-    // Subscribe to observables and mark for check
-    this.projectService.currentPositionRow$.subscribe(() => {
-      this.cdr.detectChanges();
-    });
-    this.projectService.currentPositionStep$.subscribe(() => {
-      this.cdr.detectChanges();
-    });
-    this.projectService.project$.subscribe(async () => {
+    this.projectService.ready.subscribe(async () => {
       //this.logger.debug('Project ID: ', this.projectService.project$.value.id);
       await this.loadProjectImage();
     });

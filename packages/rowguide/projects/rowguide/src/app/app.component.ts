@@ -29,7 +29,7 @@ export class AppComponent {
 
   constructor(
     public projectService: ProjectService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.projectService.ready.subscribe((ready) => {
       this.cdr.detectChanges();

@@ -54,12 +54,14 @@ export class ProjectComponent implements HierarchicalList {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.rows = [];
     this.projectService.ready.subscribe(() => {
       this.rows = this.projectService.project$.value.rows;
     });
-    this.projectService.loadCurrentProject();
+
+    await this.projectService.loadCurrentProject();
+
   }
   private initialized = false;
 
@@ -68,18 +70,19 @@ export class ProjectComponent implements HierarchicalList {
       return;
     }
 
-    let currentPosition: Position = <Position>{ row: 0, step: 0 };
-    //currentPosition = await this.projectService.loadCurrentPosition() ?? <Position>{ row: 0, step: 0 };
-
-    if (currentPosition) {
-      const currRow = this.children.get(currentPosition.row);
+    if (this.projectService.project$.value.position?.row !== 0) {
+      const currRow = this.children.get(
+        this.projectService.project$.value.position?.row ?? 0
+      );
 
       if (currRow === null || currRow === undefined) {
         return;
       }
 
       currRow.show();
-      const currStep = currRow.children.get(currentPosition.step);
+      const currStep = currRow.children.get(
+        this.projectService.project$.value.position?.step ?? 0
+      );
 
       if (currStep === null || currStep === undefined) {
         return;
@@ -97,6 +100,7 @@ export class ProjectComponent implements HierarchicalList {
       this.cdr.detectChanges();
       this.initialized = true;
     }
+    //
   }
   onAdvanceRow() {
     this.doRowForward();
