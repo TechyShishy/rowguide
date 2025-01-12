@@ -57,11 +57,9 @@ export class StepComponent implements HierarchicalList {
     }
 
     this.settingsService.zoom$.subscribe((value) => {
-      this.logger.debug(value);
       this.isZoomed = value;
     });
     this.isZoomed = this.settingsService.zoom$.value;
-    this.logger.debug('isZoomed: ', this.isZoomed);
   }
 
   @HostListener('click', ['$event'])

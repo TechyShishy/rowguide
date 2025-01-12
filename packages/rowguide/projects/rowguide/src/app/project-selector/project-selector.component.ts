@@ -56,7 +56,7 @@ export class ProjectSelectorComponent {
       const decoder = new TextDecoder();
       const projectString = decoder.decode(projectArray);
       const importProject = JSON.parse(projectString);
-      this.saveProjectToIndexedDB(importProject);
+      this.indexedDBService.updateProject(importProject);
       this.loadProjectsFromIndexedDB();
     } else if (
       bufHeader[0] === pdfHeader[0] &&

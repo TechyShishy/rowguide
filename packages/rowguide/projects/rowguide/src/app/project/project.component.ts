@@ -90,13 +90,7 @@ export class ProjectComponent implements HierarchicalList {
       this.currentStep = currStep;
       const isLastStepInRow =
         this.currentStep.index === this.currentStep.row.children.length - 1;
-      if (isLastStepInRow) {
-        this.doStepBackward();
-        this.doStepForward();
-      } else {
-        this.doStepForward();
-        this.doStepBackward();
-      }
+        this.currentStep.onClick(new Event('click'));
       this.cdr.detectChanges();
       this.initialized = true;
     }
