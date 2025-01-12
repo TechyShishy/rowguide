@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { BehaviorSubject } from 'rxjs';
 
 import { FlamService } from './flam.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
@@ -19,28 +20,31 @@ describe('FlamService', () => {
         {
           provide: ProjectService,
           useValue: {
-            project: {
+            project$: new BehaviorSubject<Project>({
               rows: [
                 {
+                  id: 1,
                   steps: [
                     { id: 1, count: 1, description: 'Step A' },
                     { id: 2, count: 1, description: 'Step B' },
                   ],
                 },
                 {
+                  id: 2,
                   steps: [
                     { id: 1, count: 2, description: 'Step A' },
                     { id: 2, count: 1, description: 'Step B' },
                   ],
                 },
                 {
+                  id: 3,
                   steps: [
                     { id: 1, count: 4, description: 'Step A' },
                     { id: 2, count: 1, description: 'Step C' },
                   ],
                 },
               ],
-            },
+            }),
           },
         },
       ],

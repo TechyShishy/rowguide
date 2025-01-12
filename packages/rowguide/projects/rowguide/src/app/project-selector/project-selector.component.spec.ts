@@ -7,7 +7,7 @@ import { FlamService } from '../flam.service';
 import { NGXLogger } from 'ngx-logger';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import * as pako from 'pako';
 import { Project } from '../project';
 
@@ -24,9 +24,11 @@ describe('ProjectSelectorComponent', () => {
     indexedDBServiceSpy = jasmine.createSpyObj('IndexedDBService', [
       'loadProjects',
       'addProject',
+      'updateProject',
     ]);
     beadtoolPdfServiceSpy = jasmine.createSpyObj('BeadtoolPdfService', [
       'loadDocument',
+      'renderFrontPage',
     ]);
     flamServiceSpy = jasmine.createSpyObj('FlamService', ['inititalizeFLAM']);
 
@@ -95,17 +97,16 @@ describe('ProjectSelectorComponent', () => {
     beadtoolPdfServiceSpy.loadDocument.and.returnValue(
       Promise.resolve('PDF file content')
     );
-    projectServiceSpy.loadPeyote.and.returnValue({
-      rows: [
-        {
-          id: 1,
-          steps: [
-            { id: 1, count: 1, description: 'Step A' },
-            { id: 2, count: 1, description: 'Step B' },
-          ],
-        },
-      ],
+    beadtoolPdfServiceSpy.renderFrontPage.and.returnValue(
+      Promise.resolve(new ArrayBuffer(0))
+    );
+
+    projectServiceSpy.project$ = new BehaviorSubject<Project>({
+      id: 1,
+      name: 'Test Project',
+      rows: [],
     });
+    projectServiceSpy.ready = new Subject<boolean>();
 
     await component.importFile();
 
@@ -115,7 +116,7 @@ describe('ProjectSelectorComponent', () => {
       'PDF file content'
     );
     expect(flamServiceSpy.inititalizeFLAM).toHaveBeenCalledWith(true);
-    expect(indexedDBServiceSpy.addProject).toHaveBeenCalled();
+    expect(indexedDBServiceSpy.updateProject).toHaveBeenCalled();
   });
 
   it('should process plain text file', async () => {
@@ -123,7 +124,6 @@ describe('ProjectSelectorComponent', () => {
     component.file = mockFile;
 
     const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
-    projectServiceSpy.loadPeyote.and.returnValue(mockProject);
 
     await component.importFile();
 

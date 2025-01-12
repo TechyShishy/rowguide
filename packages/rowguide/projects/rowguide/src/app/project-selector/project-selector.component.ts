@@ -101,11 +101,11 @@ export class ProjectSelectorComponent {
   }
 
   async loadProjectsFromIndexedDB() {
-    this.projects = await this.projectDbService.getProjects();
+    this.projects = await this.indexedDBService.loadProjects();
   }
 
-  ngAfterViewInit() {
-    this.loadProjectsFromIndexedDB();
+  async ngAfterViewInit() {
+    await this.loadProjectsFromIndexedDB();
   }
   saveProjectToIndexedDB(project: Project) {
     this.indexedDBService.addProject(project);

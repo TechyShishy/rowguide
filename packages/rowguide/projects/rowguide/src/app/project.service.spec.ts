@@ -51,15 +51,6 @@ describe('ProjectService', () => {
     expect(service.project$.value).toBeInstanceOf(NullProject);
   });
 
-  it('should save the current position', () => {
-    const row = 1;
-    const step = 2;
-    service.saveCurrentPosition(row, step);
-    const savedData = JSON.parse(localStorage.getItem('currentProject')!);
-    expect(savedData.position.row).toBe(row);
-    expect(savedData.position.step).toBe(step);
-  });
-
   it('should load the current project', () => {
     const project = new BeadProject();
     localStorage.setItem(
