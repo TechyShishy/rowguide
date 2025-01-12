@@ -40,22 +40,7 @@ export class ProjectService {
     this.project$.next(project);
     this.indexedDBService.updateProject(this.project$.value);
   }
-  async loadCurrentPosition(): Promise<Position | null> {
-    const parsed = this._loadCurrentProject();
-    if (!parsed) {
-      return null;
-    }
-    if (this.project$.value.id !== parsed.id) {
-      return null;
-    }
-    const position = (await this.projectDbService.getProject(parsed.id))
-      ?.position;
-    if (!position) {
-      return null;
-    }
-    return position;
-  }
-  _loadCurrentProject(): CurrentProject | null {
+  loadCurrentProjectId(): CurrentProject | null {
     const data = localStorage.getItem('currentProject');
     if (!data) {
       return null;
@@ -67,7 +52,7 @@ export class ProjectService {
     return parsed;
   }
   async loadCurrentProject() {
-    const currentProject = this._loadCurrentProject();
+    const currentProject = this.loadCurrentProjectId();
     if (!currentProject) {
       return;
     }
@@ -79,12 +64,19 @@ export class ProjectService {
     //this.project = currentProject.project;
     this.ready.next(true);
   }
-  loadPeyote(projectName: string, data: string): Project {
-    const project = this.peyoteShorthandService.toRGP(data, ', ');
+  async loadPeyote(projectName: string, data: string) {
+    let project = this.peyoteShorthandService.toRGP(data, ', ');
     project.name = projectName;
     this.project$.next(project);
+    project.id = await this.indexedDBService.addProject(project);
+    let newProject = await this.indexedDBService.loadProject(project.id);
+    if (newProject) {
+      project = newProject;
+    } else {
+      this.logger.error('Project not found in IndexedDB');
+    }
+    this.project$.next(project);
     this.ready.next(true);
-    return this.project$.value;
   }
 }
 

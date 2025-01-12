@@ -60,26 +60,6 @@ describe('ProjectService', () => {
     expect(savedData.position.step).toBe(step);
   });
 
-  it('should load the current position', async () => {
-    const row = 1;
-    const step = 2;
-    localStorage.setItem(
-      'currentProject',
-      JSON.stringify({ project: new BeadProject(), position: { row, step } })
-    );
-
-    settingsService.ready.next(true); // Simulate settings service being ready
-
-    const position = await service.loadCurrentPosition();
-    expect(position).toEqual({ row, step });
-  });
-
-  it('should return null if no current project is found', () => {
-    localStorage.removeItem('currentProject');
-    const position = service.loadCurrentPosition();
-    expect(position).toBeNull();
-  });
-
   it('should load the current project', () => {
     const project = new BeadProject();
     localStorage.setItem(

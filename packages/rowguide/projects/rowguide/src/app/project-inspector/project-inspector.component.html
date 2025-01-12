@@ -35,7 +35,8 @@
   <mat-card-content>
     <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector">
-        <mat-list-item>{{ projectService.project$.value.position?.row }}, {{ projectService.project$.value.position?.step
+        <mat-list-item>{{ projectService.project$.value.position?.row ?? 0 }}, {{ projectService.project$.value.position?.step
+          ?? 0
           }}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector">
@@ -48,6 +49,6 @@
 <mat-card class="project-image">
   <mat-card-title>Project Image</mat-card-title>
   <mat-card-content>
-    <img [src]="image$ | async">
+    <img [src]="image$.value">
   </mat-card-content>
 </mat-card>

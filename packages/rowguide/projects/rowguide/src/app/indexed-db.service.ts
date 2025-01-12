@@ -20,7 +20,7 @@ export class IndexedDBService {
     });
     return db.getAll('projects');
   }
-  async addProject(project: Project): Promise<void> {
+  async loadProject(key: number): Promise<Project | undefined> {
     const db = await openDB<ProjectDb>('rowguide', 1, {
       upgrade(db, oldVersion, newVersion, transaction, event) {
         db.createObjectStore('projects', {
@@ -29,7 +29,18 @@ export class IndexedDBService {
         });
       },
     });
-    db.add('projects', project);
+    return db.get('projects', key);
+  }
+  async addProject(project: Project): Promise<number> {
+    const db = await openDB<ProjectDb>('rowguide', 1, {
+      upgrade(db, oldVersion, newVersion, transaction, event) {
+        db.createObjectStore('projects', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+      },
+    });
+    return db.add('projects', project);
   }
   updateProject(project: Project): void {
     openDB<ProjectDb>('rowguide', 1, {

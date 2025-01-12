@@ -71,14 +71,14 @@ export class ProjectSelectorComponent {
       const bufferCopy2 = buffer.slice(0); // Ensure the buffer is not detached
       this.fileData = await this.beadtoolPdfService.loadDocument(bufferCopy);
       if (this.fileData !== '') {
-        const project = this.projectService.loadPeyote(
-          this.file.name,
-          this.fileData
-        );
+        await this.projectService.loadPeyote(this.file.name, this.fileData);
+        let project = this.projectService.project$.value;
         project.image = await this.beadtoolPdfService.renderFrontPage(
           bufferCopy2
         );
-        this.saveProjectToIndexedDB(project);
+        this.projectService.project$.next(project);
+        this.indexedDBService.updateProject(project);
+        this.projectService.ready.next(true);
         this.flamService.inititalizeFLAM(true);
         this.loadProjectsFromIndexedDB();
       } else {
@@ -88,11 +88,8 @@ export class ProjectSelectorComponent {
       const text = await this.file.text();
       this.logger.debug('File text: ', text);
       this.fileData = text;
-      const project = this.projectService.loadPeyote(
-        this.file.name,
-        this.fileData
-      );
-      this.saveProjectToIndexedDB(project);
+      await this.projectService.loadPeyote(this.file.name, this.fileData);
+      this.flamService.inititalizeFLAM(true);
       this.loadProjectsFromIndexedDB();
     }
 

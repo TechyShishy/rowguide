@@ -15,11 +15,7 @@ describe('ProjectComponent', () => {
   beforeEach(async () => {
     projectServiceStub = {
       ready: new Subject<boolean>(),
-      project: { rows: [] },
       loadCurrentProject: jasmine.createSpy('loadCurrentProject'),
-      loadCurrentPosition: jasmine
-        .createSpy('loadCurrentPosition')
-        .and.returnValue({ row: 0, step: 0 }),
       saveCurrentPosition: jasmine.createSpy('saveCurrentPosition'),
     };
 
@@ -50,11 +46,6 @@ describe('ProjectComponent', () => {
     component.ngOnInit();
     expect(component.rows).toEqual([]);
     expect(projectServiceStub.loadCurrentProject).toHaveBeenCalled();
-  });
-
-  it('should load current position on ngAfterViewChecked', () => {
-    component.ngAfterViewChecked();
-    expect(projectServiceStub.loadCurrentPosition).toHaveBeenCalled();
   });
 
   it('should advance step on onAdvanceStep', () => {
