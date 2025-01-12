@@ -16,7 +16,7 @@ describe('ProjectService', () => {
   beforeEach(() => {
     const peyoteShorthandServiceSpy = jasmine.createSpyObj(
       'PeyoteShorthandService',
-      ['toRGP']
+      ['toProject']
     );
     const settingsServiceSpy = jasmine.createSpyObj('SettingsService', [], {
       ready: new Subject<boolean>(),
@@ -65,7 +65,7 @@ describe('ProjectService', () => {
     const projectName = 'Test Project';
     const data = 'some,data';
     const project = new BeadProject();
-    peyoteShorthandService.toRGP.and.returnValue(project);
+    peyoteShorthandService.toProject.and.returnValue(project);
 
     service.loadPeyote(projectName, data);
 

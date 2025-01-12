@@ -65,7 +65,7 @@ export class ProjectService {
     this.ready.next(true);
   }
   async loadPeyote(projectName: string, data: string) {
-    let project = this.peyoteShorthandService.toRGP(data, ', ');
+    let project = this.peyoteShorthandService.toProject(data, ', ');
     project.name = projectName;
     this.project$.next(project);
     project.id = await this.indexedDBService.addProject(project);

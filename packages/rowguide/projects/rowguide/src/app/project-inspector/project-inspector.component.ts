@@ -31,14 +31,14 @@ export class ProjectInspectorComponent implements OnInit {
     public projectService: ProjectService,
     public logger: NGXLogger,
     private cdr: ChangeDetectorRef,
-    private projectDbService: ProjectDbService,
     private indexedDbService: IndexedDBService
   ) {}
 
   ngOnInit() {
-    //this.flamService.inititalizeFLAM(true);
-    this.flam = Object.values(this.flamService.flam);
     this.projectService.ready.subscribe(async () => {
+      this.flamService.inititalizeFLAM(true);
+      this.flam = Object.values(this.flamService.flam);
+
       await this.loadProjectImage();
     });
   }

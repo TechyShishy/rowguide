@@ -9,7 +9,7 @@ import { NGXLogger } from 'ngx-logger';
 export class PeyoteShorthandService {
   constructor(private logger: NGXLogger) {}
 
-  toRGP(projectString: string, delimiter: string = ' '): Project {
+  toProject(projectString: string, delimiter: string = ' '): Project {
     this.logger.debug('Loading project from string', projectString);
     const project: Project = { rows: [] };
 

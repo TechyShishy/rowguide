@@ -26,7 +26,7 @@ describe('PeyoteShorthandService', () => {
 
   it('should convert project string to Project object', () => {
     const projectString = '(1)stepA (2)stepB\n(3)stepC (4)stepD';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
 
@@ -61,7 +61,7 @@ describe('PeyoteShorthandService', () => {
 
   it('should handle lines with no valid steps', () => {
     const projectString = 'invalid step\n(1)stepA';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(1);
 
@@ -77,21 +77,21 @@ describe('PeyoteShorthandService', () => {
 
   it('should handle empty input string', () => {
     const projectString = '';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(0);
   });
 
   it('should handle input with only whitespace', () => {
     const projectString = '   \n  ';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(0);
   });
 
   it('should handle input with multiple rows and steps', () => {
     const projectString = '(1)stepA (2)stepB\n(3)stepC (4)stepD\n(5)stepE';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(3);
 
@@ -135,7 +135,7 @@ describe('PeyoteShorthandService', () => {
 
   it('should handle input with invalid steps', () => {
     const projectString = '(1)stepA invalid (2)stepB\n(3)stepC (4)stepD';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
 
@@ -170,14 +170,14 @@ describe('PeyoteShorthandService', () => {
 
   it('should handle input with no steps', () => {
     const projectString = 'no steps here';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(0);
   });
 
   it('should handle multiple step formats', () => {
     const projectString = '(1)stepA 2(stepB)\n3(stepC) (4)stepD';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
 
@@ -212,7 +212,7 @@ describe('PeyoteShorthandService', () => {
 
   it('should handle descriptions with numbers', () => {
     const projectString = '(1)step1 (2)step2\n(3)step3 (4)step4';
-    const project: Project = service.toRGP(projectString);
+    const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
 
