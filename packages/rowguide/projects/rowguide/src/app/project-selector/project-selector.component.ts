@@ -67,20 +67,28 @@ export class ProjectSelectorComponent {
       this.logger.debug('PDF file detected');
       const bufferCopy = buffer.slice(0); // Ensure the buffer is not detached
       const bufferCopy2 = buffer.slice(0); // Ensure the buffer is not detached
+      this.logger.debug('Buffer copied');
       this.fileData = await this.beadtoolPdfService.loadDocument(bufferCopy);
       if (this.fileData !== '') {
+        this.logger.debug('Document loaded');
         await this.projectService.loadPeyote(this.file.name, this.fileData);
+        this.logger.debug('Peyote loaded');
         let project = this.projectService.project$.value;
         project.image = await this.beadtoolPdfService.renderFrontPage(
           bufferCopy2
         );
+        this.logger.debug('Image rendered');
         this.flamService.inititalizeFLAM(true);
         project.firstLastAppearanceMap = this.flamService.flam$.value;
+        this.logger.debug('FLAM initialized');
         this.projectService.project$.next(project);
-        this.indexedDBService.updateProject(project);
+        await this.indexedDBService.updateProject(project);
+        this.logger.debug('Project written to IndexedDB');
         this.projectService.ready.next(true);
-        this.loadProjectsFromIndexedDB();
-        this.projectService.saveCurrentPosition(0, 0);
+        await this.loadProjectsFromIndexedDB();
+        this.logger.debug('Projects loaded from IndexedDB');
+        await this.projectService.saveCurrentPosition(0, 0);
+        this.logger.debug('Current position saved');
       } else {
         this.logger.debug('Section not found');
       }

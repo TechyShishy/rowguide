@@ -27,7 +27,7 @@ export class ProjectService {
       this.loadCurrentProject();
     });
   }
-  saveCurrentPosition(row: number, step: number) {
+  async saveCurrentPosition(row: number, step: number) {
     localStorage.setItem(
       'currentProject',
       JSON.stringify(<CurrentProject>{ id: this.project$.value.id })
@@ -35,7 +35,7 @@ export class ProjectService {
     let project = this.project$.value;
     project.position = { row, step };
     this.project$.next(project);
-    this.indexedDBService.updateProject(this.project$.value);
+    await this.indexedDBService.updateProject(this.project$.value);
   }
   loadCurrentProjectId(): CurrentProject | null {
     const data = localStorage.getItem('currentProject');

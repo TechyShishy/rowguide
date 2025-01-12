@@ -45,11 +45,19 @@ export class BeadtoolPdfService {
     text = text.replace(/,\n+/g, ', ');
     const match = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
 
+
+    const rowStripRegex = /^Row [&\d]+ \([LR]\)\s*/gm;
     if (match) {
-      const rgsFileText = match[1].replace(/^Row [&\d]+ \([LR]\)\s*/gm, '');
+      const rgsFileText = match[1].replace(rowStripRegex, '');
       return rgsFileText;
     } else {
-      return '';
+      const match = text.match(/((?:Row 1 .*)(?:Row \d .*\n?)).*$/s);
+      if (match) {
+        const rgsFileText = match[1].replace(rowStripRegex, '');
+        return rgsFileText;
+      } else {
+        return '';
+      }
     }
   }
 

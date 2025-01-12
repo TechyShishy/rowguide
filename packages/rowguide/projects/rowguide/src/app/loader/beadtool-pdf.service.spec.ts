@@ -26,9 +26,14 @@ describe('BeadtoolPdfService', () => {
       'Row 4 (R) stepF',
     ],
   ];
-  const docDataInvalid = [
+  const docDataRowOne = [
     ['Row 1 (L) stepA', 'Row 2 (R) stepB'],
     ['Row 3 (L) stepC stepD stepE', 'Row 4 (R) stepF'],
+  ];
+  const docDataInvalid = [
+    ['Row 2 (L) stepA', 'Row 3 (R) stepB'],
+    ['Row 4 (L) stepC stepD stepE', 'Row 5 (R) stepF'],
+    ['Row 6 (L) stepG stepH stepI', 'Row 7 (R) stepJ'],
   ];
 
   beforeEach(() => {
