@@ -88,9 +88,7 @@ export class ProjectComponent implements HierarchicalList {
         return;
       }
       this.currentStep = currStep;
-      const isLastStepInRow =
-        this.currentStep.index === this.currentStep.row.children.length - 1;
-        this.currentStep.onClick(new Event('click'));
+      this.currentStep.onClick(new Event('click'));
       this.cdr.detectChanges();
       this.initialized = true;
     }

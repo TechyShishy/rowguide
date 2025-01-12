@@ -84,7 +84,7 @@ describe('ProjectSelectorComponent', () => {
 
     await component.importFile();
 
-    expect(indexedDBServiceSpy.addProject).toHaveBeenCalledWith({
+    expect(indexedDBServiceSpy.updateProject).toHaveBeenCalledWith({
       id: 1,
       name: 'Test Project',
       rows: [],
