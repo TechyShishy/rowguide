@@ -80,6 +80,7 @@ export class ProjectSelectorComponent {
         this.indexedDBService.updateProject(project);
         this.projectService.ready.next(true);
         this.loadProjectsFromIndexedDB();
+        this.projectService.saveCurrentPosition(0, 0);
       } else {
         this.logger.debug('Section not found');
       }
@@ -95,6 +96,7 @@ export class ProjectSelectorComponent {
       this.indexedDBService.updateProject(project);
       this.projectService.ready.next(true);
       this.loadProjectsFromIndexedDB();
+      this.projectService.saveCurrentPosition(0, 0);
     }
 
     // TODO: Do something to move the user to the project view

@@ -21,7 +21,10 @@ describe('ProjectSelectorComponent', () => {
   let flamServiceSpy: jasmine.SpyObj<FlamService>;
 
   beforeEach(async () => {
-    projectServiceSpy = jasmine.createSpyObj('ProjectService', ['loadPeyote']);
+    projectServiceSpy = jasmine.createSpyObj('ProjectService', [
+      'loadPeyote',
+      'saveCurrentPosition',
+    ]);
     indexedDBServiceSpy = jasmine.createSpyObj('IndexedDBService', [
       'loadProjects',
       'addProject',
