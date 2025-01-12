@@ -10,6 +10,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import * as pako from 'pako';
 import { Project } from '../project';
+import { FLAM } from '../flam';
 
 describe('ProjectSelectorComponent', () => {
   let component: ProjectSelectorComponent;
@@ -106,6 +107,7 @@ describe('ProjectSelectorComponent', () => {
       name: 'Test Project',
       rows: [],
     });
+    flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
     projectServiceSpy.ready = new Subject<boolean>();
 
     await component.importFile();
@@ -124,6 +126,10 @@ describe('ProjectSelectorComponent', () => {
     component.file = mockFile;
 
     const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
+
+    projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
+    flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
+    projectServiceSpy.ready = new Subject<boolean>();
 
     await component.importFile();
 

@@ -4,6 +4,7 @@ import { ProjectService } from './project.service';
 import { FLAM } from './flam';
 import { NGXLogger } from 'ngx-logger';
 import { Step } from './step';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 @Injectable({
   providedIn: 'root',
@@ -14,11 +15,32 @@ export class FlamService {
     private projectService: ProjectService
   ) {}
 
-  flam: FLAM = {};
+  flam$: BehaviorSubject<FLAM> = new BehaviorSubject({} as FLAM);
 
+  ngOnInit() {
+    this.projectService.ready.subscribe(() => {
+      this.inititalizeFLAM(true);
+    });
+  }
   inititalizeFLAM(force: boolean = false) {
-    if (force == false && Object.keys(this.flam).length != 0) return;
-    this.flam = this.generateFLAM(this.projectService.project$.value);
+    if (force == false && Object.keys(this.flam$.value).length != 0) return;
+    if (
+      Object.keys(
+        this.projectService.project$.value.firstLastAppearanceMap ?? {}
+      ).length > 0
+    ) {
+      this.logger.debug(
+        'Using cached FLAM:',
+        JSON.stringify(
+          this.projectService.project$.value.firstLastAppearanceMap
+        )
+      );
+      this.flam$.next(
+        this.projectService.project$.value.firstLastAppearanceMap ?? {}
+      );
+    } else {
+      this.flam$.next(this.generateFLAM(this.projectService.project$.value));
+    }
   }
 
   generateFLAM(project: Project): FLAM {
@@ -45,9 +67,9 @@ export class FlamService {
   isFirstStep(row: number, step: Step): boolean {
     this.inititalizeFLAM();
     if (
-      this.flam[step.description] &&
-      this.flam[step.description].firstAppearance[0] == row &&
-      this.flam[step.description].firstAppearance[1] == step.id - 1
+      this.flam$.value[step.description] &&
+      this.flam$.value[step.description].firstAppearance[0] == row &&
+      this.flam$.value[step.description].firstAppearance[1] == step.id - 1
     ) {
       return true;
     } else {
@@ -58,9 +80,9 @@ export class FlamService {
   isLastStep(row: number, step: Step): boolean {
     this.inititalizeFLAM();
     if (
-      this.flam[step.description] &&
-      this.flam[step.description].lastAppearance[0] == row &&
-      this.flam[step.description].lastAppearance[1] == step.id - 1
+      this.flam$.value[step.description] &&
+      this.flam$.value[step.description].lastAppearance[0] == row &&
+      this.flam$.value[step.description].lastAppearance[1] == step.id - 1
     ) {
       return true;
     } else {

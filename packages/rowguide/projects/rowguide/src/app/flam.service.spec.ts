@@ -59,13 +59,13 @@ describe('FlamService', () => {
 
   it('should initialize FLAM correctly', () => {
     service.inititalizeFLAM();
-    expect(Object.keys(service.flam).length).toBe(3);
-    expect(service.flam['Step A'].firstAppearance).toEqual([0, 0]);
-    expect(service.flam['Step A'].lastAppearance).toEqual([2, 0]);
-    expect(service.flam['Step B'].firstAppearance).toEqual([0, 1]);
-    expect(service.flam['Step B'].lastAppearance).toEqual([1, 1]);
-    expect(service.flam['Step C'].firstAppearance).toEqual([2, 1]);
-    expect(service.flam['Step C'].lastAppearance).toEqual([2, 1]);
+    expect(Object.keys(service.flam$.value).length).toBe(3);
+    expect(service.flam$.value['Step A'].firstAppearance).toEqual([0, 0]);
+    expect(service.flam$.value['Step A'].lastAppearance).toEqual([2, 0]);
+    expect(service.flam$.value['Step B'].firstAppearance).toEqual([0, 1]);
+    expect(service.flam$.value['Step B'].lastAppearance).toEqual([1, 1]);
+    expect(service.flam$.value['Step C'].firstAppearance).toEqual([2, 1]);
+    expect(service.flam$.value['Step C'].lastAppearance).toEqual([2, 1]);
   });
 
   it('should identify the first step correctly', () => {

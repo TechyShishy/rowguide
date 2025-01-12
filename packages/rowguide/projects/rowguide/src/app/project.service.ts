@@ -9,6 +9,7 @@ import { NGXLogger } from 'ngx-logger';
 import { Position } from './position';
 import { ProjectDbService } from './project-db.service';
 import { IndexedDBService } from './indexed-db.service';
+import { FlamService } from './flam.service';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +25,7 @@ export class ProjectService {
     private settingsService: SettingsService,
     private logger: NGXLogger,
     private projectDbService: ProjectDbService,
-    private indexedDBService: IndexedDBService
+    private indexedDBService: IndexedDBService,
   ) {
     this.settingsService.ready.subscribe(() => {
       this.loadCurrentProject();

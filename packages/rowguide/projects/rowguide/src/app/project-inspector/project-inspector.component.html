@@ -3,12 +3,12 @@
   <mat-card-content>
     <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector">
-        <mat-list-item *ngFor="let flamRow of flam">
+        <mat-list-item *ngFor="let flamRow of ObjectValues(flamService.flam$.value)">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
         </mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector">
-        <mat-list-item class="ppinspector" *ngFor="let flamRow of flam">
+        <mat-list-item *ngFor="let flamRow of ObjectValues(flamService.flam$.value)">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
         </mat-list-item>
         </ng-template>

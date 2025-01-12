@@ -76,10 +76,11 @@ export class ProjectSelectorComponent {
         project.image = await this.beadtoolPdfService.renderFrontPage(
           bufferCopy2
         );
+        this.flamService.inititalizeFLAM(true);
+        project.firstLastAppearanceMap = this.flamService.flam$.value;
         this.projectService.project$.next(project);
         this.indexedDBService.updateProject(project);
         this.projectService.ready.next(true);
-        this.flamService.inititalizeFLAM(true);
         this.loadProjectsFromIndexedDB();
       } else {
         this.logger.debug('Section not found');
@@ -89,7 +90,12 @@ export class ProjectSelectorComponent {
       this.logger.debug('File text: ', text);
       this.fileData = text;
       await this.projectService.loadPeyote(this.file.name, this.fileData);
+      let project = this.projectService.project$.value;
       this.flamService.inititalizeFLAM(true);
+      project.firstLastAppearanceMap = this.flamService.flam$.value;
+      this.projectService.project$.next(project);
+      this.indexedDBService.updateProject(project);
+      this.projectService.ready.next(true);
       this.loadProjectsFromIndexedDB();
     }
 

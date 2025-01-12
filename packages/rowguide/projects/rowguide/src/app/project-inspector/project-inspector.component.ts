@@ -22,7 +22,7 @@ import { IndexedDBService } from '../indexed-db.service';
   styleUrls: ['./project-inspector.component.scss'],
 })
 export class ProjectInspectorComponent implements OnInit {
-  flam: Array<FLAMRow> = [];
+  ObjectValues = Object.values;
   image$: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   constructor(
@@ -37,7 +37,6 @@ export class ProjectInspectorComponent implements OnInit {
   ngOnInit() {
     this.projectService.ready.subscribe(async () => {
       this.flamService.inititalizeFLAM(true);
-      this.flam = Object.values(this.flamService.flam);
 
       await this.loadProjectImage();
     });
