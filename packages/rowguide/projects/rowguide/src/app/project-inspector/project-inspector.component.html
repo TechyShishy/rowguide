@@ -40,7 +40,15 @@
           }}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector$.value">
-        <mat-list-item>Row: {{ ( projectService.project$.value.position?.row ?? 0 ) + 1 }}</mat-list-item>
+        <mat-list-item>Row: {{
+          (
+          (
+          ( projectService.project$.value.position?.row ?? 0 ) + ( this.settingsService.combine12$.value ? 2 : 1 ) == 2
+          ) ? 1 : (
+          ( projectService.project$.value.position?.row ?? 0 ) + ( this.settingsService.combine12$.value ? 2 : 1 )
+          )
+          )
+          }}</mat-list-item>
         <mat-list-item>Step: {{ ( projectService.project$.value.position?.step ?? 0 ) + 1 }}</mat-list-item>
       </ng-template>
       </mat-list>
