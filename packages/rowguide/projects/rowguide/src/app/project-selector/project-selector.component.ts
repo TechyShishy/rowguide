@@ -15,7 +15,6 @@ import { IndexedDBService } from '../indexed-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
-import { ProjectDbService } from '../project-db.service';
 
 @Component({
   selector: 'app-project-selector',
@@ -43,8 +42,7 @@ export class ProjectSelectorComponent {
     private projectService: ProjectService,
     private indexedDBService: IndexedDBService,
     private flamService: FlamService,
-    private beadtoolPdfService: BeadtoolPdfService,
-    private projectDbService: ProjectDbService
+    private beadtoolPdfService: BeadtoolPdfService
   ) {}
   async importFile() {
     const buffer = await this.file.arrayBuffer();

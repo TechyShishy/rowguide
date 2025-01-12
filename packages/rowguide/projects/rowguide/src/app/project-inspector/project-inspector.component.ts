@@ -5,14 +5,12 @@ import {
 } from '@angular/core';
 import { FlamService } from '../flam.service';
 import { CommonModule } from '@angular/common';
-import { FLAMRow } from '../flamrow';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
-import { ProjectDbService } from '../project-db.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { IndexedDBService } from '../indexed-db.service';
 
 @Component({
@@ -48,11 +46,16 @@ export class ProjectInspectorComponent implements OnInit {
     );
     if (project?.image) {
       const reader = new FileReader();
-      reader.onload = () => {
-        this.image$.next(reader.result as string);
-        this.cdr.detectChanges();
-      };
-      reader.readAsDataURL(new Blob([project.image], { type: 'image/png' }));
+      const result = await new Promise<string>((resolve) => {
+        reader.onload = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(
+          new Blob([project.image ?? new ArrayBuffer(0)], { type: 'image/png' })
+        );
+      });
+      this.image$.next(result);
+      this.cdr.detectChanges();
     }
   }
 }

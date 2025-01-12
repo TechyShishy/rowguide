@@ -1,17 +1,16 @@
-import { Injectable, Input } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Subject, BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SettingsService {
   ready: Subject<boolean> = new Subject<boolean>();
-  @Input() combine12: boolean = false;
-  @Input() lrdesignators: boolean = false;
-  @Input() flammarkers: boolean = false;
-  @Input() ppinspector: boolean = false;
-  @Input() zoom: boolean = false;
-
+  public combine12$ = new BehaviorSubject<boolean>(false);
+  public lrdesignators$ = new BehaviorSubject<boolean>(false);
+  public flammarkers$ = new BehaviorSubject<boolean>(false);
+  public ppinspector$ = new BehaviorSubject<boolean>(false);
+  public zoom$ = new BehaviorSubject<boolean>(false);
   constructor() {}
   saveSettings(settings: Settings) {
     localStorage.setItem('settings', JSON.stringify(settings));
@@ -21,11 +20,11 @@ export class SettingsService {
     let settings = localStorage.getItem('settings');
     if (settings) {
       let s = JSON.parse(settings);
-      this.combine12 = s.combine12;
-      this.lrdesignators = s.lrdesignators;
-      this.flammarkers = s.flammarkers;
-      this.ppinspector = s.ppinspector;
-      this.zoom = s.zoom;
+      this.combine12$.next(s.combine12);
+      this.lrdesignators$.next(s.lrdesignators);
+      this.flammarkers$.next(s.flammarkers);
+      this.ppinspector$.next(s.ppinspector);
+      this.zoom$.next(s.zoom);
     }
   }
 }

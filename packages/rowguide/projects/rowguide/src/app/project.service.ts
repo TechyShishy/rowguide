@@ -6,10 +6,7 @@ import { NullProject } from './null-project';
 import { StepComponent } from './step/step.component';
 import { SettingsService } from './settings.service';
 import { NGXLogger } from 'ngx-logger';
-import { Position } from './position';
-import { ProjectDbService } from './project-db.service';
 import { IndexedDBService } from './indexed-db.service';
-import { FlamService } from './flam.service';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +21,6 @@ export class ProjectService {
     private peyoteShorthandService: PeyoteShorthandService,
     private settingsService: SettingsService,
     private logger: NGXLogger,
-    private projectDbService: ProjectDbService,
     private indexedDBService: IndexedDBService,
   ) {
     this.settingsService.ready.subscribe(() => {
@@ -58,7 +54,7 @@ export class ProjectService {
       return;
     }
     const project =
-      (await this.projectDbService.getProject(currentProject.id)) ??
+      (await this.indexedDBService.loadProject(currentProject.id)) ??
       new NullProject();
 
     this.project$.next(project);

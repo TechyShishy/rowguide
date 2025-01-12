@@ -2,12 +2,12 @@
   <mat-card-title>FLAM</mat-card-title>
   <mat-card-content>
     <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector">
+      <ng-template [ngIf]="!settingsService.ppinspector$.value">
         <mat-list-item *ngFor="let flamRow of ObjectValues(flamService.flam$.value)">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
         </mat-list-item>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector">
+      <ng-template [ngIf]="settingsService.ppinspector$.value">
         <mat-list-item *ngFor="let flamRow of ObjectValues(flamService.flam$.value)">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
         </mat-list-item>
@@ -19,11 +19,11 @@
     <mat-card-title>Project Summary</mat-card-title>
     <mat-card-content>
       <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector">
+      <ng-template [ngIf]="!settingsService.ppinspector$.value">
         <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
         <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector">
+      <ng-template [ngIf]="settingsService.ppinspector$.value">
         <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
         <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
       </ng-template>
@@ -34,12 +34,12 @@
   <mat-card-title>Saved Position</mat-card-title>
   <mat-card-content>
     <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector">
+      <ng-template [ngIf]="!settingsService.ppinspector$.value">
         <mat-list-item>{{ projectService.project$.value.position?.row ?? 0 }}, {{ projectService.project$.value.position?.step
           ?? 0
           }}</mat-list-item>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector">
+      <ng-template [ngIf]="settingsService.ppinspector$.value">
         <mat-list-item>Row: {{ ( projectService.project$.value.position?.row ?? 0 ) + 1 }}</mat-list-item>
         <mat-list-item>Step: {{ ( projectService.project$.value.position?.step ?? 0 ) + 1 }}</mat-list-item>
       </ng-template>

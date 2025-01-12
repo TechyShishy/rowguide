@@ -13,18 +13,19 @@ import { ProjectService } from '../project.service';
 import { RowComponent } from '../row/row.component';
 import { FlamService } from '../flam.service';
 import { SettingsService } from '../settings.service';
+import { NGXLogger } from 'ngx-logger';
 
 @Component({
-    selector: 'app-step',
-    imports: [MatChipsModule],
-    templateUrl: './step.component.html',
-    styleUrl: './step.component.scss'
+  selector: 'app-step',
+  imports: [MatChipsModule],
+  templateUrl: './step.component.html',
+  styleUrl: './step.component.scss',
 })
 export class StepComponent implements HierarchicalList {
   @Input() step!: Step;
   highlighted: boolean = false;
   @HostBinding('class.current') isCurrentStep = false;
-  @HostBinding('class.zoom') isZoomed = false;
+  @HostBinding('class.zoom') isZoomed = this.settingsService.zoom$.value;
   @HostBinding('class.first') isFirstStep = false;
   @HostBinding('class.last') isLastStep = false;
 
@@ -39,11 +40,12 @@ export class StepComponent implements HierarchicalList {
   constructor(
     private flamService: FlamService,
     private settingsService: SettingsService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private logger: NGXLogger
   ) {}
 
   ngOnInit() {
-    if (this.settingsService.flammarkers) {
+    if (this.settingsService.flammarkers$.value) {
       this.isFirstStep = this.flamService.isFirstStep(
         this.row.index,
         this.step
@@ -53,9 +55,13 @@ export class StepComponent implements HierarchicalList {
       this.isFirstStep = false;
       this.isLastStep = false;
     }
-    if (this.settingsService.zoom) {
-      this.isZoomed = true;
-    }
+
+    this.settingsService.zoom$.subscribe((value) => {
+      this.logger.debug(value);
+      this.isZoomed = value;
+    });
+    this.isZoomed = this.settingsService.zoom$.value;
+    this.logger.debug('isZoomed: ', this.isZoomed);
   }
 
   @HostListener('click', ['$event'])

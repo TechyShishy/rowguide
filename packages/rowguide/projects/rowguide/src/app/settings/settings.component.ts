@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'app-settings',
@@ -42,11 +43,13 @@ export class SettingsComponent {
     private projectService: ProjectService
   ) {
     this.settingsService.loadSettings();
-    this.combine12Control.setValue(this.settingsService.combine12);
-    this.lrdesignatorsControl.setValue(this.settingsService.lrdesignators);
-    this.flammarkersControl.setValue(this.settingsService.flammarkers);
-    this.ppinspectorControl.setValue(this.settingsService.ppinspector);
-    this.zoomControl.setValue(this.settingsService.zoom);
+    this.combine12Control.setValue(this.settingsService.combine12$.value);
+    this.lrdesignatorsControl.setValue(
+      this.settingsService.lrdesignators$.value
+    );
+    this.flammarkersControl.setValue(this.settingsService.flammarkers$.value);
+    this.ppinspectorControl.setValue(this.settingsService.ppinspector$.value);
+    this.zoomControl.setValue(this.settingsService.zoom$.value);
 
     this.settings.valueChanges.subscribe((value) => {
       this.settingsService.saveSettings(<Settings>{
@@ -56,6 +59,11 @@ export class SettingsComponent {
         ppinspector: value.ppinspector,
         zoom: value.zoom,
       });
+      this.settingsService.combine12$.next(value.combine12 ?? false);
+      this.settingsService.lrdesignators$.next(value.lrdesignators ?? false);
+      this.settingsService.flammarkers$.next(value.flammarkers ?? false);
+      this.settingsService.ppinspector$.next(value.ppinspector ?? false);
+      this.settingsService.zoom$.next(value.zoom ?? false);
       projectService.loadCurrentProject();
     });
   }

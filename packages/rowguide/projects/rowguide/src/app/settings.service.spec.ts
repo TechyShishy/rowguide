@@ -39,11 +39,11 @@ import { SettingsService, Settings } from './settings.service';
       };
       localStorage.setItem('settings', JSON.stringify(settings));
       service.loadSettings();
-      expect(service.combine12).toBe(true);
-      expect(service.lrdesignators).toBe(true);
-      expect(service.flammarkers).toBe(true);
-      expect(service.ppinspector).toBe(true);
-      expect(service.zoom).toBe(true);
+      expect(service.combine12$.value).toBe(true);
+      expect(service.lrdesignators$.value).toBe(true);
+      expect(service.flammarkers$.value).toBe(true);
+      expect(service.ppinspector$.value).toBe(true);
+      expect(service.zoom$.value).toBe(true);
     });
 
     it('should emit ready event after saving settings', (done) => {
