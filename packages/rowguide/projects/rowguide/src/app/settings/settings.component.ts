@@ -9,7 +9,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
-import { Observable } from 'rxjs';
 
 @Component({
     selector: 'app-settings',

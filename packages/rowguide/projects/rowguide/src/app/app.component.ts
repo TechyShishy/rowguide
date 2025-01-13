@@ -1,5 +1,8 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {
+  RouterLink,
+  RouterOutlet,
+} from '@angular/router';
 import { MatTabGroup, MatTab } from '@angular/material/tabs';
 import { ProjectSelectorComponent } from './project-selector/project-selector.component';
 import { ProjectComponent } from './project/project.component';
@@ -8,18 +11,24 @@ import { ProjectInspectorComponent } from './project-inspector/project-inspector
 import { ProjectService } from './project.service';
 import { Project } from './project';
 import { CommonModule } from '@angular/common';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    ProjectComponent,
-    ProjectSelectorComponent,
-    ProjectInspectorComponent,
-    SettingsComponent,
     CommonModule,
-    MatTabGroup,
-    MatTab,
+    MatSidenavModule,
+    MatListModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    RouterOutlet,
+    RouterLink,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -29,7 +38,7 @@ export class AppComponent {
 
   constructor(
     public projectService: ProjectService,
-    private cdr: ChangeDetectorRef,
+    private cdr: ChangeDetectorRef
   ) {
     this.projectService.ready.subscribe((ready) => {
       this.cdr.detectChanges();

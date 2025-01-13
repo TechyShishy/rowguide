@@ -1,7 +1,17 @@
-<mat-tab-group>
-  <mat-tab class="app-project" label="Project: {{projectService.project$.value.name}}"><app-project /></mat-tab>
-  <mat-tab class="app-project-selector" label="Project Selector"><app-project-selector /></mat-tab>
-  <mat-tab class="app-project-inspector" label="Project Inspector"><app-project-inspector /></mat-tab>
-  <mat-tab class="app-settings" label="Settings"><app-settings /></mat-tab>
-</mat-tab-group>
-<router-outlet />
+<mat-sidenav-container>
+  <mat-sidenav #sidenav>
+    <mat-list>
+      <mat-list-item><a mat-button routerLink="/project">Project</a></mat-list-item>
+      <mat-list-item><a mat-button routerLink="/project-selector">Project
+          Selector</a></mat-list-item>
+      <mat-list-item><a mat-button routerLink="/project-inspector">Project
+          Inspector</a></mat-list-item>
+      <mat-list-item><a mat-button routerLink="/settings">Settings</a></mat-list-item>
+    </mat-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar><button mat-icon-button (click)="sidenav.toggle()">
+        <mat-icon>menu</mat-icon></button>Project: {{projectService.project$.value.name}}</mat-toolbar>
+    <router-outlet />
+  </mat-sidenav-content>
+  </mat-sidenav-container>
