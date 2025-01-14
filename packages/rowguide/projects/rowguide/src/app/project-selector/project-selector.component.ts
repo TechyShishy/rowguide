@@ -15,6 +15,7 @@ import { IndexedDBService } from '../indexed-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-project-selector',
@@ -42,7 +43,8 @@ export class ProjectSelectorComponent {
     private projectService: ProjectService,
     private indexedDBService: IndexedDBService,
     private flamService: FlamService,
-    private beadtoolPdfService: BeadtoolPdfService
+    private beadtoolPdfService: BeadtoolPdfService,
+    private router: Router
   ) {}
   async importFile() {
     const buffer = await this.file.arrayBuffer();
@@ -58,6 +60,7 @@ export class ProjectSelectorComponent {
       const importProject = JSON.parse(projectString);
       this.indexedDBService.updateProject(importProject);
       this.loadProjectsFromIndexedDB();
+      this.router.navigate(['/project']);
     } else if (
       bufHeader[0] === pdfHeader[0] &&
       bufHeader[1] === pdfHeader[1] &&
@@ -81,6 +84,7 @@ export class ProjectSelectorComponent {
         this.projectService.ready.next(true);
         await this.loadProjectsFromIndexedDB();
         await this.projectService.saveCurrentPosition(0, 0);
+        this.router.navigate(['/project']);
       } else {
         this.logger.debug('Section not found');
       }
@@ -97,6 +101,7 @@ export class ProjectSelectorComponent {
       this.projectService.ready.next(true);
       this.loadProjectsFromIndexedDB();
       this.projectService.saveCurrentPosition(0, 0);
+      this.router.navigate(['/project']);
     }
 
     // TODO: Do something to move the user to the project view
