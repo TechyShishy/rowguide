@@ -57,6 +57,6 @@
 <mat-card class="project-image">
   <mat-card-title>Project Image</mat-card-title>
   <mat-card-content>
-    <img [src]="image$.value">
+    <img [src]="image$ | async">
   </mat-card-content>
 </mat-card>

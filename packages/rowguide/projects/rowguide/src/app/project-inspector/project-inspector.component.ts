@@ -12,6 +12,8 @@ import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { IndexedDBService } from '../indexed-db.service';
+import { Observable, switchMap } from 'rxjs';
+import { Project } from '../project';
 
 @Component({
   selector: 'app-project-inspector',
@@ -21,7 +23,9 @@ import { IndexedDBService } from '../indexed-db.service';
 })
 export class ProjectInspectorComponent implements OnInit {
   ObjectValues = Object.values;
-  image$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  image$: Observable<string> = this.projectService.project$.pipe(
+    switchMap(this.loadProjectImage)
+  );
 
   constructor(
     public flamService: FlamService,
@@ -35,15 +39,10 @@ export class ProjectInspectorComponent implements OnInit {
   ngOnInit() {
     this.projectService.ready.subscribe(async () => {
       this.flamService.inititalizeFLAM(true);
-
-      await this.loadProjectImage();
     });
   }
 
-  async loadProjectImage() {
-    const project = await this.indexedDbService.loadProject(
-      this.projectService.project$.value.id ?? 0
-    );
+  async loadProjectImage(project: Project): Promise<string> {
     if (project?.image) {
       const reader = new FileReader();
       const result = await new Promise<string>((resolve) => {
@@ -54,8 +53,8 @@ export class ProjectInspectorComponent implements OnInit {
           new Blob([project.image ?? new ArrayBuffer(0)], { type: 'image/png' })
         );
       });
-      this.image$.next(result);
-      this.cdr.detectChanges();
+      return result;
     }
+    return '';
   }
 }

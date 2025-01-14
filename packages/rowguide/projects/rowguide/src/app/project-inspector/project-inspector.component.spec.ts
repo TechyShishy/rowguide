@@ -81,10 +81,11 @@ describe('ProjectInspectorComponent', () => {
   });
 
   it('should load project image', async () => {
-    await component.loadProjectImage();
+    const mockProject = { id: 1, image: undefined, rows: [] };
+    await component.loadProjectImage(mockProject);
 
     expect(mockIndexedDBService.loadProject).toHaveBeenCalledWith(1);
-    expect(component.image$.value).toContain('data:image/png;base64,');
+    expect(component.image$).toContain('data:image/png;base64,');
   });
 
   it('should not load project image if no image exists', async () => {
@@ -98,9 +99,9 @@ describe('ProjectInspectorComponent', () => {
       Promise.resolve(mockProject)
     );
 
-    await component.loadProjectImage();
+    await component.loadProjectImage(mockProject);
 
     expect(mockIndexedDBService.loadProject).toHaveBeenCalledWith(1);
-    expect(component.image$.value).toBe('');
+    expectAsync(component.image$).toBeResolved();
   });
 });

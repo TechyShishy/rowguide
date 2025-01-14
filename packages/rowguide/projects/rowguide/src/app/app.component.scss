@@ -5,6 +5,13 @@ body {
   padding: 0;
   box-sizing: border-box;
 }
+:host {
+  height: 100%;
+  display: block;
+}
+mat-sidenav-container {
+  height: 100%;
+}
 mat-sidenav a {
   @include mat.button-overrides(
     (
