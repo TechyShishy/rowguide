@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, Output } from '@angular/core';
+import { Component, ElementRef, Input } from '@angular/core';
 import { Project } from '../project';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
@@ -6,32 +6,30 @@ import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
 import { IndexedDBService } from '../indexed-db.service';
 import { FormsModule } from '@angular/forms';
-import { ProjectService } from '../project.service';
 import { MatButtonModule } from '@angular/material/button';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
-import { FlamService } from '../flam.service';
+import { Router } from '@angular/router';
 
 @Component({
-    selector: 'app-project-summary',
-    imports: [
-        MatExpansionModule,
-        MatCardModule,
-        MatInputModule,
-        FormsModule,
-        MatButtonModule,
-    ],
-    templateUrl: './project-summary.component.html',
-    styleUrl: './project-summary.component.scss'
+  selector: 'app-project-summary',
+  imports: [
+    MatExpansionModule,
+    MatCardModule,
+    MatInputModule,
+    FormsModule,
+    MatButtonModule,
+  ],
+  templateUrl: './project-summary.component.html',
+  styleUrl: './project-summary.component.scss',
 })
 export class ProjectSummaryComponent {
   @Input() project!: Project;
 
   constructor(
     private indexedDBService: IndexedDBService,
-    private projectService: ProjectService,
-    private flamService: FlamService,
-    private ref: ElementRef
+    private ref: ElementRef,
+    private router: Router
   ) {}
 
   saveName() {
@@ -39,10 +37,7 @@ export class ProjectSummaryComponent {
   }
 
   loadProject() {
-    this.projectService.project$.next(this.project);
-    this.flamService.inititalizeFLAM(true);
-    this.projectService.saveCurrentPosition(0, 0);
-    this.projectService.loadCurrentProject();
+    this.router.navigate(['/project', { id: this.project.id }]);
   }
   deleteProject() {
     this.indexedDBService.deleteProject(this.project);

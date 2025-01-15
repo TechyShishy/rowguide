@@ -65,7 +65,7 @@ describe('RowComponent', () => {
 
     component['setFirstStepAsCurrent']();
 
-    expect(component.project.currentStep).toBe(mockStepComponent);
+    expect(component.project.currentStep$).toBe(mockStepComponent);
     expect(mockStepComponent.isCurrentStep).toBeTrue();
     expect(component.markFirstStep).toBeFalse();
     expect(mockPanel.open).toHaveBeenCalled();

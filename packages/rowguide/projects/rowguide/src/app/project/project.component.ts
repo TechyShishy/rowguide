@@ -2,25 +2,43 @@ import {
   Component,
   HostListener,
   QueryList,
-  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { RowComponent } from '../row/row.component';
-import { NgFor } from '@angular/common';
+import { CommonModule, NgFor } from '@angular/common';
 import { Row } from '../row';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';
 import { StepComponent } from '../step/step.component';
 import { MatButtonModule } from '@angular/material/button';
-import { of } from 'rxjs';
+import {
+  distinctUntilChanged,
+  Observable,
+  of,
+  switchMap,
+  BehaviorSubject,
+  firstValueFrom,
+  lastValueFrom,
+  take,
+  skipWhile,
+  share,
+  forkJoin,
+  combineLatest,
+  combineLatestWith,
+  map,
+  mergeWith,
+  delayWhen,
+  tap,
+  OperatorFunction,
+} from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { SettingsService } from '../settings.service';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { sanity } from '../sanity';
-import { Step } from '../step';
 import { Position } from '../position';
+import { ActivatedRoute } from '@angular/router';
+import { Project } from '../project';
 
 @Component({
   selector: 'app-project',
@@ -30,19 +48,22 @@ import { Position } from '../position';
     MatButtonModule,
     MatCardModule,
     MatExpansionModule,
+    CommonModule,
   ],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
 })
 export class ProjectComponent implements HierarchicalList {
-  rows!: Array<Row>;
+  rows$: Observable<Row[]> = of([] as Row[]);
+  position$: Observable<Position> = of({ row: 0, step: 0 });
+  project$: Observable<Project> = new BehaviorSubject<Project>({} as Project);
 
   @ViewChildren(RowComponent) children!: QueryList<RowComponent>;
-  currentStep: StepComponent = <StepComponent>{};
-
-  advanceRowIterator!: IterableIterator<RowComponent>;
-  advanceRowCurrent!: RowComponent;
-
+  children$: BehaviorSubject<QueryList<RowComponent>> = new BehaviorSubject<
+    QueryList<RowComponent>
+  >({} as QueryList<RowComponent>);
+  currentStep$: BehaviorSubject<StepComponent> =
+    new BehaviorSubject<StepComponent>({} as StepComponent);
   index: number = 0;
   parent = null;
   prev = null;
@@ -51,56 +72,89 @@ export class ProjectComponent implements HierarchicalList {
   constructor(
     private projectService: ProjectService,
     private logger: NGXLogger,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
-  async ngOnInit() {
-    this.rows = [];
-    this.projectService.ready.subscribe(() => {
-      this.rows = this.projectService.project$.value.rows;
-    });
+  ngOnInit() {
+    this.project$ = this.route.paramMap.pipe(
+      switchMap(async (params) => {
+        let id = parseInt(params.get('id') ?? '');
+        if (isNaN(id)) {
+          id = this.projectService.loadCurrentProjectId()?.id ?? 0;
+        }
+        const project = await this.projectService.loadProject(id);
+        if (project === null || project === undefined) {
+          return {} as Project;
+        }
+        return project;
+      })
+    );
+    this.rows$ = this.project$.pipe(switchMap((project) => of(project.rows)));
+    this.position$ = this.project$.pipe(
+      switchMap((project) =>
+        of(project.position ?? ({ row: 0, step: 0 } as Position))
+      ),
+      distinctUntilChanged(
+        (prev, curr) => prev.row === curr.row && prev.step === curr.step
+      )
+    );
 
-    await this.projectService.loadCurrentProject();
-
+    this.children$
+      .pipe(
+        combineLatestWith(this.position$),
+        skipWhile(([children, _position]) => {
+          return (
+            children === null ||
+            children === undefined ||
+            children.get === undefined
+          );
+        }),
+        map(([children, position]) => {
+          const row = children?.get(position.row);
+          if (row === null || row === undefined) {
+            return {} as StepComponent;
+          }
+          row.show();
+          const step = row.children.get(position.step);
+          if (step === null || step === undefined) {
+            return {} as StepComponent;
+          }
+          return step;
+        }),
+        skipWhile(
+          (step) =>
+            step === null || step === undefined || step.index === undefined
+        )
+      )
+      .subscribe((step) => {
+        this.currentStep$.next(step);
+      });
   }
-  private initialized = false;
-
-  async ngAfterViewChecked() {
-    if (this.initialized) {
-      return;
-    }
-
-    if (this.projectService.project$.value.position?.row !== 0) {
-      const currRow = this.children.get(
-        this.projectService.project$.value.position?.row ?? 0
-      );
-
-      if (currRow === null || currRow === undefined) {
-        return;
-      }
-
-      currRow.show();
-      const currStep = currRow.children.get(
-        this.projectService.project$.value.position?.step ?? 0
-      );
-
-      if (currStep === null || currStep === undefined) {
-        return;
-      }
-      this.currentStep = currStep;
-      this.currentStep.onClick(new Event('click'));
+  async ngAfterViewInit() {
+    this.children.changes.subscribe((children) => {
+      this.children$.next(children);
       this.cdr.detectChanges();
-      this.initialized = true;
-    }
-    //
+    });
+    this.currentStep$
+      .pipe(
+        skipWhile((step) => {
+          return step.index === undefined;
+        }),
+        take(1)
+      )
+      .subscribe((step) => {
+        step.onClick(new Event('click'));
+      });
   }
+
   onAdvanceRow() {
     this.doRowForward();
   }
-  onAdvanceStep() {
-    const endOfRow = this.doStepForward();
+  async onAdvanceStep() {
+    const endOfRow = await this.doStepForward();
     if (endOfRow) {
-      const endOfProject = this.doRowForward();
+      const endOfProject = await this.doRowForward();
       if (endOfProject) {
         this.resetProject(true);
       }
@@ -109,10 +163,10 @@ export class ProjectComponent implements HierarchicalList {
   onRetreatRow() {
     this.doRowBackward();
   }
-  onRetreatStep() {
-    const startOfRow = this.doStepBackward();
+  async onRetreatStep() {
+    const startOfRow = await this.doStepBackward();
     if (startOfRow) {
-      const startOfProject = this.doRowBackward();
+      const startOfProject = await this.doRowBackward();
       if (startOfProject) {
         this.resetProject(false);
       }
@@ -120,20 +174,20 @@ export class ProjectComponent implements HierarchicalList {
     }
   }
   @HostListener('keydown.ArrowRight', ['$event'])
-  onRightArrow() {
-    const endOfRow = this.doStepForward();
+  async onRightArrow() {
+    const endOfRow = await this.doStepForward();
     if (endOfRow) {
-      const endOfProject = this.doRowForward();
+      const endOfProject = await this.doRowForward();
       if (endOfProject) {
         this.resetProject(true);
       }
     }
   }
   @HostListener('keydown.ArrowLeft', ['$event'])
-  onLeftArrow() {
-    const startOfRow = this.doStepBackward();
+  async onLeftArrow() {
+    const startOfRow = await this.doStepBackward();
     if (startOfRow) {
-      const startOfProject = this.doRowBackward();
+      const startOfProject = await this.doRowBackward();
       if (startOfProject) {
         this.resetProject(false);
       }
@@ -149,24 +203,30 @@ export class ProjectComponent implements HierarchicalList {
     this.doRowForward();
   }
 
-  sanityPresumptiveStep() {
+  async sanityPresumptiveStep() {
     if (sanity) {
-      const presumptiveStep = this.currentStep.row.children.get(
-        this.currentStep.index
-      );
-      if (presumptiveStep !== this.currentStep) {
+      const currentStep = await firstValueFrom(this.currentStep$);
+      if (currentStep === null || currentStep === undefined) {
+        return;
+      }
+      const presumptiveStep = currentStep.row.children.get(currentStep.index);
+      if (presumptiveStep !== currentStep) {
         throw new Error(
           'Sanity check failed, presumptive step is not current step'
         );
       }
     }
   }
-  sanityPresumptiveRow() {
+  async sanityPresumptiveRow() {
     if (sanity) {
-      const presumptiveRow = this.currentStep.row.project.children.get(
-        this.currentStep.row.index
+      const currentStep = await firstValueFrom(this.currentStep$);
+      if (currentStep === null || currentStep === undefined) {
+        return;
+      }
+      const presumptiveRow = currentStep.row.project.children.get(
+        currentStep.row.index
       );
-      if (presumptiveRow !== this.currentStep.row) {
+      if (presumptiveRow !== currentStep.row) {
         throw new Error(
           'Sanity check failed, presumptive row is not current row'
         );
@@ -174,69 +234,84 @@ export class ProjectComponent implements HierarchicalList {
     }
   }
 
-  doStepForward(): boolean {
-    this.currentStep.isCurrentStep = false;
+  async doStepForward(): Promise<boolean> {
+    const currentStep = await firstValueFrom(this.currentStep$);
+    if (currentStep === null || currentStep === undefined) {
+      return true;
+    }
+    currentStep.isCurrentStep = false;
     this.sanityPresumptiveStep();
-    const nextStep = this.currentStep.row.children.get(
-      this.currentStep.index + 1
-    );
+    const nextStep = currentStep.row.children.get(currentStep.index + 1);
     if (nextStep === null || nextStep === undefined) {
       return true;
     }
-    this.currentStep = nextStep;
-    this.currentStep.isCurrentStep = true;
-    this.currentStep.row.show();
-    this.projectService.saveCurrentPosition(
-      this.currentStep.row.index,
-      this.currentStep.index
-    );
+    nextStep.isCurrentStep = true;
+    nextStep.row.show();
+    this.projectService.saveCurrentPosition(nextStep.row.index, nextStep.index);
+    this.currentStep$.next(nextStep);
     return false;
   }
-  doStepBackward(): boolean {
-    this.currentStep.isCurrentStep = false;
+  async doStepBackward(): Promise<boolean> {
+    const currentStep = await firstValueFrom(this.currentStep$);
+    if (currentStep === null || currentStep === undefined) {
+      return true;
+    }
+    currentStep.isCurrentStep = false;
     this.sanityPresumptiveStep();
-    const prevStep = this.currentStep.row.children.get(
-      this.currentStep.index - 1
-    );
+    const prevStep = currentStep.row.children.get(currentStep.index - 1);
     if (prevStep === null || prevStep === undefined) {
       return true;
     }
-    this.currentStep = prevStep;
-    this.currentStep.isCurrentStep = true;
-    this.currentStep.row.show();
-    this.projectService.saveCurrentPosition(
-      this.currentStep.row.index,
-      this.currentStep.index
-    );
+    prevStep.isCurrentStep = true;
+    prevStep.row.show();
+    this.projectService.saveCurrentPosition(prevStep.row.index, prevStep.index);
+    this.currentStep$.next(prevStep);
     return false;
   }
-  doStepEnd() {
-    this.currentStep = this.currentStep.row.children.last;
+  async doStepEnd() {
+    const currentStep = await firstValueFrom(this.currentStep$);
+    if (currentStep === null || currentStep === undefined) {
+      return;
+    }
+    const lastStep = currentStep.row.children.last;
+    lastStep.isCurrentStep = true;
+    this.projectService.saveCurrentPosition(lastStep.row.index, lastStep.index);
+    this.currentStep$.next(lastStep);
   }
-  doRowForward(): boolean {
-    this.currentStep.isCurrentStep = false;
-    this.currentStep.row.hide();
-    const currParent = this.currentStep.row;
-    this.sanityPresumptiveRow();
-    const nextParent = currParent.project.children.get(currParent.index + 1);
+  async doRowForward(): Promise<boolean> {
+    const currentStep = await firstValueFrom(this.currentStep$);
+    if (currentStep === null || currentStep === undefined) {
+      return true;
+    }
+    currentStep.isCurrentStep = false;
+    currentStep.row.hide();
+    const nextParent = currentStep.row.project.children.get(
+      currentStep.row.index + 1
+    );
     if (nextParent === null || nextParent === undefined) {
       return true;
     }
     nextParent.show();
-    nextParent.markFirstStep = true;
+    this.projectService.saveCurrentPosition(nextParent.index, 0);
+    this.currentStep$.next(nextParent.children.first);
     return false;
   }
-  doRowBackward(): boolean {
-    this.currentStep.isCurrentStep = false;
-    this.currentStep.row.hide();
-    const currParent = this.currentStep.row;
-    this.sanityPresumptiveRow();
-    const prevParent = currParent.project.children.get(currParent.index - 1);
+  async doRowBackward(): Promise<boolean> {
+    const currentStep = await firstValueFrom(this.currentStep$);
+    if (currentStep === null || currentStep === undefined) {
+      return true;
+    }
+    currentStep.isCurrentStep = false;
+    currentStep.row.hide();
+    const prevParent = currentStep.row.project.children.get(
+      currentStep.row.index - 1
+    );
     if (prevParent === null || prevParent === undefined) {
       return true;
     }
     prevParent.show();
-    prevParent.markFirstStep = true;
+    this.projectService.saveCurrentPosition(prevParent.index, 0);
+    this.currentStep$.next(prevParent.children.first);
     return false;
   }
 

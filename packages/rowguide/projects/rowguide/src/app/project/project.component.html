@@ -1,10 +1,11 @@
 <mat-accordion [multi]="true">
-  <app-row *ngFor="let row of rows; index as i" [index]="i" [row]="row" [steps]="row.steps" [project]="this"></app-row>
+  <app-row *ngFor="let row of ( rows$ | async ); index as i" [index]="i" [row]="row" [steps]="row.steps"
+    [project]="this"></app-row>
 </mat-accordion>
 <div class="advance-button-container">
   <button mat-raised-button color="primary" type="button" (click)="onRetreatRow()">Retreat Row</button>
   <button mat-raised-button color="primary" type="button" (click)="onRetreatStep()">Retreat Step</button>
-  <mat-card>{{currentStep.beadCount}}</mat-card>
+  <mat-card>{{(currentStep$ | async)?.beadCount}}</mat-card>
   <button mat-raised-button color="primary" type="button" (click)="onAdvanceStep()">Advance Step</button>
   <button mat-raised-button color="primary" type="button" (click)="onAdvanceRow()">Advance Row</button>
 </div>

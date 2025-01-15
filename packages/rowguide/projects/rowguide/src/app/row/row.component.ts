@@ -73,7 +73,7 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   }
 
   private setFirstStepAsCurrent() {
-    this.project.currentStep = this.children.first;
+    this.project.currentStep$.next(this.children.first);
     this.children.first.isCurrentStep = true;
     this.show();
     this.markFirstStep = false;

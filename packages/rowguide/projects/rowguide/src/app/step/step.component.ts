@@ -14,6 +14,8 @@ import { RowComponent } from '../row/row.component';
 import { FlamService } from '../flam.service';
 import { SettingsService } from '../settings.service';
 import { NGXLogger } from 'ngx-logger';
+import { lastValueFrom } from 'rxjs/internal/lastValueFrom';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-step',
@@ -63,12 +65,13 @@ export class StepComponent implements HierarchicalList {
   }
 
   @HostListener('click', ['$event'])
-  onClick(_e: any) {
-    if (this.row.project.currentStep) {
-      this.row.project.currentStep.isCurrentStep = false;
+  async onClick(_e: any) {
+    const currentStep = await firstValueFrom(this.row.project.currentStep$);
+    if (currentStep) {
+      currentStep.isCurrentStep = false;
     }
-    this.row.project.currentStep = this;
     this.isCurrentStep = true;
     this.projectService.saveCurrentPosition(this.row.index, this.index);
+    this.row.project.currentStep$.next(this);
   }
 }

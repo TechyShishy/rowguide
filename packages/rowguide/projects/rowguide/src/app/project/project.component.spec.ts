@@ -4,7 +4,8 @@ import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
-import { Subject, of } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
+import { Row } from '../row';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;
@@ -44,54 +45,54 @@ describe('ProjectComponent', () => {
 
   it('should initialize rows on ngOnInit', () => {
     component.ngOnInit();
-    expect(component.rows).toEqual([]);
+    expectAsync(component.rows$).toBeResolvedTo(new Observable<Row[]>());
     expect(projectServiceStub.loadCurrentProject).toHaveBeenCalled();
   });
 
   it('should advance step on onAdvanceStep', () => {
-    spyOn(component, 'doStepForward').and.returnValue(false);
+    spyOn(component, 'doStepForward').and.returnValue(Promise.resolve(false));
     component.onAdvanceStep();
     expect(component.doStepForward).toHaveBeenCalled();
   });
 
   it('should advance row on onAdvanceRow', () => {
-    spyOn(component, 'doRowForward').and.returnValue(false);
+    spyOn(component, 'doRowForward').and.returnValue(Promise.resolve(false));
     component.onAdvanceRow();
     expect(component.doRowForward).toHaveBeenCalled();
   });
 
   it('should retreat step on onRetreatStep', () => {
-    spyOn(component, 'doStepBackward').and.returnValue(false);
+    spyOn(component, 'doStepBackward').and.returnValue(Promise.resolve(false));
     component.onRetreatStep();
     expect(component.doStepBackward).toHaveBeenCalled();
   });
 
   it('should retreat row on onRetreatRow', () => {
-    spyOn(component, 'doRowBackward').and.returnValue(false);
+    spyOn(component, 'doRowBackward').and.returnValue(Promise.resolve(false));
     component.onRetreatRow();
     expect(component.doRowBackward).toHaveBeenCalled();
   });
 
   it('should handle right arrow key press', () => {
-    spyOn(component, 'doStepForward').and.returnValue(false);
+    spyOn(component, 'doStepForward').and.returnValue(Promise.resolve(false));
     component.onRightArrow();
     expect(component.doStepForward).toHaveBeenCalled();
   });
 
   it('should handle left arrow key press', () => {
-    spyOn(component, 'doStepBackward').and.returnValue(false);
+    spyOn(component, 'doStepBackward').and.returnValue(Promise.resolve(false));
     component.onLeftArrow();
     expect(component.doStepBackward).toHaveBeenCalled();
   });
 
   it('should handle up arrow key press', () => {
-    spyOn(component, 'doRowBackward').and.returnValue(false);
+    spyOn(component, 'doRowBackward').and.returnValue(Promise.resolve(false));
     component.onUpArrow();
     expect(component.doRowBackward).toHaveBeenCalled();
   });
 
   it('should handle down arrow key press', () => {
-    spyOn(component, 'doRowForward').and.returnValue(false);
+    spyOn(component, 'doRowForward').and.returnValue(Promise.resolve(false));
     component.onDownArrow();
     expect(component.doRowForward).toHaveBeenCalled();
   });
