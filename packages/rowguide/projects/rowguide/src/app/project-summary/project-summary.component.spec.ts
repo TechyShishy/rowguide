@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSummaryComponent } from './project-summary.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoggerTestingModule } from 'ngx-logger/testing';
+import { provideRouter } from '@angular/router';
+import { routes } from '../app.routes';
 
 describe('ProjectSummaryComponent', () => {
   let component: ProjectSummaryComponent;
@@ -14,7 +16,7 @@ describe('ProjectSummaryComponent', () => {
         BrowserAnimationsModule,
         LoggerTestingModule,
       ],
-      providers: [],
+      providers: [provideRouter(routes)],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProjectSummaryComponent);

@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
 import { Router } from '@angular/router';
+import { ProjectService } from '../project.service';
 
 @Component({
   selector: 'app-project-summary',
@@ -29,7 +30,8 @@ export class ProjectSummaryComponent {
   constructor(
     private indexedDBService: IndexedDBService,
     private ref: ElementRef,
-    private router: Router
+    private router: Router,
+    private projectService: ProjectService
   ) {}
 
   saveName() {
@@ -37,6 +39,7 @@ export class ProjectSummaryComponent {
   }
 
   loadProject() {
+    this.projectService.saveCurrentProject(this.project.id ?? 0);
     this.router.navigate(['/project', { id: this.project.id }]);
   }
   deleteProject() {

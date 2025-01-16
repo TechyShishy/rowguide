@@ -36,13 +36,12 @@ export class ProjectService {
     this.settingsService.ready.subscribe(() => {
       this.loadCurrentProject();
     });
-    this.saveCurrentProject();
   }
-  async saveCurrentProject() {
+  async saveCurrentProject(id: number) {
     localStorage.setItem(
       'currentProject',
       JSON.stringify(<CurrentProject>{
-        id: (await firstValueFrom(this.project$)).id,
+        id: id,
       })
     );
   }

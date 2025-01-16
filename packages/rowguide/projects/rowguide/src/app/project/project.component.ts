@@ -37,7 +37,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { sanity } from '../sanity';
 import { Position } from '../position';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Project } from '../project';
 
 @Component({
@@ -73,10 +73,18 @@ export class ProjectComponent implements HierarchicalList {
     private projectService: ProjectService,
     private logger: NGXLogger,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit() {
+    this.logger.debug(this.route.snapshot.paramMap.get('id'));
+    this.route.paramMap.subscribe((params) => {
+      if (params.get('id') === null) {
+        const currentId = this.projectService.loadCurrentProjectId();
+        this.router.navigate(['project', { id: currentId?.id }]);
+      }
+    });
     this.project$ = this.route.paramMap.pipe(
       switchMap(async (params) => {
         let id = parseInt(params.get('id') ?? '');
