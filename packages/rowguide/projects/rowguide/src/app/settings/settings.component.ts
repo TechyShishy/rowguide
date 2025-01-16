@@ -11,15 +11,15 @@ import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 
 @Component({
-    selector: 'app-settings',
-    imports: [
-        FormsModule,
-        MatSlideToggleModule,
-        ReactiveFormsModule,
-        MatCardModule,
-    ],
-    templateUrl: './settings.component.html',
-    styleUrl: './settings.component.scss'
+  selector: 'app-settings',
+  imports: [
+    FormsModule,
+    MatSlideToggleModule,
+    ReactiveFormsModule,
+    MatCardModule,
+  ],
+  templateUrl: './settings.component.html',
+  styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
   combine12Control = new FormControl(false);
@@ -41,7 +41,6 @@ export class SettingsComponent {
     private settingsService: SettingsService,
     private projectService: ProjectService
   ) {
-    this.settingsService.loadSettings();
     this.combine12Control.setValue(this.settingsService.combine12$.value);
     this.lrdesignatorsControl.setValue(
       this.settingsService.lrdesignators$.value

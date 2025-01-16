@@ -11,7 +11,9 @@ export class SettingsService {
   public flammarkers$ = new BehaviorSubject<boolean>(false);
   public ppinspector$ = new BehaviorSubject<boolean>(false);
   public zoom$ = new BehaviorSubject<boolean>(false);
-  constructor() {}
+  constructor() {
+    this.loadSettings();
+  }
   saveSettings(settings: Settings) {
     localStorage.setItem('settings', JSON.stringify(settings));
     this.ready.next(true);
