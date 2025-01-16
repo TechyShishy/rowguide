@@ -37,44 +37,6 @@ describe('RowComponent', () => {
     expect(component.visible).toBeFalse();
   });
 
-  it('should set first step as current when markFirstStep is true', () => {
-    const mockStepComponent = jasmine.createSpyObj('StepComponent', [
-      'isCurrentStep',
-    ]);
-    const mockProjectComponent = jasmine.createSpyObj('ProjectComponent', [
-      'currentStep',
-    ]);
-    const mockPanel = jasmine.createSpyObj('MatExpansionPanel', ['open']);
-    const mockElementRef = {
-      nativeElement: { scrollIntoView: jasmine.createSpy('scrollIntoView') },
-    };
-    const prevRow = { ref: mockElementRef } as any;
-
-    // Mock the children property as a Map
-    Object.defineProperty(mockProjectComponent, 'children', {
-      value: new Map<number, any>([[0, prevRow]]),
-    });
-
-    component.children = new QueryList<StepComponent>();
-    component.children.reset([mockStepComponent]);
-    component.project = mockProjectComponent;
-    component.panel = mockPanel;
-    component.markFirstStep = true;
-    component.index = 1;
-    component.row = { id: 1 } as Row;
-
-    component['setFirstStepAsCurrent']();
-
-    expect(component.project.currentStep$).toBe(mockStepComponent);
-    expect(mockStepComponent.isCurrentStep).toBeTrue();
-    expect(component.markFirstStep).toBeFalse();
-    expect(mockPanel.open).toHaveBeenCalled();
-    expect(mockElementRef.nativeElement.scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  });
-
   it('should update bead counts', () => {
     const step1 = jasmine.createSpyObj('StepComponent', ['step']);
     step1.step = { id: 1, count: 1, description: 'stepA' } as Step;

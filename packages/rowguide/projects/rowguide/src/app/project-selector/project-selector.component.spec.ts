@@ -11,6 +11,8 @@ import { BehaviorSubject, of, Subject } from 'rxjs';
 import * as pako from 'pako';
 import { Project } from '../project';
 import { FLAM } from '../flam';
+import { provideRouter } from '@angular/router';
+import { routes } from '../app.routes';
 
 describe('ProjectSelectorComponent', () => {
   let component: ProjectSelectorComponent;
@@ -47,6 +49,7 @@ describe('ProjectSelectorComponent', () => {
         { provide: IndexedDBService, useValue: indexedDBServiceSpy },
         { provide: BeadtoolPdfService, useValue: beadtoolPdfServiceSpy },
         { provide: FlamService, useValue: flamServiceSpy },
+        provideRouter(routes),
       ],
     }).compileComponents();
 

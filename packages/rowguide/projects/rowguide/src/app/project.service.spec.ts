@@ -7,6 +7,8 @@ import { Subject } from 'rxjs';
 import { BeadProject } from './bead-project';
 import { LoggerModule } from 'ngx-logger';
 import { LoggerTestingModule } from 'ngx-logger/testing';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
 
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -31,6 +33,7 @@ describe('ProjectService', () => {
           useValue: peyoteShorthandServiceSpy,
         },
         { provide: SettingsService, useValue: settingsServiceSpy },
+        provideRouter(routes),
       ],
     });
 

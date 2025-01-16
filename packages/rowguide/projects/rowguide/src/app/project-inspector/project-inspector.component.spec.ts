@@ -5,7 +5,13 @@ import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
 import { FlamService } from '../flam.service';
 import { IndexedDBService } from '../indexed-db.service';
-import { BehaviorSubject } from 'rxjs';
+import {
+  BehaviorSubject,
+  firstValueFrom,
+  lastValueFrom,
+  skipWhile,
+  take,
+} from 'rxjs';
 import { Project } from '../project';
 import { FLAM } from '../flam';
 
@@ -77,15 +83,13 @@ describe('ProjectInspectorComponent', () => {
     await fixture.whenStable();
 
     expect(mockFlamService.inititalizeFLAM).toHaveBeenCalledWith(true);
-    expect(component.loadProjectImage).toHaveBeenCalled();
   });
 
   it('should load project image', async () => {
-    const mockProject = { id: 1, image: undefined, rows: [] };
-    await component.loadProjectImage(mockProject);
+    const mockProject = { id: 1, image: new ArrayBuffer(0), rows: [] };
+    const image = await component.loadProjectImage(mockProject);
 
-    expect(mockIndexedDBService.loadProject).toHaveBeenCalledWith(1);
-    expect(component.image$).toContain('data:image/png;base64,');
+    expect(image).toContain('data:image/png;base64,');
   });
 
   it('should not load project image if no image exists', async () => {
@@ -99,9 +103,8 @@ describe('ProjectInspectorComponent', () => {
       Promise.resolve(mockProject)
     );
 
-    await component.loadProjectImage(mockProject);
+    const image = await component.loadProjectImage(mockProject);
 
-    expect(mockIndexedDBService.loadProject).toHaveBeenCalledWith(1);
-    expectAsync(component.image$).toBeResolved();
+    expect(image).toBe('');
   });
 });

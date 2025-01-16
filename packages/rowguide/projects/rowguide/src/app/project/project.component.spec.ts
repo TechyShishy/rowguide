@@ -4,21 +4,40 @@ import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
-import { Observable, Subject, of } from 'rxjs';
+import { Observable, Subject, firstValueFrom, of } from 'rxjs';
 import { Row } from '../row';
+import { provideRouter } from '@angular/router';
+import { routes } from '../app.routes';
+import { Project } from '../project';
+import { Position } from '../position';
+import { QueryList } from '@angular/core';
+import { StepComponent } from '../step/step.component';
+import { RowComponent } from '../row/row.component';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;
   let fixture: ComponentFixture<ProjectComponent>;
-  let projectServiceStub: Partial<ProjectService>;
+  let projectServiceStub: ProjectService;
   let settingsServiceStub: Partial<SettingsService>;
 
   beforeEach(async () => {
-    projectServiceStub = {
+    projectServiceStub = jasmine.createSpyObj(
+      'ProjectService',
+      [
+        'loadCurrentProject',
+        'loadCurrentProjectId',
+        'loadProject',
+        'saveCurrentPosition',
+      ],
+      ['ready']
+    );
+    /*projectServiceStub = {
       ready: new Subject<boolean>(),
       loadCurrentProject: jasmine.createSpy('loadCurrentProject'),
+      loadCurrentProjectId: jasmine.createSpy('loadCurrentProjectId'),
+      loadProject: jasmine.createSpy('loadProject'),
       saveCurrentPosition: jasmine.createSpy('saveCurrentPosition'),
-    };
+    };*/
 
     settingsServiceStub = {};
 
@@ -27,6 +46,7 @@ describe('ProjectComponent', () => {
       providers: [
         { provide: ProjectService, useValue: projectServiceStub },
         { provide: SettingsService, useValue: settingsServiceStub },
+        provideRouter(routes),
       ],
     }).compileComponents();
 
@@ -43,10 +63,82 @@ describe('ProjectComponent', () => {
     expect(component).toBeDefined();
   });
 
-  it('should initialize rows on ngOnInit', () => {
+  it('should initialize project$ on ngOnInit', async () => {
+    const mockProject = { rows: [], position: { row: 0, step: 0 } } as Project;
+    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
+      Promise.resolve(mockProject)
+    );
+    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+      id: 1,
+    });
+
     component.ngOnInit();
-    expectAsync(component.rows$).toBeResolvedTo(new Observable<Row[]>());
-    expect(projectServiceStub.loadCurrentProject).toHaveBeenCalled();
+    fixture.detectChanges();
+
+    const project = await firstValueFrom(component.project$);
+    expect(project).toEqual(mockProject);
+  });
+
+  it('should initialize rows$ on ngOnInit', async () => {
+    const mockRows = [{}, {}] as Row[];
+    const mockProject = {
+      rows: mockRows,
+      position: { row: 0, step: 0 },
+    } as Project;
+    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
+      Promise.resolve(mockProject)
+    );
+    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+      id: 1,
+    });
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const rows = await firstValueFrom(component.rows$);
+    expect(rows).toEqual(mockRows);
+  });
+
+  it('should initialize position$ on ngOnInit', async () => {
+    const mockPosition = { row: 1, step: 2 } as Position;
+    const mockProject = { rows: [], position: mockPosition } as Project;
+    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
+      Promise.resolve(mockProject)
+    );
+    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+      id: 1,
+    });
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const position = await firstValueFrom(component.position$);
+    expect(position).toEqual(mockPosition);
+  });
+
+  it('should update currentStep$ on children$ and position$ change', async () => {
+    const mockStep = jasmine.createSpyObj('StepComponent', ['onClick'], {
+      index: 1,
+      row: { children: new QueryList<StepComponent>() },
+    });
+    const mockRow = jasmine.createSpyObj('RowComponent', ['show'], {
+      children: new QueryList<StepComponent>(),
+    });
+    mockRow.children.reset([mockStep]);
+    mockRow.show.and.callFake(() => {});
+    const mockChildren = new QueryList<RowComponent>();
+    mockChildren.reset([mockRow]);
+    const mockPosition = { row: 0, step: 1 } as Position;
+
+    component.children$.next(mockChildren);
+    component.position$ = of(mockPosition);
+
+    component.ngOnInit();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const currentStep = await firstValueFrom(component.currentStep$);
+    expect(currentStep).toEqual(mockStep);
   });
 
   it('should advance step on onAdvanceStep', () => {
