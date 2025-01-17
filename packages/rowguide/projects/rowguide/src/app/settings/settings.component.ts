@@ -31,7 +31,7 @@ export class SettingsComponent {
   flammarkersControl = new FormControl(false);
   ppinspectorControl = new FormControl(false);
   zoomControl = new FormControl(false);
-  scrolloffsetControl = new FormControl(0);
+  scrolloffsetControl = new FormControl(-1);
 
   settings = this.formBuilder.group({
     combine12: this.combine12Control,
@@ -70,7 +70,7 @@ export class SettingsComponent {
       this.settingsService.flammarkers$.next(value.flammarkers ?? false);
       this.settingsService.ppinspector$.next(value.ppinspector ?? false);
       this.settingsService.zoom$.next(value.zoom ?? false);
-      this.settingsService.scrolloffset$.next(value.scrolloffset ?? 0);
+      this.settingsService.scrolloffset$.next(value.scrolloffset ?? -1);
     });
   }
 }
