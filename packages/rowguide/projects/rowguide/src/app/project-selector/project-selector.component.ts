@@ -1,10 +1,19 @@
-import { Component } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NGXLogger } from 'ngx-logger';
 import { ngfModule } from 'angular-file';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatExpansionModule } from '@angular/material/expansion';
+import {
+  MatExpansionModule,
+  MatExpansionPanel,
+} from '@angular/material/expansion';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
@@ -29,6 +38,7 @@ import { Router } from '@angular/router';
     CommonModule,
     ProjectSummaryComponent,
     MatExpansionModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './project-selector.component.html',
   styleUrl: './project-selector.component.scss',
@@ -37,6 +47,7 @@ export class ProjectSelectorComponent {
   file: File = new File([], '');
   fileData: string = '';
   projects: Project[] = [];
+  showSpinner: boolean = false;
 
   constructor(
     private logger: NGXLogger,
@@ -70,7 +81,9 @@ export class ProjectSelectorComponent {
       this.logger.debug('PDF file detected');
       const bufferCopy = buffer.slice(0); // Ensure the buffer is not detached
       const bufferCopy2 = buffer.slice(0); // Ensure the buffer is not detached
+      this.showSpinner = true;
       this.fileData = await this.beadtoolPdfService.loadDocument(bufferCopy);
+      this.showSpinner = false;
       if (this.fileData !== '') {
         await this.projectService.loadPeyote(this.file.name, this.fileData);
         let project = this.projectService.project$.value;
