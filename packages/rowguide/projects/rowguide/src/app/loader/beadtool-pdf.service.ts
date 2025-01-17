@@ -12,6 +12,14 @@ export class BeadtoolPdfService {
     private logger: NGXLogger
   ) {}
 
+  private isTextMarkedContent(
+    item: TextItem | TextMarkedContent
+  ): item is TextMarkedContent {
+    return (item as TextMarkedContent).type !== undefined;
+  }
+  private isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
+    return (item as TextItem).str !== undefined;
+  }
   async loadDocument(buffer: ArrayBuffer) {
     const loadingTask = this.pdfJsLibService.getDocument({
       data: buffer,
@@ -22,29 +30,33 @@ export class BeadtoolPdfService {
     for (let i = 1; i <= pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i);
       const textContent: { items: (TextItem | TextMarkedContent)[] } =
-        await page.getTextContent({
-          includeMarkedContent: false,
-        });
+        await page.getTextContent({ includeMarkedContent: false });
+
       const pageText: string = textContent.items
         .map((item: TextItem | TextMarkedContent) => {
-          const textItem = item as TextItem;
-          return textItem.str;
+          if (this.isTextMarkedContent(item)) {
+            return '';
+          } else if (this.isTextItem(item)) {
+            const textItem = item as TextItem;
+            return textItem.str;
+          } else {
+            return '';
+          }
         })
         .join('\n');
-      textPromises.push(pageText);
+      const cleanedText = pageText.replace(
+        /.*\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/gs,
+        '\n'
+      );
+      textPromises.push(cleanedText);
     }
 
     const texts = await Promise.all(textPromises);
     let text = texts.join('\n');
     this.logger.debug('PDF text:', text);
     text = text.replace(/\*\*\*.*\*\*\*/g, '');
-    text = text.replace(
-      /\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/g,
-      '\n'
-    );
     text = text.replace(/,\n+/g, ', ');
     const match = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
-
 
     const rowStripRegex = /^Row [&\d]+ \([LR]\)\s*/gm;
     if (match) {
