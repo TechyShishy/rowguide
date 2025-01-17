@@ -34,7 +34,8 @@ export class PeyoteShorthandService {
     const row: Row = { id: lineNum, steps: [] };
     let stepNum = 1;
 
-    line.split(delimiter).forEach((step) => {
+
+    this.stripRowTag(line).split(delimiter).forEach((step) => {
       this.logger.trace('Word:', step);
       const stepMatch = this.matchStep(step);
 
@@ -48,6 +49,9 @@ export class PeyoteShorthandService {
     return row;
   }
 
+  private stripRowTag(line : string): string  {
+    return line.replace(/^Row [0-9&]+ \([LR]\)\s+/, '');
+  }
   private matchStep(step: string): RegExpMatchArray | null {
     const patterns = [
       /^\(([0-9]+)\)([a-zA-Z0-91]+)/, // (1)stepA
