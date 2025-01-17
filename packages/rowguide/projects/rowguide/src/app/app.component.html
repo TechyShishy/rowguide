@@ -1,12 +1,12 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav>
     <mat-list>
-      <mat-list-item><a mat-button routerLink="/project">Project</a></mat-list-item>
-      <mat-list-item><a mat-button routerLink="/project-selector">Project
+      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project">Project</a></mat-list-item>
+      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-selector">Project
           Selector</a></mat-list-item>
-      <mat-list-item><a mat-button routerLink="/project-inspector">Project
+      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-inspector">Project
           Inspector</a></mat-list-item>
-      <mat-list-item><a mat-button routerLink="/settings">Settings</a></mat-list-item>
+      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/settings">Settings</a></mat-list-item>
     </mat-list>
   </mat-sidenav>
   <mat-sidenav-content>
