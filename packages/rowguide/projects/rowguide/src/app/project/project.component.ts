@@ -292,6 +292,7 @@ export class ProjectComponent implements HierarchicalList {
       return true;
     }
     nextParent.show();
+    nextParent.children.first.onClick(new Event('click'));
     this.projectService.saveCurrentPosition(nextParent.index, 0);
     this.currentStep$.next(nextParent.children.first);
     return false;
@@ -310,6 +311,7 @@ export class ProjectComponent implements HierarchicalList {
       return true;
     }
     prevParent.show();
+    prevParent.children.first.onClick(new Event('click'));
     this.projectService.saveCurrentPosition(prevParent.index, 0);
     this.currentStep$.next(prevParent.children.first);
     return false;
