@@ -29,7 +29,7 @@ export class FlamService {
         this.projectService.project$.value.firstLastAppearanceMap ?? {}
       ).length > 0
     ) {
-      this.logger.debug(
+      this.logger.trace(
         'Using cached FLAM:',
         this.projectService.project$.value.firstLastAppearanceMap
       );
@@ -63,7 +63,6 @@ export class FlamService {
   }
 
   isFirstStep(row: number, step: Step): boolean {
-    this.logger.debug('Checking if step is first:', step);
     this.inititalizeFLAM();
     if (
       this.flam$.value[step.description] &&

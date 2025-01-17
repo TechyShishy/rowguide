@@ -78,7 +78,6 @@ export class ProjectComponent implements HierarchicalList {
   ) {}
 
   ngOnInit() {
-    this.logger.debug(this.route.snapshot.paramMap.get('id'));
     this.route.paramMap.subscribe((params) => {
       if (params.get('id') === null) {
         const currentId = this.projectService.loadCurrentProjectId();
