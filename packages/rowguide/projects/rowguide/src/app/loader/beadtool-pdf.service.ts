@@ -46,7 +46,7 @@ export class BeadtoolPdfService {
         .join('\n');
       const cleanedText = pageText.replace(
         /.*\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/gs,
-        '\n'
+        ''
       );
       textPromises.push(cleanedText);
     }

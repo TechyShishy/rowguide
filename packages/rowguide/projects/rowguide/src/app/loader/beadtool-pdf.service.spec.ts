@@ -16,13 +16,13 @@ describe('BeadtoolPdfService', () => {
   ];
   const docDataBeadtoolComments = [
     [
+      'Created with BeadTool 4 - www.beadtool.net',
       'Row 1&2 (L) stepA',
       'Row 2 (R) stepB',
-      'Created with BeadTool 4 - www.beadtool.net',
     ],
     [
-      'Row 3 (L) stepC stepD stepE',
       'Created with BeadTool 4 - www.beadtool.net',
+      'Row 3 (L) stepC stepD stepE',
       'Row 4 (R) stepF',
     ],
   ];
