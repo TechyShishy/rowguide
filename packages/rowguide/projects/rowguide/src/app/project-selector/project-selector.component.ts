@@ -60,7 +60,7 @@ export class ProjectSelectorComponent {
       const importProject = JSON.parse(projectString);
       this.indexedDBService.updateProject(importProject);
       this.loadProjectsFromIndexedDB();
-      this.router.navigate(['/project']);
+      this.router.navigate(['project', { id: importProject.id }]);
     } else if (
       bufHeader[0] === pdfHeader[0] &&
       bufHeader[1] === pdfHeader[1] &&
@@ -84,7 +84,7 @@ export class ProjectSelectorComponent {
         this.projectService.ready.next(true);
         await this.loadProjectsFromIndexedDB();
         await this.projectService.saveCurrentPosition(0, 0);
-        this.router.navigate(['/project']);
+        this.router.navigate(['project', { id: project.id }]);
       } else {
         this.logger.debug('Section not found');
       }
@@ -101,10 +101,8 @@ export class ProjectSelectorComponent {
       this.projectService.ready.next(true);
       this.loadProjectsFromIndexedDB();
       this.projectService.saveCurrentPosition(0, 0);
-      this.router.navigate(['/project']);
+      this.router.navigate(['project', { id: project.id }]);
     }
-
-    // TODO: Do something to move the user to the project view
   }
 
   async extractSection(pdfFile: File) {
