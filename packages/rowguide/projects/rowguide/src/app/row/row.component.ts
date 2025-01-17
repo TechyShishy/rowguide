@@ -25,17 +25,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { ProjectComponent } from '../project/project.component';
 
 @Component({
-    selector: 'app-row',
-    imports: [
-        CommonModule,
-        MatButtonModule,
-        MatCardModule,
-        MatExpansionModule,
-        MatChipsModule,
-        StepComponent,
-    ],
-    templateUrl: './row.component.html',
-    styleUrls: ['./row.component.scss']
+  selector: 'app-row',
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardModule,
+    MatExpansionModule,
+    MatChipsModule,
+    StepComponent,
+  ],
+  templateUrl: './row.component.html',
+  styleUrls: ['./row.component.scss'],
 })
 export class RowComponent implements HierarchicalList, AfterViewInit {
   @Input() row!: Row;
@@ -94,13 +94,25 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   show() {
     this.panel.open();
     this.cdr.detectChanges();
-    this.scrollToPreviousRow();
+    this.settingsService.scrolloffset$.subscribe((offset) => {
+      this.scrollToOffsetRow(offset);
+    });
+    //this.scrollToPreviousRow();
   }
 
   private scrollToPreviousRow() {
     const prevRow = this.project.children.get(this.index - 1);
     if (prevRow) {
       prevRow.ref.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }
+  private scrollToOffsetRow(offset: number) {
+    const offsetRow = this.project.children.get(this.index + offset);
+    if (offsetRow) {
+      offsetRow.ref.nativeElement.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });

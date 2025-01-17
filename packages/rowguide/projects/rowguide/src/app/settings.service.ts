@@ -11,6 +11,7 @@ export class SettingsService {
   public flammarkers$ = new BehaviorSubject<boolean>(false);
   public ppinspector$ = new BehaviorSubject<boolean>(false);
   public zoom$ = new BehaviorSubject<boolean>(false);
+  public scrolloffset$ = new BehaviorSubject<number>(0);
   constructor() {
     this.loadSettings();
   }
@@ -27,6 +28,7 @@ export class SettingsService {
       this.flammarkers$.next(s.flammarkers);
       this.ppinspector$.next(s.ppinspector);
       this.zoom$.next(s.zoom);
+      this.scrolloffset$.next(s.scrolloffset);
     }
   }
 }
@@ -37,4 +39,5 @@ export class Settings {
   flammarkers: boolean = false;
   ppinspector: boolean = false;
   zoom: boolean = false;
+  scrolloffset: number = 0;
 }

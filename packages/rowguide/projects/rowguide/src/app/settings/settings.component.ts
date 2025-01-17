@@ -7,8 +7,10 @@ import {
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSliderModule } from '@angular/material/slider';
 import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-settings',
@@ -17,6 +19,8 @@ import { ProjectService } from '../project.service';
     MatSlideToggleModule,
     ReactiveFormsModule,
     MatCardModule,
+    MatSliderModule,
+    CommonModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -27,6 +31,7 @@ export class SettingsComponent {
   flammarkersControl = new FormControl(false);
   ppinspectorControl = new FormControl(false);
   zoomControl = new FormControl(false);
+  scrolloffsetControl = new FormControl(0);
 
   settings = this.formBuilder.group({
     combine12: this.combine12Control,
@@ -34,6 +39,7 @@ export class SettingsComponent {
     flammarkers: this.flammarkersControl,
     ppinspector: this.ppinspectorControl,
     zoom: this.zoomControl,
+    scrolloffset: this.scrolloffsetControl,
   });
 
   constructor(
@@ -48,6 +54,7 @@ export class SettingsComponent {
     this.flammarkersControl.setValue(this.settingsService.flammarkers$.value);
     this.ppinspectorControl.setValue(this.settingsService.ppinspector$.value);
     this.zoomControl.setValue(this.settingsService.zoom$.value);
+    this.scrolloffsetControl.setValue(this.settingsService.scrolloffset$.value);
 
     this.settings.valueChanges.subscribe((value) => {
       this.settingsService.saveSettings(<Settings>{
@@ -56,13 +63,14 @@ export class SettingsComponent {
         flammarkers: value.flammarkers,
         ppinspector: value.ppinspector,
         zoom: value.zoom,
+        scrolloffset: value.scrolloffset,
       });
       this.settingsService.combine12$.next(value.combine12 ?? false);
       this.settingsService.lrdesignators$.next(value.lrdesignators ?? false);
       this.settingsService.flammarkers$.next(value.flammarkers ?? false);
       this.settingsService.ppinspector$.next(value.ppinspector ?? false);
       this.settingsService.zoom$.next(value.zoom ?? false);
-      projectService.loadCurrentProject();
+      this.settingsService.scrolloffset$.next(value.scrolloffset ?? 0);
     });
   }
 }
