@@ -3,41 +3,34 @@ import {
   HostListener,
   QueryList,
   ViewChildren,
+  ChangeDetectorRef,
 } from '@angular/core';
-import { RowComponent } from '../row/row.component';
 import { CommonModule, NgFor } from '@angular/common';
-import { Row } from '../row';
-import { ProjectService } from '../project.service';
-import { NGXLogger } from 'ngx-logger';
-import { HierarchicalList } from '../hierarchical-list';
-import { StepComponent } from '../step/step.component';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import {
-  distinctUntilChanged,
-  Observable,
-  of,
-  switchMap,
-  BehaviorSubject,
-  firstValueFrom,
-  lastValueFrom,
-  take,
-  skipWhile,
-  share,
-  forkJoin,
-  combineLatest,
-  combineLatestWith,
-  map,
-  mergeWith,
-  delayWhen,
-  tap,
-  OperatorFunction,
-} from 'rxjs';
-import { ChangeDetectorRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { Observable } from 'rxjs/internal/Observable';
+import { of } from 'rxjs/internal/observable/of';
+import { distinctUntilChanged } from 'rxjs/internal/operators/distinctUntilChanged';
+import { switchMap } from 'rxjs/internal/operators/switchMap';
+import { take } from 'rxjs/internal/operators/take';
+import { skipWhile } from 'rxjs/internal/operators/skipWhile';
+import { combineLatestWith } from 'rxjs/internal/operators/combineLatestWith';
+import { map } from 'rxjs/internal/operators/map';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+
+import { NGXLogger } from 'ngx-logger';
+
+import { RowComponent } from '../row/row.component';
+import { StepComponent } from '../step/step.component';
+import { Row } from '../row';
+import { ProjectService } from '../project.service';
+import { HierarchicalList } from '../hierarchical-list';
 import { sanity } from '../sanity';
 import { Position } from '../position';
-import { ActivatedRoute, Router } from '@angular/router';
 import { Project } from '../project';
 
 @Component({
