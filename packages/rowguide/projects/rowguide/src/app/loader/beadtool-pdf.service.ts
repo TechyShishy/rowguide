@@ -56,22 +56,18 @@ export class BeadtoolPdfService {
     this.logger.debug('PDF text:', text);
     text = text.replace(/\*\*\*.*\*\*\*/g, '');
     text = text.replace(/,\n+/g, ', ');
-    const match = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
+    const match1 = text.match(/((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s);
 
-    //const rowStripRegex = /^Row [&\d]+ \([LR]\)\s*/gm;
-    const rowStripRegex = /^$/g;
-    if (match) {
-      const rgsFileText = match[1].replace(rowStripRegex, '');
-      return rgsFileText;
-    } else {
-      const match = text.match(/((?:Row 1 .*)(?:Row \d .*\n?)).*$/s);
-      if (match) {
-        const rgsFileText = match[1].replace(rowStripRegex, '');
-        return rgsFileText;
-      } else {
-        return '';
-      }
+    if (match1) {
+      return match1[1];
     }
+
+    const match2 = text.match(/((?:Row 1 .*)(?:Row \d .*\n?)).*$/s);
+    if (match2) {
+      return match2[1];
+    }
+
+    return '';
   }
 
   async renderFrontPage(buffer: ArrayBuffer): Promise<ArrayBuffer> {
