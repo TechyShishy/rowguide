@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
 import { SettingsService, Settings } from './settings.service';
-import exp from 'constants';
 
 describe('SettingsService', () => {
   let service: SettingsService;

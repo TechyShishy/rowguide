@@ -11,19 +11,19 @@ describe('BeadtoolPdfService', () => {
   let service: BeadtoolPdfService;
   let pdfjslibServiceSpy: jasmine.SpyObj<PdfjslibService>;
   const docDataPlain = [
-    ['Row 1&2 (L) stepA', 'Row 2 (R) stepB'],
-    ['Row 3 (L) stepC stepD stepE', 'Row 4 (R) stepF'],
+    ['Row 1&2 (L) stepA', 'Row 3 (R) stepB'],
+    ['Row 4 (L) stepC stepD stepE', 'Row 5 (R) stepF'],
   ];
   const docDataBeadtoolComments = [
     [
       'Created with BeadTool 4 - www.beadtool.net',
       'Row 1&2 (L) stepA',
-      'Row 2 (R) stepB',
+      'Row 3 (R) stepB',
     ],
     [
       'Created with BeadTool 4 - www.beadtool.net',
-      'Row 3 (L) stepC stepD stepE',
-      'Row 4 (R) stepF',
+      'Row 4 (L) stepC stepD stepE',
+      'Row 5 (R) stepF',
     ],
   ];
   const docDataRowOne = [
@@ -84,7 +84,9 @@ describe('BeadtoolPdfService', () => {
     const buffer = new ArrayBuffer(8);
     const result = await service.loadDocument(buffer);
 
-    expect(result).toBe('stepA\nstepB\nstepC stepD stepE\nstepF');
+    expect(result).toBe(
+      'Row 1&2 (L) stepA\nRow 3 (R) stepB\nRow 4 (L) stepC stepD stepE\nRow 5 (R) stepF'
+    );
   });
 
   it('should return an empty string when content does not match', async () => {
