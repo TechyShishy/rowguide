@@ -16,6 +16,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { NotificationComponent } from "./notification/notification.component";
 
 @Component({
   selector: 'app-root',
@@ -29,7 +30,8 @@ import { MatButtonModule } from '@angular/material/button';
     MatButtonModule,
     RouterOutlet,
     RouterLink,
-  ],
+    NotificationComponent
+],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
