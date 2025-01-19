@@ -4,7 +4,7 @@ import { BeadtoolPdfService } from './beadtool-pdf.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { PdfjslibService } from '../pdfjslib.service';
 import { NGXLogger } from 'ngx-logger';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 
 describe('BeadtoolPdfService', () => {
@@ -82,7 +82,9 @@ describe('BeadtoolPdfService', () => {
     } as unknown as PDFDocumentLoadingTask);
 
     const buffer = new ArrayBuffer(8);
-    const result = await service.loadDocument(buffer);
+    const result = await firstValueFrom(
+      service.loadDocument(new File([buffer], 'test.pdf'))
+    );
 
     expect(result).toBe(
       'Row 1&2 (L) stepA\nRow 3 (R) stepB\nRow 4 (L) stepC stepD stepE\nRow 5 (R) stepF'
@@ -90,6 +92,7 @@ describe('BeadtoolPdfService', () => {
   });
 
   it('should return an empty string when content does not match', async () => {
+    const mockFile = new File(['%PDF-1.4Test Content'], 'test.pdf');
     const mockPdfDoc = {
       numPages: Object.keys(docDataInvalid).length,
       getPage: jasmine.createSpy('getPage').and.callFake((pageNum: number) => {
@@ -113,7 +116,7 @@ describe('BeadtoolPdfService', () => {
     } as unknown as PDFDocumentLoadingTask);
 
     const buffer = new ArrayBuffer(8);
-    const result = await service.loadDocument(buffer);
+    const result = await firstValueFrom(service.loadDocument(mockFile));
 
     expect(result).toBe('');
   });

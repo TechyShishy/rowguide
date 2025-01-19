@@ -25,6 +25,18 @@ import { ProjectSummaryComponent } from '../project-summary/project-summary.comp
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
 import { Router } from '@angular/router';
+import {
+  buffer,
+  combineLatestWith,
+  from,
+  map,
+  mergeWith,
+  Observable,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+} from 'rxjs';
 
 @Component({
   selector: 'app-project-selector',
@@ -46,8 +58,10 @@ import { Router } from '@angular/router';
 export class ProjectSelectorComponent {
   file: File = new File([], '');
   fileData: string = '';
+  fileData$: Observable<string> = new Observable<string>();
   projects: Project[] = [];
   showSpinner: boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private logger: NGXLogger,
@@ -57,21 +71,22 @@ export class ProjectSelectorComponent {
     private beadtoolPdfService: BeadtoolPdfService,
     private router: Router
   ) {}
-  async importFile() {
-    const buffer = await this.file.arrayBuffer();
+  importFile(): Observable<Project> {
+    return from(this.file.arrayBuffer()).pipe(
+      map((buffer) => buffer.slice(0, 8)),
+      switchMap((buffer) => this.detectFileType(buffer))
+    );
+  }
+
+  private detectFileType(buffer: ArrayBuffer): Observable<Project> {
+    let project$: Observable<Project>;
     const gzipHeader = Uint8Array.from([0x1f, 0x8b]);
     const pdfHeader = Uint8Array.from([0x25, 0x50, 0x44, 0x46]);
-    const bufHeader = new Uint8Array(buffer.slice(0, 4));
+    const bufHeader = new Uint8Array(buffer);
 
     if (bufHeader[0] === gzipHeader[0] && bufHeader[1] === gzipHeader[1]) {
       this.logger.debug('Gzip file detected');
-      const projectArray = inflate(buffer);
-      const decoder = new TextDecoder();
-      const projectString = decoder.decode(projectArray);
-      const importProject = JSON.parse(projectString);
-      this.indexedDBService.updateProject(importProject);
-      this.loadProjectsFromIndexedDB();
-      this.router.navigate(['project', { id: importProject.id }]);
+      project$ = this.importGzipFile(this.file);
     } else if (
       bufHeader[0] === pdfHeader[0] &&
       bufHeader[1] === pdfHeader[1] &&
@@ -79,43 +94,63 @@ export class ProjectSelectorComponent {
       bufHeader[3] === pdfHeader[3]
     ) {
       this.logger.debug('PDF file detected');
-      const bufferCopy = buffer.slice(0); // Ensure the buffer is not detached
-      const bufferCopy2 = buffer.slice(0); // Ensure the buffer is not detached
-      this.showSpinner = true;
-      this.fileData = await this.beadtoolPdfService.loadDocument(bufferCopy);
-      this.showSpinner = false;
-      if (this.fileData !== '') {
-        await this.projectService.loadPeyote(this.file.name, this.fileData);
-        let project = this.projectService.project$.value;
-        project.image = await this.beadtoolPdfService.renderFrontPage(
-          bufferCopy2
-        );
-        this.flamService.inititalizeFLAM(true);
-        project.firstLastAppearanceMap = this.flamService.flam$.value;
-        this.projectService.project$.next(project);
-        await this.indexedDBService.updateProject(project);
-        this.projectService.ready.next(true);
-        await this.loadProjectsFromIndexedDB();
-        await this.projectService.saveCurrentPosition(0, 0);
-        this.router.navigate(['project', { id: project.id }]);
-      } else {
-        this.logger.debug('Section not found');
-      }
+      project$ = this.importPdfFile(this.file);
     } else {
-      const text = await this.file.text();
-      this.logger.debug('File text: ', text);
-      this.fileData = text;
-      await this.projectService.loadPeyote(this.file.name, this.fileData);
-      let project = this.projectService.project$.value;
-      this.flamService.inititalizeFLAM(true);
-      project.firstLastAppearanceMap = this.flamService.flam$.value;
-      this.projectService.project$.next(project);
-      this.indexedDBService.updateProject(project);
-      this.projectService.ready.next(true);
-      this.loadProjectsFromIndexedDB();
-      this.projectService.saveCurrentPosition(0, 0);
-      this.router.navigate(['project', { id: project.id }]);
+      this.logger.debug('RGS file detected');
+      project$ = this.importRgsFile(this.file);
     }
+
+    return project$.pipe(
+      tap((project) => {
+        this.projectService.project$.next(project);
+        this.indexedDBService.updateProject(project);
+        this.projectService.ready.next(true);
+        this.loadProjectsFromIndexedDB();
+        this.router.navigate(['project', { id: project.id }]);
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  importGzipFile(file: File) {
+    return from(file.arrayBuffer()).pipe(
+      map((buffer) => {
+        const projectArray = inflate(buffer);
+        const decoder = new TextDecoder();
+        const projectString = decoder.decode(projectArray);
+        return JSON.parse(projectString);
+      })
+    );
+  }
+  importPdfFile(file: File) {
+    return from(this.beadtoolPdfService.loadDocument(file)).pipe(
+      switchMap((data) => {
+        return from(this.projectService.loadPeyote(file.name, data));
+      }),
+      combineLatestWith(from(this.beadtoolPdfService.renderFrontPage(file))),
+      map(([project, image]) => {
+        project.image = image;
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(project);
+        project.position = { row: 0, step: 0 };
+        return project;
+      })
+    );
+  }
+
+  importRgsFile(file: File) {
+    return from(this.file.text()).pipe(
+      switchMap((data) => {
+        return from(this.projectService.loadPeyote(file.name, data));
+      }),
+      map((project) => {
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(project);
+        project.position = { row: 0, step: 0 };
+        return project;
+      })
+    );
   }
 
   async extractSection(pdfFile: File) {
@@ -128,8 +163,5 @@ export class ProjectSelectorComponent {
 
   async ngAfterViewInit() {
     await this.loadProjectsFromIndexedDB();
-  }
-  saveProjectToIndexedDB(project: Project) {
-    this.indexedDBService.addProject(project);
   }
 }

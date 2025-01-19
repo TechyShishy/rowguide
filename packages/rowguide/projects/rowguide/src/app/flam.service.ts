@@ -58,7 +58,7 @@ export class FlamService {
         }
       }
     }
-    this.logger.trace('Generated FLAM:', JSON.stringify(flam));
+    this.logger.trace('Generated FLAM:', flam);
     return flam;
   }
 

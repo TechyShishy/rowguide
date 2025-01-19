@@ -7,7 +7,7 @@ import { FlamService } from '../flam.service';
 import { NGXLogger } from 'ngx-logger';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, from, of, Subject } from 'rxjs';
 import * as pako from 'pako';
 import { Project } from '../project';
 import { FLAM } from '../flam';
@@ -36,7 +36,10 @@ describe('ProjectSelectorComponent', () => {
       'loadDocument',
       'renderFrontPage',
     ]);
-    flamServiceSpy = jasmine.createSpyObj('FlamService', ['inititalizeFLAM']);
+    flamServiceSpy = jasmine.createSpyObj('FlamService', [
+      'inititalizeFLAM',
+      'generateFLAM',
+    ]);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -72,12 +75,6 @@ describe('ProjectSelectorComponent', () => {
     expect(component.projects).toEqual(mockProjects);
   });
 
-  it('should save project to IndexedDB', () => {
-    const mockProject: Project = { rows: [], id: 1, name: 'Test Project' };
-    component.saveProjectToIndexedDB(mockProject);
-    expect(indexedDBServiceSpy.addProject).toHaveBeenCalledWith(mockProject);
-  });
-
   it('should detect gzip file and process it', async () => {
     const mockGzipContent = pako.gzip(
       JSON.stringify({ id: 1, name: 'Test Project', rows: [] })
@@ -85,7 +82,14 @@ describe('ProjectSelectorComponent', () => {
     const mockFile = new File([mockGzipContent], 'test.gz');
     component.file = mockFile;
 
-    await component.importFile();
+
+    const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
+
+    projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
+    flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
+    projectServiceSpy.ready = new Subject<boolean>();
+
+    await firstValueFrom(component.importFile());
 
     expect(indexedDBServiceSpy.updateProject).toHaveBeenCalledWith({
       id: 1,
@@ -101,29 +105,29 @@ describe('ProjectSelectorComponent', () => {
     );
     component.file = mockFile;
 
-    beadtoolPdfServiceSpy.loadDocument.and.returnValue(
-      Promise.resolve('PDF file content')
-    );
+    beadtoolPdfServiceSpy.loadDocument.and.returnValue(of('PDF file content'));
     beadtoolPdfServiceSpy.renderFrontPage.and.returnValue(
-      Promise.resolve(new ArrayBuffer(0))
+      from(Promise.resolve(new ArrayBuffer(0)))
     );
-
-    projectServiceSpy.project$ = new BehaviorSubject<Project>({
+    const mockProject = {
       id: 1,
       name: 'Test Project',
       rows: [],
-    });
+    };
+    projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
     flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
     projectServiceSpy.ready = new Subject<boolean>();
 
-    await component.importFile();
+    projectServiceSpy.loadPeyote.and.returnValue(Promise.resolve(mockProject));
+
+    await firstValueFrom(component.importFile());
 
     expect(beadtoolPdfServiceSpy.loadDocument).toHaveBeenCalled();
     expect(projectServiceSpy.loadPeyote).toHaveBeenCalledWith(
       'test.pdf',
       'PDF file content'
     );
-    expect(flamServiceSpy.inititalizeFLAM).toHaveBeenCalledWith(true);
+    expect(flamServiceSpy.generateFLAM).toHaveBeenCalled();
     expect(indexedDBServiceSpy.updateProject).toHaveBeenCalled();
   });
 
@@ -134,10 +138,11 @@ describe('ProjectSelectorComponent', () => {
     const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
 
     projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
+    projectServiceSpy.loadPeyote.and.returnValue(Promise.resolve(mockProject));
     flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
     projectServiceSpy.ready = new Subject<boolean>();
 
-    await component.importFile();
+    await firstValueFrom(component.importFile());
 
     expect(projectServiceSpy.loadPeyote).toHaveBeenCalledWith(
       'test.txt',

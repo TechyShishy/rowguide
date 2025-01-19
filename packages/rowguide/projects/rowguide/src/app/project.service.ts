@@ -84,6 +84,7 @@ export class ProjectService {
     }
     this.project$.next(project);
     this.ready.next(true);
+    return project;
   }
   async loadProject(id: number) {
     const project = await this.indexedDBService.loadProject(id);
