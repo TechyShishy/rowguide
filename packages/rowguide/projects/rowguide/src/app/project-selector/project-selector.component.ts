@@ -37,7 +37,10 @@ import {
   takeUntil,
   firstValueFrom,
   tap,
+  of,
+  forkJoin,
 } from 'rxjs';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-project-selector',
@@ -70,7 +73,8 @@ export class ProjectSelectorComponent {
     private indexedDBService: IndexedDBService,
     private flamService: FlamService,
     private beadtoolPdfService: BeadtoolPdfService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {}
   importFile(): Observable<Project> {
     return from(this.file.arrayBuffer()).pipe(
@@ -134,14 +138,36 @@ export class ProjectSelectorComponent {
   }
   importPdfFile(file: File) {
     return from(this.beadtoolPdfService.loadDocument(file)).pipe(
-      switchMap((data) => {
-        return from(this.projectService.loadPeyote(file.name, data));
+      map((text: string): [string, number] => {
+        const match = text.match(
+          /(?:Row (\d+) \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)$/
+        );
+        let lastRow = 0;
+        if (match) {
+          lastRow = parseInt(match[1]);
+        }
+        return [text, lastRow];
+      }),
+      switchMap(([data, lastRow]: [string, number]) => {
+        return forkJoin([
+          from(this.projectService.loadPeyote(file.name, data)),
+          of(lastRow),
+        ]);
       }),
       combineLatestWith(from(this.beadtoolPdfService.renderFrontPage(file))),
-      map(([project, image]) => {
+      map(([[project, lastRow], image]): [Project, number] => {
         project.image = image;
         project.firstLastAppearanceMap = this.flamService.generateFLAM(project);
         project.position = { row: 0, step: 0 };
+        return [project, lastRow];
+      }),
+      map(([project, lastRow]: [Project, number]) => {
+        if (lastRow > 0 && lastRow !== project.rows.length + 1) {
+          this.logger.warn('Row count mismatch');
+          this.notificationService.snackbar(
+            'Number of rows imported does not match the highest row number in the PDF.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'
+          );
+        }
         return project;
       })
     );

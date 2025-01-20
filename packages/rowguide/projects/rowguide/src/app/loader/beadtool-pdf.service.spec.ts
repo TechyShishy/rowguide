@@ -17,13 +17,13 @@ describe('BeadtoolPdfService', () => {
   const docDataBeadtoolComments = [
     [
       'Created with BeadTool 4 - www.beadtool.net',
-      'Row 1&2 (L) stepA',
-      'Row 3 (R) stepB',
+      'Row 1&2 (L) (1)stepA',
+      'Row 3 (R) (2)stepB',
     ],
     [
       'Created with BeadTool 4 - www.beadtool.net',
-      'Row 4 (L) stepC stepD stepE',
-      'Row 5 (R) stepF',
+      'Row 4 (L) (3)stepC, (4)stepD, (5)stepE',
+      'Row 5 (R) (6)stepF',
     ],
   ];
   const docDataRowOne = [
@@ -85,9 +85,8 @@ describe('BeadtoolPdfService', () => {
     const result = await firstValueFrom(
       service.loadDocument(new File([buffer], 'test.pdf'))
     );
-
     expect(result).toBe(
-      'Row 1&2 (L) stepA\nRow 3 (R) stepB\nRow 4 (L) stepC stepD stepE\nRow 5 (R) stepF'
+      'Row 1&2 (L) (1)stepA\nRow 3 (R) (2)stepB\nRow 4 (L) (3)stepC, (4)stepD, (5)stepE\nRow 5 (R) (6)stepF'
     );
   });
 
