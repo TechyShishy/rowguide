@@ -52,14 +52,16 @@ export class BeadtoolPdfService {
         this.logger.trace('PDF text:', text);
         const replaceText = this.cleanText(text);
         const match1 = replaceText.match(
-          /((?:Row 1&2 .*)(?:Row \d .*\n?)).*$/s
+          /((?:Row 1&2 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
         );
 
         if (match1) {
           return match1[1];
         }
 
-        const match2 = replaceText.match(/((?:Row 1 .*)(?:Row \d .*\n?)).*$/s);
+        const match2 = replaceText.match(
+          /((?:Row 1 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
+        );
         if (match2) {
           return match2[1];
         }
