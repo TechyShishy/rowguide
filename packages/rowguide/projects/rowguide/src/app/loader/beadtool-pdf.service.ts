@@ -33,13 +33,13 @@ export class BeadtoolPdfService {
 
   loadDocument(file: File): Observable<string> {
     return from(file.arrayBuffer()).pipe(
-      mergeMap(
+      switchMap(
         (buffer) =>
           this.pdfJsLibService.getDocument({
             data: buffer,
           }).promise
       ),
-      mergeMap((pdfDoc) => {
+      switchMap((pdfDoc) => {
         const pageObservables = [];
 
         for (let i = 1; i <= pdfDoc.numPages; i++) {
