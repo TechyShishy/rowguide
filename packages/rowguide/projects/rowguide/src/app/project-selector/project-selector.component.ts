@@ -35,6 +35,7 @@ import {
   Subject,
   switchMap,
   takeUntil,
+  firstValueFrom,
   tap,
 } from 'rxjs';
 
@@ -76,6 +77,12 @@ export class ProjectSelectorComponent {
       map((buffer) => buffer.slice(0, 8)),
       switchMap((buffer) => this.detectFileType(buffer))
     );
+  }
+
+  async clickImport() {
+    this.showSpinner = true;
+    await firstValueFrom(this.importFile());
+    this.showSpinner = false;
   }
 
   private detectFileType(buffer: ArrayBuffer): Observable<Project> {

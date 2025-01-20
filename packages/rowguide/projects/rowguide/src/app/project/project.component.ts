@@ -32,6 +32,8 @@ import { HierarchicalList } from '../hierarchical-list';
 import { sanity } from '../sanity';
 import { Position } from '../position';
 import { Project } from '../project';
+import { FlamService } from '../flam.service';
+import { tap } from 'rxjs/internal/operators/tap';
 
 @Component({
   selector: 'app-project',
@@ -67,7 +69,8 @@ export class ProjectComponent implements HierarchicalList {
     private logger: NGXLogger,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private flamService: FlamService
   ) {}
 
   ngOnInit() {
@@ -86,6 +89,12 @@ export class ProjectComponent implements HierarchicalList {
         const project = await this.projectService.loadProject(id);
         if (project === null || project === undefined) {
           return {} as Project;
+        }
+        return project;
+      }),
+      tap((project) => {
+        if (project.firstLastAppearanceMap !== undefined) {
+          this.flamService.flam$.next(project.firstLastAppearanceMap);
         }
         return project;
       })

@@ -8,7 +8,7 @@
       <button mat-raised-button color="primary" ngfSelect [(file)]="file">
         Choose File
       </button>
-      <button mat-raised-button color="primary" (click)="importFile()">Import File</button>
+      <button mat-raised-button color="primary" (click)="clickImport()">Import File</button>
       <mat-spinner *ngIf="showSpinner"></mat-spinner>
     </mat-expansion-panel>
     <app-project-summary *ngFor="let project of projects" [project]="project"></app-project-summary>
