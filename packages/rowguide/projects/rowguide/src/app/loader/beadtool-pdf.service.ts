@@ -11,7 +11,7 @@ import { from } from 'rxjs/internal/observable/from';
 import { switchMap } from 'rxjs/internal/operators/switchMap';
 import { map } from 'rxjs/internal/operators/map';
 import { mergeMap } from 'rxjs/internal/operators/mergeMap';
-import { forkJoin, firstValueFrom } from 'rxjs';
+import { forkJoin, firstValueFrom, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -33,12 +33,12 @@ export class BeadtoolPdfService {
 
   loadDocument(file: File): Observable<string> {
     return from(file.arrayBuffer()).pipe(
-      mergeMap((buffer) => {
-        const loadingTask = this.pdfJsLibService.getDocument({
-          data: buffer,
-        });
-        return loadingTask.promise;
-      }),
+      mergeMap(
+        (buffer) =>
+          this.pdfJsLibService.getDocument({
+            data: buffer,
+          }).promise
+      ),
       mergeMap((pdfDoc) => {
         const pageObservables = [];
 
@@ -47,10 +47,10 @@ export class BeadtoolPdfService {
         }
         return forkJoin(pageObservables);
       }),
-      map((texts) => {
-        const text = texts.join('\n');
-        this.logger.trace('PDF text:', text);
-        const replaceText = this.cleanText(text);
+      map((texts) => texts.join('\n')),
+      tap((text) => this.logger.trace('PDF text:', text)),
+      map((text) => this.cleanText(text)),
+      map((replaceText) => {
         const match1 = replaceText.match(
           /((?:Row 1&2 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
         );
@@ -67,7 +67,8 @@ export class BeadtoolPdfService {
         }
 
         return '';
-      })
+      }),
+      map((text) => text.trim())
     );
   }
 
