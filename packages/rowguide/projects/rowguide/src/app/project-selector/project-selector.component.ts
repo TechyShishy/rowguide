@@ -41,6 +41,7 @@ import {
   forkJoin,
 } from 'rxjs';
 import { NotificationService } from '../notification.service';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-project-selector',
@@ -74,7 +75,8 @@ export class ProjectSelectorComponent {
     private flamService: FlamService,
     private beadtoolPdfService: BeadtoolPdfService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private settingsService: SettingsService
   ) {}
   importFile(): Observable<Project> {
     return from(this.file.arrayBuffer()).pipe(
@@ -161,12 +163,18 @@ export class ProjectSelectorComponent {
         project.position = { row: 0, step: 0 };
         return [project, lastRow];
       }),
-      map(([project, lastRow]: [Project, number]) => {
-        if (lastRow > 0 && lastRow !== project.rows.length + 1) {
-          this.logger.warn('Row count mismatch');
-          this.notificationService.snackbar(
-            'Number of rows imported does not match the highest row number in the PDF.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'
-          );
+      combineLatestWith(this.settingsService.combine12$),
+      map(([[project, lastRow], combine12]: [[Project, number], boolean]) => {
+        if (lastRow > 0) {
+          if (
+            (combine12 && lastRow !== project.rows.length + 1) ||
+            (!combine12 && lastRow !== project.rows.length)
+          ) {
+            this.logger.warn('Row count mismatch');
+            this.notificationService.snackbar(
+              'Number of rows imported does not match the highest row number in the PDF.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'
+            );
+          }
         }
         return project;
       })
