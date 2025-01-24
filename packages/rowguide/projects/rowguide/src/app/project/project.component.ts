@@ -34,6 +34,8 @@ import { Position } from '../position';
 import { Project } from '../project';
 import { FlamService } from '../flam.service';
 import { tap } from 'rxjs/internal/operators/tap';
+import { SettingsService } from '../settings.service';
+import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 
 @Component({
   selector: 'app-project',
@@ -70,7 +72,9 @@ export class ProjectComponent implements HierarchicalList {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-    private flamService: FlamService
+    private flamService: FlamService,
+    private settingsService: SettingsService,
+    private peyoteShorthandService: PeyoteShorthandService
   ) {}
 
   ngOnInit() {
@@ -81,12 +85,15 @@ export class ProjectComponent implements HierarchicalList {
       }
     });
     this.project$ = this.route.paramMap.pipe(
-      switchMap(async (params) => {
+      map((params) => {
         let id = parseInt(params.get('id') ?? '');
         if (isNaN(id)) {
           id = this.projectService.loadCurrentProjectId()?.id ?? 0;
         }
-        const project = await this.projectService.loadProject(id);
+        return id;
+      }),
+      switchMap((id) => this.projectService.loadProject(id)),
+      map((project) => {
         if (project === null || project === undefined) {
           return {} as Project;
         }
@@ -99,7 +106,24 @@ export class ProjectComponent implements HierarchicalList {
         return project;
       })
     );
-    this.rows$ = this.project$.pipe(switchMap((project) => of(project.rows)));
+    this.rows$ = this.project$.pipe(
+      map((project) => project.rows),
+      combineLatestWith(this.settingsService.combine12$),
+      map(([rows, combine12]) => {
+        const newRows = deepCopy(rows)
+        if (combine12) {
+          const zipperSteps = this.peyoteShorthandService.zipperSteps(
+            newRows[0].steps,
+            newRows[1].steps
+          );
+          if (zipperSteps.length > 0) {
+            newRows[0].steps = zipperSteps;
+            newRows.splice(1, 1);
+          }
+        }
+        return newRows;
+      })
+    );
     this.position$ = this.project$.pipe(
       switchMap((project) =>
         of(project.position ?? ({ row: 0, step: 0 } as Position))
@@ -137,24 +161,22 @@ export class ProjectComponent implements HierarchicalList {
         )
       )
       .subscribe((step) => {
+        const sub = step.row.project.project$.subscribe((project) => {
+          sub.unsubscribe();
+        });
         this.currentStep$.next(step);
       });
   }
-  async ngAfterViewInit() {
+  ngAfterViewInit() {
     this.children.changes.subscribe((children) => {
       this.children$.next(children);
       this.cdr.detectChanges();
     });
-    this.currentStep$
-      .pipe(
-        skipWhile((step) => {
-          return step.index === undefined;
-        }),
-        take(1)
-      )
-      .subscribe((step) => {
-        step.onClick(new Event('click'));
-      });
+    const sub = this.currentStep$.pipe(skipWhile((step) => step.index === undefined)).subscribe((step) => {
+      step.onClick(new Event('click'));
+      sub.unsubscribe();
+    });
+
   }
 
   onAdvanceRow() {
@@ -327,4 +349,7 @@ export class ProjectComponent implements HierarchicalList {
   }
 
   resetProject(_forward: boolean) {}
+}
+function deepCopy(value: any): any {
+  return JSON.parse(JSON.stringify(value));
 }

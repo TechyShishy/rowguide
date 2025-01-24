@@ -166,10 +166,7 @@ export class ProjectSelectorComponent {
       combineLatestWith(this.settingsService.combine12$),
       map(([[project, lastRow], combine12]: [[Project, number], boolean]) => {
         if (lastRow > 0) {
-          if (
-            (combine12 && lastRow !== project.rows.length + 1) ||
-            (!combine12 && lastRow !== project.rows.length)
-          ) {
+          if (lastRow !== project.rows.length) {
             this.logger.warn('Row count mismatch');
             this.notificationService.snackbar(
               'Number of rows imported does not match the highest row number in the PDF.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'

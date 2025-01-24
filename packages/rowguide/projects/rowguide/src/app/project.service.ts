@@ -7,6 +7,11 @@ import {
   of,
   firstValueFrom,
   lastValueFrom,
+  tap,
+  map,
+  skipWhile,
+  filter,
+  take,
 } from 'rxjs';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { NullProject } from './null-project';
@@ -46,12 +51,17 @@ export class ProjectService {
     );
   }
   async saveCurrentPosition(row: number, step: number) {
-    let project = await firstValueFrom(this.project$);
-    project.position = { row, step };
-    this.project$.next(project);
-    await this.indexedDBService.updateProject(
-      await firstValueFrom(this.project$)
-    );
+    this.project$.pipe(
+      filter((project) => project.id !== undefined),
+      map((project) => {
+        project.position = { row, step };
+        return project;
+      }),
+      take(1)
+    ).subscribe((project) => {
+      this.project$.next(project);
+      this.indexedDBService.updateProject(project);
+    });
   }
   loadCurrentProjectId(): CurrentProject | null {
     const data = localStorage.getItem('currentProject');
