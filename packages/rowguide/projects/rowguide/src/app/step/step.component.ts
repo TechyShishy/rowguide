@@ -3,6 +3,7 @@ import {
   HostBinding,
   HostListener,
   Input,
+  OnInit,
   QueryList,
 } from '@angular/core';
 import { Step } from '../step';
@@ -15,21 +16,35 @@ import { FlamService } from '../flam.service';
 import { SettingsService } from '../settings.service';
 import { NGXLogger } from 'ngx-logger';
 import { lastValueFrom } from 'rxjs/internal/lastValueFrom';
-import { firstValueFrom } from 'rxjs';
+import {
+  combineLatest,
+  firstValueFrom,
+  forkJoin,
+  map,
+  of,
+  take,
+  tap,
+} from 'rxjs';
 
 @Component({
   selector: 'app-step',
   imports: [MatChipsModule],
   templateUrl: './step.component.html',
   styleUrl: './step.component.scss',
+  host: {
+    '[class.current]': 'isCurrentStep',
+    '[class.first]': 'isFirstStep',
+    '[class.last]': 'isLastStep',
+    '[class.zoom]': 'isZoomed',
+  },
 })
-export class StepComponent implements HierarchicalList {
+export class StepComponent implements HierarchicalList, OnInit {
   @Input() step!: Step;
   highlighted: boolean = false;
-  @HostBinding('class.current') isCurrentStep = false;
-  @HostBinding('class.zoom') isZoomed = this.settingsService.zoom$.value;
-  @HostBinding('class.first') isFirstStep = false;
-  @HostBinding('class.last') isLastStep = false;
+  isCurrentStep = false;
+  isZoomed = false;
+  isFirstStep = false;
+  isLastStep = false;
 
   @Input() index: number = 0;
   @Input() row!: RowComponent;
@@ -47,7 +62,23 @@ export class StepComponent implements HierarchicalList {
   ) {}
 
   ngOnInit() {
-    if (this.settingsService.flammarkers$.value) {
+    combineLatest([
+      this.settingsService.flammarkers$,
+      this.settingsService.zoom$,
+      this.flamService.isFirstStep(this.row.index, this.step),
+      this.flamService.isLastStep(this.row.index, this.step),
+    ]).subscribe(([flammarkers, zoom, isFirstStep, isLastStep]) => {
+      if (flammarkers) {
+        this.isFirstStep = isFirstStep;
+        this.isLastStep = isLastStep;
+      } else {
+        this.isFirstStep = false;
+        this.isLastStep = false;
+      }
+      this.isZoomed = zoom;
+    });
+
+    /*if (this.settingsService.flammarkers$.value) {
       this.isFirstStep = this.flamService.isFirstStep(
         this.row.index,
         this.step
@@ -61,7 +92,7 @@ export class StepComponent implements HierarchicalList {
     this.settingsService.zoom$.subscribe((value) => {
       this.isZoomed = value;
     });
-    this.isZoomed = this.settingsService.zoom$.value;
+    this.isZoomed = this.settingsService.zoom$.value;*/
   }
 
   @HostListener('click', ['$event'])

@@ -38,7 +38,7 @@ export class ProjectInspectorComponent implements OnInit {
 
   ngOnInit() {
     this.projectService.ready.subscribe(async () => {
-      this.flamService.inititalizeFLAM(true);
+      //this.flamService.inititalizeFLAM(true);
     });
   }
 

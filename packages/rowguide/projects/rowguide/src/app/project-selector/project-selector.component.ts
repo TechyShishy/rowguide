@@ -159,7 +159,7 @@ export class ProjectSelectorComponent {
       combineLatestWith(from(this.beadtoolPdfService.renderFrontPage(file))),
       map(([[project, lastRow], image]): [Project, number] => {
         project.image = image;
-        project.firstLastAppearanceMap = this.flamService.generateFLAM(project);
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(project.rows);
         project.position = { row: 0, step: 0 };
         return [project, lastRow];
       }),
@@ -184,7 +184,7 @@ export class ProjectSelectorComponent {
         return from(this.projectService.loadPeyote(file.name, data));
       }),
       map((project) => {
-        project.firstLastAppearanceMap = this.flamService.generateFLAM(project);
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(project.rows);
         project.position = { row: 0, step: 0 };
         return project;
       })

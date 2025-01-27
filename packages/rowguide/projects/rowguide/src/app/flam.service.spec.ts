@@ -7,48 +7,42 @@ import { ProjectService } from './project.service';
 import { Project } from './project';
 import { Step } from './step';
 import { FLAM } from './flam';
+import { Row } from './row';
 
 describe('FlamService', () => {
   let service: FlamService;
   let projectService: ProjectService;
+  let rows: Row[] = [];
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
-      providers: [
-        FlamService,
-        {
-          provide: ProjectService,
-          useValue: {
-            project$: new BehaviorSubject<Project>({
-              rows: [
-                {
-                  id: 1,
-                  steps: [
-                    { id: 1, count: 1, description: 'Step A' },
-                    { id: 2, count: 1, description: 'Step B' },
-                  ],
-                },
-                {
-                  id: 2,
-                  steps: [
-                    { id: 1, count: 2, description: 'Step A' },
-                    { id: 2, count: 1, description: 'Step B' },
-                  ],
-                },
-                {
-                  id: 3,
-                  steps: [
-                    { id: 1, count: 4, description: 'Step A' },
-                    { id: 2, count: 1, description: 'Step C' },
-                  ],
-                },
-              ],
-            }),
-          },
-        },
-      ],
+      providers: [],
     }).compileComponents();
+
+    rows = [
+      {
+        id: 1,
+        steps: [
+          { id: 1, count: 1, description: 'Step A' },
+          { id: 2, count: 1, description: 'Step B' },
+        ],
+      },
+      {
+        id: 2,
+        steps: [
+          { id: 1, count: 2, description: 'Step A' },
+          { id: 2, count: 1, description: 'Step B' },
+        ],
+      },
+      {
+        id: 3,
+        steps: [
+          { id: 1, count: 4, description: 'Step A' },
+          { id: 2, count: 1, description: 'Step C' },
+        ],
+      },
+    ];
     service = TestBed.inject(FlamService);
     projectService = TestBed.inject(ProjectService);
   });
@@ -58,7 +52,7 @@ describe('FlamService', () => {
   });
 
   it('should initialize FLAM correctly', () => {
-    service.inititalizeFLAM();
+    service.flam$.next(service.generateFLAM(rows));
     expect(Object.keys(service.flam$.value).length).toBe(3);
     expect(service.flam$.value['Step A'].firstAppearance).toEqual([0, 0]);
     expect(service.flam$.value['Step A'].lastAppearance).toEqual([2, 0]);
@@ -69,14 +63,14 @@ describe('FlamService', () => {
   });
 
   it('should identify the first step correctly', () => {
-    service.inititalizeFLAM();
+    service.flam$.next(service.generateFLAM(rows));
     const step: Step = { id: 1, count: 1, description: 'Step A' };
     expect(service.isFirstStep(0, step)).toBeTrue();
     expect(service.isFirstStep(1, step)).toBeFalse();
   });
 
   it('should identify the last step correctly', () => {
-    service.inititalizeFLAM();
+    service.flam$.next(service.generateFLAM(rows));
     const step: Step = { id: 1, count: 1, description: 'Step A' };
     expect(service.isLastStep(2, step)).toBeTrue();
     expect(service.isLastStep(0, step)).toBeFalse();

@@ -5,26 +5,35 @@ import { FLAM } from './flam';
 import { NGXLogger } from 'ngx-logger';
 import { Step } from './step';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { SettingsService } from './settings.service';
+import { Row } from './row';
+import { take } from 'rxjs/internal/operators/take';
+import { filter } from 'rxjs/internal/operators/filter';
+import { distinctUntilChanged, map, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FlamService {
-  constructor(
-    private logger: NGXLogger,
-    private projectService: ProjectService
-  ) {}
-
   flam$: BehaviorSubject<FLAM> = new BehaviorSubject({} as FLAM);
 
-  ngOnInit() {
-    this.projectService.ready.subscribe(() => {
-      this.inititalizeFLAM(true);
-    });
+  constructor(
+    private logger: NGXLogger,
+    private projectService: ProjectService,
+    private settingsService: SettingsService
+  ) {
+    this.projectService.zippedRows$
+      .pipe(
+        filter((rows) => rows.length !== 0),
+        map((rows) => this.generateFLAM(rows))
+      )
+      .subscribe((flam) => this.flam$.next(flam));
   }
-  inititalizeFLAM(force: boolean = false) {
+
+  /*inititalizeFLAM(force: boolean = false) {
     if (force == false && Object.keys(this.flam$.value).length != 0) return;
     if (
+      force == false &&
       Object.keys(
         this.projectService.project$.value.firstLastAppearanceMap ?? {}
       ).length > 0
@@ -37,14 +46,22 @@ export class FlamService {
         this.projectService.project$.value.firstLastAppearanceMap ?? {}
       );
     } else {
-      this.flam$.next(this.generateFLAM(this.projectService.project$.value));
+      this.projectService.zippedRows$
+        .pipe(
+          filter((rows) => rows.length !== 0),
+          take(1)
+        )
+        .subscribe((rows) => {
+          this.logger.debug('Generating FLAM1');
+          this.flam$.next(this.generateFLAM(rows));
+        });
     }
-  }
+  }*/
 
-  generateFLAM(project: Project): FLAM {
+  generateFLAM(rows: Row[]): FLAM {
     let flam: FLAM = {};
-    for (let i = 0; i < project.rows.length; i++) {
-      let row = project.rows[i];
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i];
       for (let j = 0; j < row.steps.length; j++) {
         let step = row.steps[j];
         if (flam[step.description] != undefined) {
@@ -62,29 +79,25 @@ export class FlamService {
     return flam;
   }
 
-  isFirstStep(row: number, step: Step): boolean {
-    this.inititalizeFLAM();
-    if (
-      this.flam$.value[step.description] &&
-      this.flam$.value[step.description].firstAppearance[0] == row &&
-      this.flam$.value[step.description].firstAppearance[1] == step.id - 1
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+  isFirstStep(row: number, step: Step): Observable<boolean> {
+    //this.inititalizeFLAM();
+    return this.flam$.pipe(
+      map((flam) => flam[step.description]),
+      filter((flamStep) => flamStep != undefined),
+      map((flamStep) => flamStep.firstAppearance),
+      map(
+        ([firstRow, firstStep]) => firstRow == row && firstStep == step.id - 1
+      )
+    );
   }
 
-  isLastStep(row: number, step: Step): boolean {
-    this.inititalizeFLAM();
-    if (
-      this.flam$.value[step.description] &&
-      this.flam$.value[step.description].lastAppearance[0] == row &&
-      this.flam$.value[step.description].lastAppearance[1] == step.id - 1
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+  isLastStep(row: number, step: Step): Observable<boolean> {
+    //this.inititalizeFLAM();
+    return this.flam$.pipe(
+      map((flam) => flam[step.description]),
+      filter((flamStep) => flamStep != undefined),
+      map((flamStep) => flamStep.lastAppearance),
+      map(([lastRow, lastStep]) => lastRow == row && lastStep == step.id - 1)
+    );
   }
 }

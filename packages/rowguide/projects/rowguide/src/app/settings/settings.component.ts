@@ -11,6 +11,9 @@ import { MatSliderModule } from '@angular/material/slider';
 import { Settings, SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { CommonModule } from '@angular/common';
+import { NGXLogger } from 'ngx-logger';
+import { FlamService } from '../flam.service';
+import { take } from 'rxjs/internal/operators/take';
 
 @Component({
   selector: 'app-settings',
@@ -45,7 +48,9 @@ export class SettingsComponent {
   constructor(
     private formBuilder: FormBuilder,
     private settingsService: SettingsService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private logger: NGXLogger,
+    private flamService: FlamService
   ) {
     this.combine12Control.setValue(this.settingsService.combine12$.value);
     this.lrdesignatorsControl.setValue(

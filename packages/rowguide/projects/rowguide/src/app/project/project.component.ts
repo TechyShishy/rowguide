@@ -98,19 +98,20 @@ export class ProjectComponent implements HierarchicalList {
           return {} as Project;
         }
         return project;
-      }),
+      }) /*,
       tap((project) => {
         if (project.firstLastAppearanceMap !== undefined) {
+          this.logger.debug('Applying Flam');
           this.flamService.flam$.next(project.firstLastAppearanceMap);
         }
         return project;
-      })
+      })*/
     );
     this.rows$ = this.project$.pipe(
       map((project) => project.rows),
       combineLatestWith(this.settingsService.combine12$),
       map(([rows, combine12]) => {
-        const newRows = deepCopy(rows)
+        const newRows = deepCopy(rows);
         if (combine12) {
           const zipperSteps = this.peyoteShorthandService.zipperSteps(
             newRows[0].steps,
@@ -124,6 +125,9 @@ export class ProjectComponent implements HierarchicalList {
         return newRows;
       })
     );
+    this.rows$.subscribe((rows) => {
+      this.projectService.zippedRows$.next(rows);
+    });
     this.position$ = this.project$.pipe(
       switchMap((project) =>
         of(project.position ?? ({ row: 0, step: 0 } as Position))

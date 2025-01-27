@@ -21,6 +21,7 @@ import { NGXLogger } from 'ngx-logger';
 import { IndexedDBService } from './indexed-db.service';
 import { Position } from './position';
 import { ActivatedRoute } from '@angular/router';
+import { Row } from './row';
 
 @Injectable({
   providedIn: 'root',
@@ -29,6 +30,7 @@ export class ProjectService {
   project$: BehaviorSubject<Project> = new BehaviorSubject<Project>(
     new NullProject()
   );
+  zippedRows$: BehaviorSubject<Row[]> = new BehaviorSubject<Row[]>([]);
   ready: Subject<boolean> = new Subject<boolean>();
   currentStep!: StepComponent;
   constructor(
