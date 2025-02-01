@@ -36,6 +36,7 @@ import { FlamService } from '../flam.service';
 import { tap } from 'rxjs/internal/operators/tap';
 import { SettingsService } from '../settings.service';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-project',
@@ -72,7 +73,6 @@ export class ProjectComponent implements HierarchicalList {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-    private flamService: FlamService,
     private settingsService: SettingsService,
     private peyoteShorthandService: PeyoteShorthandService
   ) {}
@@ -108,6 +108,7 @@ export class ProjectComponent implements HierarchicalList {
       })*/
     );
     this.rows$ = this.project$.pipe(
+      filter((project) => project.rows !== undefined),
       map((project) => project.rows),
       combineLatestWith(this.settingsService.combine12$),
       map(([rows, combine12]) => {
@@ -176,11 +177,14 @@ export class ProjectComponent implements HierarchicalList {
       this.children$.next(children);
       this.cdr.detectChanges();
     });
-    const sub = this.currentStep$.pipe(skipWhile((step) => step.index === undefined)).subscribe((step) => {
-      step.onClick(new Event('click'));
-      sub.unsubscribe();
-    });
-
+    this.currentStep$
+      .pipe(
+        skipWhile((step) => step.index === undefined),
+        take(1)
+      )
+      .subscribe((step) => {
+        step.onClick(new Event('click'));
+      });
   }
 
   onAdvanceRow() {

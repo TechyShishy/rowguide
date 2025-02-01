@@ -4,7 +4,7 @@ import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
-import { Observable, Subject, firstValueFrom, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, firstValueFrom, of } from 'rxjs';
 import { Row } from '../row';
 import { provideRouter } from '@angular/router';
 import { routes } from '../app.routes';
@@ -13,15 +13,17 @@ import { Position } from '../position';
 import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 import { RowComponent } from '../row/row.component';
+import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;
   let fixture: ComponentFixture<ProjectComponent>;
-  let projectServiceStub: ProjectService;
+  let projectServiceSpy: jasmine.SpyObj<ProjectService>;
   let settingsServiceStub: Partial<SettingsService>;
+  let peyoteShorthandServiceSpy: jasmine.SpyObj<PeyoteShorthandService>;
 
   beforeEach(async () => {
-    projectServiceStub = jasmine.createSpyObj(
+    projectServiceSpy = jasmine.createSpyObj(
       'ProjectService',
       [
         'loadCurrentProject',
@@ -29,8 +31,14 @@ describe('ProjectComponent', () => {
         'loadProject',
         'saveCurrentPosition',
       ],
-      ['ready']
+      {
+        ready: new Subject<boolean>(),
+        zippedRows$: new BehaviorSubject<Row[]>([]),
+      }
     );
+    peyoteShorthandServiceSpy = jasmine.createSpyObj('PeyoteShorthandService', [
+      'zipperSteps',
+    ]);
     /*projectServiceStub = {
       ready: new Subject<boolean>(),
       loadCurrentProject: jasmine.createSpy('loadCurrentProject'),
@@ -39,20 +47,31 @@ describe('ProjectComponent', () => {
       saveCurrentPosition: jasmine.createSpy('saveCurrentPosition'),
     };*/
 
-    settingsServiceStub = {};
+    settingsServiceStub = {
+      combine12$: new BehaviorSubject(false), // Mock combine12$ observable
+    };
 
     await TestBed.configureTestingModule({
-      imports: [ProjectComponent, LoggerTestingModule],
+      imports: [LoggerTestingModule],
       providers: [
-        { provide: ProjectService, useValue: projectServiceStub },
+        { provide: ProjectService, useValue: projectServiceSpy },
         { provide: SettingsService, useValue: settingsServiceStub },
+        {
+          provide: PeyoteShorthandService,
+          useValue: peyoteShorthandServiceSpy,
+        },
         provideRouter(routes),
       ],
     }).compileComponents();
 
+    projectServiceSpy.loadCurrentProjectId.and.returnValue({ id: 1 });
+    projectServiceSpy.loadProject.and.returnValue(
+      Promise.resolve({ rows: [], position: { row: 0, step: 0 } } as Project)
+    );
+    peyoteShorthandServiceSpy.zipperSteps.and.returnValue([]);
     fixture = TestBed.createComponent(ProjectComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    //fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -65,15 +84,13 @@ describe('ProjectComponent', () => {
 
   it('should initialize project$ on ngOnInit', async () => {
     const mockProject = { rows: [], position: { row: 0, step: 0 } } as Project;
-    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
-      Promise.resolve(mockProject)
-    );
-    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
+    projectServiceSpy.loadCurrentProjectId.and.returnValue({
       id: 1,
     });
 
     component.ngOnInit();
-    fixture.detectChanges();
+    //fixture.detectChanges();
 
     const project = await firstValueFrom(component.project$);
     expect(project).toEqual(mockProject);
@@ -85,15 +102,13 @@ describe('ProjectComponent', () => {
       rows: mockRows,
       position: { row: 0, step: 0 },
     } as Project;
-    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
-      Promise.resolve(mockProject)
-    );
-    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
+    projectServiceSpy.loadCurrentProjectId.and.returnValue({
       id: 1,
     });
 
     component.ngOnInit();
-    fixture.detectChanges();
+    //fixture.detectChanges();
 
     const rows = await firstValueFrom(component.rows$);
     expect(rows).toEqual(mockRows);
@@ -102,15 +117,13 @@ describe('ProjectComponent', () => {
   it('should initialize position$ on ngOnInit', async () => {
     const mockPosition = { row: 1, step: 2 } as Position;
     const mockProject = { rows: [], position: mockPosition } as Project;
-    (projectServiceStub.loadProject as jasmine.Spy).and.returnValue(
-      Promise.resolve(mockProject)
-    );
-    (projectServiceStub.loadCurrentProjectId as jasmine.Spy).and.returnValue({
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
+    projectServiceSpy.loadCurrentProjectId.and.returnValue({
       id: 1,
     });
 
     component.ngOnInit();
-    fixture.detectChanges();
+    //fixture.detectChanges();
 
     const position = await firstValueFrom(component.position$);
     expect(position).toEqual(mockPosition);
@@ -119,7 +132,10 @@ describe('ProjectComponent', () => {
   it('should update currentStep$ on children$ and position$ change', async () => {
     const mockStep = jasmine.createSpyObj('StepComponent', ['onClick'], {
       index: 1,
-      row: { children: new QueryList<StepComponent>() },
+      row: {
+        children: new QueryList<StepComponent>(),
+        project: component,
+      } as RowComponent,
     });
     const mockRow = jasmine.createSpyObj('RowComponent', ['show'], {
       children: new QueryList<StepComponent>(),
@@ -136,6 +152,7 @@ describe('ProjectComponent', () => {
     component.ngOnInit();
     fixture.detectChanges();
     await fixture.whenStable();
+    component.ngAfterViewInit();
 
     const currentStep = await firstValueFrom(component.currentStep$);
     expect(currentStep).toEqual(mockStep);

@@ -16,7 +16,7 @@ export class PeyoteShorthandService {
     private notificationService: NotificationService
   ) {}
 
-  toProject(projectString: string, delimiter: string = ',  '): Project {
+  toProject(projectString: string, delimiter: string = ', '): Project {
     this.logger.debug('Loading project from string', projectString);
     const project: Project = { rows: [] };
 
@@ -61,7 +61,9 @@ export class PeyoteShorthandService {
   private checkStepCounts(projectRowSteps: number[]): void {
     this.settingsService.combine12$.subscribe((combine12) => {
       //const firstRow = combine12 ? (projectRowSteps.shift() ?? 0) / 2 : projectRowSteps.shift() ?? 0;
-      const allStepsMatch = projectRowSteps.every((step) => step === projectRowSteps[0]);
+      const allStepsMatch = projectRowSteps.every(
+        (step) => step === projectRowSteps[0]
+      );
       const evenStepsMatch = projectRowSteps.every((step, index) =>
         index % 2 === 0 ? step === projectRowSteps[0] : true
       );
@@ -69,7 +71,11 @@ export class PeyoteShorthandService {
         index % 2 === 1 ? step === projectRowSteps[0] : true
       );
       if (!allStepsMatch && !evenStepsMatch && !oddStepsMatch) {
-        this.logger.warn('Row steps do not match:', projectRowSteps[0], projectRowSteps);
+        this.logger.warn(
+          'Row steps do not match:',
+          projectRowSteps[0],
+          projectRowSteps
+        );
         this.notificationService.snackbar(
           'Imported file has inconsistent step counts.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'
         );

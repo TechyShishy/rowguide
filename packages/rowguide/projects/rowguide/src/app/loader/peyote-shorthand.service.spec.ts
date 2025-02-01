@@ -3,17 +3,27 @@ import { NGXLogger } from 'ngx-logger';
 import { PeyoteShorthandService } from './peyote-shorthand.service';
 import { Project } from '../project';
 import { Row } from '../row';
+import { NotificationService } from '../notification.service';
+import { SettingsService } from '../settings.service';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 describe('PeyoteShorthandService', () => {
   let service: PeyoteShorthandService;
+  let notificationServiceSpy: jasmine.SpyObj<NotificationService>;
+  let settingsServiceStub: Partial<SettingsService>;
 
   beforeEach(() => {
     const spy = jasmine.createSpyObj('NGXLogger', ['debug', 'trace', 'warn']);
+    notificationServiceSpy = jasmine.createSpyObj('NotificationService', [
+      'snackbar',
+    ]);
+    settingsServiceStub = { combine12$: new BehaviorSubject<boolean>(false) };
 
     TestBed.configureTestingModule({
       providers: [
-        PeyoteShorthandService,
         { provide: NGXLogger, useValue: spy },
+        { provide: NotificationService, useValue: notificationServiceSpy },
+        { provide: SettingsService, useValue: settingsServiceStub },
       ],
     });
 
@@ -25,7 +35,8 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should convert project string to Project object', () => {
-    const projectString = '(1)stepA (2)stepB\n(3)stepC (4)stepD';
+    const projectString =
+      'Row 1 (L) (1)stepA, (2)stepB\nRow 2 (R) (3)stepC, (4)stepD';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
@@ -60,7 +71,7 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should handle lines with no valid steps', () => {
-    const projectString = 'invalid step\n(1)stepA';
+    const projectString = 'Row 1 (L) invalid step\nRow 2 (R) (1)stepA';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(1);
@@ -90,7 +101,8 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should handle input with multiple rows and steps', () => {
-    const projectString = '(1)stepA (2)stepB\n(3)stepC (4)stepD\n(5)stepE';
+    const projectString =
+      'Row 1 (L) (1)stepA, (2)stepB\nRow 2 (R) (3)stepC, (4)stepD\nRow 3 (L) (5)stepE';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(3);
@@ -134,7 +146,8 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should handle input with invalid steps', () => {
-    const projectString = '(1)stepA invalid (2)stepB\n(3)stepC (4)stepD';
+    const projectString =
+      'Row 1 (L) (1)stepA, invalid, (2)stepB\nRow 2 (R) (3)stepC, (4)stepD';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
@@ -169,14 +182,15 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should handle input with no steps', () => {
-    const projectString = 'no steps here';
+    const projectString = 'Row 1 (L) no steps here';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(0);
   });
 
   it('should handle multiple step formats', () => {
-    const projectString = '(1)stepA 2(stepB)\n3(stepC) (4)stepD';
+    const projectString =
+      'Row 1 (L) (1)stepA, 2(stepB)\nRow 2 (R) 3(stepC), (4)stepD';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);
@@ -211,7 +225,8 @@ describe('PeyoteShorthandService', () => {
   });
 
   it('should handle descriptions with numbers', () => {
-    const projectString = '(1)step1 (2)step2\n(3)step3 (4)step4';
+    const projectString =
+      'Row 1 (L) (1)step1, (2)step2\nRow 2 (R) (3)step3, (4)step4';
     const project: Project = service.toProject(projectString);
 
     expect(project.rows.length).toBe(2);

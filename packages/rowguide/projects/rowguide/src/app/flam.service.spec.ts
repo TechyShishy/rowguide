@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 import { FlamService } from './flam.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
@@ -8,6 +8,8 @@ import { Project } from './project';
 import { Step } from './step';
 import { FLAM } from './flam';
 import { Row } from './row';
+import { routes } from './app.routes';
+import { provideRouter } from '@angular/router';
 
 describe('FlamService', () => {
   let service: FlamService;
@@ -17,7 +19,7 @@ describe('FlamService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
-      providers: [],
+      providers: [provideRouter(routes)],
     }).compileComponents();
 
     rows = [
@@ -62,17 +64,17 @@ describe('FlamService', () => {
     expect(service.flam$.value['Step C'].lastAppearance).toEqual([2, 1]);
   });
 
-  it('should identify the first step correctly', () => {
+  it('should identify the first step correctly', async () => {
     service.flam$.next(service.generateFLAM(rows));
     const step: Step = { id: 1, count: 1, description: 'Step A' };
-    expect(service.isFirstStep(0, step)).toBeTrue();
-    expect(service.isFirstStep(1, step)).toBeFalse();
+    expect(await firstValueFrom(service.isFirstStep(0, step))).toBeTrue();
+    expect(await firstValueFrom(service.isFirstStep(1, step))).toBeFalse();
   });
 
-  it('should identify the last step correctly', () => {
+  it('should identify the last step correctly', async () => {
     service.flam$.next(service.generateFLAM(rows));
     const step: Step = { id: 1, count: 1, description: 'Step A' };
-    expect(service.isLastStep(2, step)).toBeTrue();
-    expect(service.isLastStep(0, step)).toBeFalse();
+    expect(await firstValueFrom(service.isLastStep(2, step))).toBeTrue();
+    expect(await firstValueFrom(service.isLastStep(0, step))).toBeFalse();
   });
 });
