@@ -152,7 +152,7 @@ export class PeyoteShorthandService {
     return [row1, row1TotalSteps, row2, row2TotalSteps];
   }
 
-  private expandSteps(steps: Step[]) {
+  expandSteps(steps: Step[]) {
     const rowSteps: Step[] = [];
     steps.forEach((step) => {
       for (let i = 0; i < step.count; i++) {
@@ -162,7 +162,7 @@ export class PeyoteShorthandService {
     return rowSteps;
   }
 
-  private compressSteps(steps: Step[]) {
+  compressSteps(steps: Step[]) {
     const rowSteps: Step[] = [];
     let currentStep: Step = {} as Step;
     steps.forEach((step) => {
