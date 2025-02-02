@@ -11,7 +11,7 @@ import { SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { IndexedDBService } from '../indexed-db.service';
+import { ProjectDbService } from '../project-db.service';
 import { Observable, switchMap } from 'rxjs';
 import { Project } from '../project';
 
@@ -33,7 +33,7 @@ export class ProjectInspectorComponent implements OnInit {
     public projectService: ProjectService,
     public logger: NGXLogger,
     private cdr: ChangeDetectorRef,
-    private indexedDbService: IndexedDBService
+    private indexedDbService: ProjectDbService
   ) {}
 
   ngOnInit() {

@@ -1,14 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { IndexedDBService } from './indexed-db.service';
-import { LoggerTestingModule } from 'ngx-logger/testing';
+import { IndexedDbService } from './indexed-db.service';
 
-describe('LocalStorageService', () => {
-  let service: IndexedDBService;
+describe('IndexedDbService', () => {
+  let service: IndexedDbService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [LoggerTestingModule] });
-    service = TestBed.inject(IndexedDBService);
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(IndexedDbService);
   });
 
   it('should be created', () => {

@@ -3,7 +3,7 @@ import { openDB } from 'idb';
 import { MigrationDbService } from './migration-db.service';
 import { from, map, Observable, take } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
-import { IndexedDBService } from './indexed-db.service';
+import { ProjectDbService } from './project-db.service';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { Step } from './step';
 
@@ -16,11 +16,9 @@ export class UpgradeService {
   constructor(
     private migrationDbService: MigrationDbService,
     private logger: NGXLogger,
-    private indexedDBService: IndexedDBService,
+    private indexedDBService: ProjectDbService,
     private peyoteShorthandService: PeyoteShorthandService
-  ) {
-    this.doNewMigrations();
-  }
+  ) {}
   async doNewMigrations() {
     for (let i = 1; i <= this.highestMigration; i++) {
       if (await this.migrationDbService.loadMigration(i)) {

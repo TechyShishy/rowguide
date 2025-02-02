@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { UpgradeService } from './upgrade.service';
 import { MigrationDbService } from './migration-db.service';
-import { IndexedDBService } from './indexed-db.service';
+import { ProjectDbService } from './project-db.service';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Project } from './project';
@@ -12,7 +12,7 @@ import { Row } from './row';
 
 describe('UpgradeService', () => {
   let service: UpgradeService;
-  let indexedDBServiceSpy: jasmine.SpyObj<IndexedDBService>;
+  let indexedDBServiceSpy: jasmine.SpyObj<ProjectDbService>;
   let peyoteShorthandServiceSpy: jasmine.SpyObj<PeyoteShorthandService>;
   let migrationDbServiceSpy: jasmine.SpyObj<MigrationDbService>;
 
@@ -31,7 +31,7 @@ describe('UpgradeService', () => {
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
       providers: [
-        { provide: IndexedDBService, useValue: indexedDBServiceSpy },
+        { provide: ProjectDbService, useValue: indexedDBServiceSpy },
         { provide: MigrationDbService, useValue: migrationDbServiceSpy },
       ],
     });

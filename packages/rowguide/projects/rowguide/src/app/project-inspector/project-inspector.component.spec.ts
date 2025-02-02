@@ -4,7 +4,7 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
 import { FlamService } from '../flam.service';
-import { IndexedDBService } from '../indexed-db.service';
+import { ProjectDbService } from '../project-db.service';
 import {
   BehaviorSubject,
   firstValueFrom,
@@ -21,7 +21,7 @@ describe('ProjectInspectorComponent', () => {
   let mockProjectService: Partial<ProjectService>;
   let mockSettingsService: Partial<SettingsService>;
   let mockFlamService: Partial<FlamService>;
-  let mockIndexedDBService: Partial<IndexedDBService>;
+  let mockIndexedDBService: Partial<ProjectDbService>;
   let mockImage$: BehaviorSubject<string>;
 
   beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('ProjectInspectorComponent', () => {
         { provide: ProjectService, useValue: mockProjectService },
         { provide: SettingsService, useValue: mockSettingsService },
         { provide: FlamService, useValue: mockFlamService },
-        { provide: IndexedDBService, useValue: mockIndexedDBService },
+        { provide: ProjectDbService, useValue: mockIndexedDBService },
         { provide: 'image$', useValue: mockImage$ },
       ],
     }).compileComponents();

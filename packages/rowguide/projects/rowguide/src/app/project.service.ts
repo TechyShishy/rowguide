@@ -18,7 +18,7 @@ import { NullProject } from './null-project';
 import { StepComponent } from './step/step.component';
 import { SettingsService } from './settings.service';
 import { NGXLogger } from 'ngx-logger';
-import { IndexedDBService } from './indexed-db.service';
+import { ProjectDbService } from './project-db.service';
 import { Position } from './position';
 import { ActivatedRoute } from '@angular/router';
 import { Row } from './row';
@@ -37,7 +37,7 @@ export class ProjectService {
     private peyoteShorthandService: PeyoteShorthandService,
     private settingsService: SettingsService,
     private logger: NGXLogger,
-    private indexedDBService: IndexedDBService,
+    private indexedDBService: ProjectDbService,
     private route: ActivatedRoute
   ) {
     this.settingsService.ready.subscribe(() => {
@@ -53,17 +53,19 @@ export class ProjectService {
     );
   }
   async saveCurrentPosition(row: number, step: number) {
-    this.project$.pipe(
-      filter((project) => project.id !== undefined),
-      map((project) => {
-        project.position = { row, step };
-        return project;
-      }),
-      take(1)
-    ).subscribe((project) => {
-      this.project$.next(project);
-      this.indexedDBService.updateProject(project);
-    });
+    this.project$
+      .pipe(
+        filter((project) => project.id !== undefined),
+        map((project) => {
+          project.position = { row, step };
+          return project;
+        }),
+        take(1)
+      )
+      .subscribe((project) => {
+        this.project$.next(project);
+        this.indexedDBService.updateProject(project);
+      });
   }
   loadCurrentProjectId(): CurrentProject | null {
     const data = localStorage.getItem('currentProject');

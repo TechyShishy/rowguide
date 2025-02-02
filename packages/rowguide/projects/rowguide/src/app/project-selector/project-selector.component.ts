@@ -20,7 +20,7 @@ import { MatCardModule } from '@angular/material/card';
 import { inflate } from 'pako';
 import { CommonModule } from '@angular/common';
 import { Project } from '../project';
-import { IndexedDBService } from '../indexed-db.service';
+import { ProjectDbService } from '../project-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
@@ -71,7 +71,7 @@ export class ProjectSelectorComponent {
   constructor(
     private logger: NGXLogger,
     private projectService: ProjectService,
-    private indexedDBService: IndexedDBService,
+    private indexedDBService: ProjectDbService,
     private flamService: FlamService,
     private beadtoolPdfService: BeadtoolPdfService,
     private router: Router,
@@ -159,7 +159,9 @@ export class ProjectSelectorComponent {
       combineLatestWith(from(this.beadtoolPdfService.renderFrontPage(file))),
       map(([[project, lastRow], image]): [Project, number] => {
         project.image = image;
-        project.firstLastAppearanceMap = this.flamService.generateFLAM(project.rows);
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(
+          project.rows
+        );
         project.position = { row: 0, step: 0 };
         return [project, lastRow];
       }),
@@ -184,7 +186,9 @@ export class ProjectSelectorComponent {
         return from(this.projectService.loadPeyote(file.name, data));
       }),
       map((project) => {
-        project.firstLastAppearanceMap = this.flamService.generateFLAM(project.rows);
+        project.firstLastAppearanceMap = this.flamService.generateFLAM(
+          project.rows
+        );
         project.position = { row: 0, step: 0 };
         return project;
       })

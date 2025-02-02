@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
 import { ProjectService } from '../project.service';
-import { IndexedDBService } from '../indexed-db.service';
+import { ProjectDbService } from '../project-db.service';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
 import { NGXLogger } from 'ngx-logger';
@@ -18,7 +18,7 @@ describe('ProjectSelectorComponent', () => {
   let component: ProjectSelectorComponent;
   let fixture: ComponentFixture<ProjectSelectorComponent>;
   let projectServiceSpy: jasmine.SpyObj<ProjectService>;
-  let indexedDBServiceSpy: jasmine.SpyObj<IndexedDBService>;
+  let indexedDBServiceSpy: jasmine.SpyObj<ProjectDbService>;
   let beadtoolPdfServiceSpy: jasmine.SpyObj<BeadtoolPdfService>;
   let flamServiceSpy: jasmine.SpyObj<FlamService>;
 
@@ -49,7 +49,7 @@ describe('ProjectSelectorComponent', () => {
       ],
       providers: [
         { provide: ProjectService, useValue: projectServiceSpy },
-        { provide: IndexedDBService, useValue: indexedDBServiceSpy },
+        { provide: ProjectDbService, useValue: indexedDBServiceSpy },
         { provide: BeadtoolPdfService, useValue: beadtoolPdfServiceSpy },
         { provide: FlamService, useValue: flamServiceSpy },
         provideRouter(routes),
@@ -81,7 +81,6 @@ describe('ProjectSelectorComponent', () => {
     );
     const mockFile = new File([mockGzipContent], 'test.gz');
     component.file = mockFile;
-
 
     const mockProject: Project = { id: 1, name: 'Test Project', rows: [] };
 

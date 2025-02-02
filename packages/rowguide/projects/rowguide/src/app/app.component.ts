@@ -17,6 +17,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NotificationComponent } from "./notification/notification.component";
+import { UpgradeService } from './upgrade.service';
 
 @Component({
   selector: 'app-root',
@@ -30,8 +31,8 @@ import { NotificationComponent } from "./notification/notification.component";
     MatButtonModule,
     RouterOutlet,
     RouterLink,
-    NotificationComponent
-],
+    NotificationComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -40,10 +41,14 @@ export class AppComponent {
 
   constructor(
     public projectService: ProjectService,
+    private upgradeService: UpgradeService,
     private cdr: ChangeDetectorRef
   ) {
     this.projectService.ready.subscribe((ready) => {
       this.cdr.detectChanges();
     });
+  }
+  ngOnInit() {
+    this.upgradeService.doNewMigrations();
   }
 }

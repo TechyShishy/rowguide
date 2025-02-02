@@ -4,7 +4,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
-import { IndexedDBService } from '../indexed-db.service';
+import { ProjectDbService } from '../project-db.service';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import fileDownload from 'js-file-download';
@@ -28,7 +28,7 @@ export class ProjectSummaryComponent {
   @Input() project!: Project;
 
   constructor(
-    private indexedDBService: IndexedDBService,
+    private indexedDBService: ProjectDbService,
     private ref: ElementRef,
     private router: Router,
     private projectService: ProjectService
