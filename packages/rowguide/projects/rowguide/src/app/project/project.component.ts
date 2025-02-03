@@ -37,6 +37,7 @@ import { tap } from 'rxjs/internal/operators/tap';
 import { SettingsService } from '../settings.service';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { filter } from 'rxjs';
+import { ZipperService } from '../zipper.service';
 
 @Component({
   selector: 'app-project',
@@ -74,7 +75,8 @@ export class ProjectComponent implements HierarchicalList {
     private route: ActivatedRoute,
     private router: Router,
     private settingsService: SettingsService,
-    private peyoteShorthandService: PeyoteShorthandService
+    private peyoteShorthandService: PeyoteShorthandService,
+    private zipperService: ZipperService
   ) {}
 
   ngOnInit() {
@@ -114,7 +116,7 @@ export class ProjectComponent implements HierarchicalList {
       map(([rows, combine12]) => {
         const newRows = deepCopy(rows);
         if (combine12) {
-          const zipperSteps = this.peyoteShorthandService.zipperSteps(
+          const zipperSteps = this.zipperService.zipperSteps(
             newRows[0].steps,
             newRows[1].steps
           );

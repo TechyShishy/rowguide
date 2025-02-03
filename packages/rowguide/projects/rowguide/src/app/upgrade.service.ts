@@ -6,6 +6,7 @@ import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from './project-db.service';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { Step } from './step';
+import { ZipperService } from './zipper.service';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +18,7 @@ export class UpgradeService {
     private migrationDbService: MigrationDbService,
     private logger: NGXLogger,
     private indexedDBService: ProjectDbService,
-    private peyoteShorthandService: PeyoteShorthandService
+    private zipperService: ZipperService
   ) {}
   async doNewMigrations() {
     for (let i = 1; i <= this.highestMigration; i++) {
@@ -40,10 +41,10 @@ export class UpgradeService {
     return this.indexedDBService.loadProjects().then((projects) => {
       projects.forEach((project) => {
         if (project.rows && project.rows.length >= 2) {
-          const expandedRow1 = this.peyoteShorthandService.expandSteps(
+          const expandedRow1 = this.zipperService.expandSteps(
             project.rows[0].steps
           );
-          const expandedRow2 = this.peyoteShorthandService.expandSteps(
+          const expandedRow2 = this.zipperService.expandSteps(
             project.rows[1].steps
           );
           if (expandedRow1.length / 2 === expandedRow2.length) {
@@ -63,11 +64,11 @@ export class UpgradeService {
             });
             project.rows.unshift({
               id: 2,
-              steps: this.peyoteShorthandService.compressSteps(newSteps2),
+              steps: this.zipperService.compressSteps(newSteps2),
             });
             project.rows.unshift({
               id: 1,
-              steps: this.peyoteShorthandService.compressSteps(newSteps1),
+              steps: this.zipperService.compressSteps(newSteps1),
             });
             this.indexedDBService.updateProject(project);
           }

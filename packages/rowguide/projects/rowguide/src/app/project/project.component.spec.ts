@@ -14,13 +14,14 @@ import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 import { RowComponent } from '../row/row.component';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
+import { ZipperService } from '../zipper.service';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;
   let fixture: ComponentFixture<ProjectComponent>;
   let projectServiceSpy: jasmine.SpyObj<ProjectService>;
   let settingsServiceStub: Partial<SettingsService>;
-  let peyoteShorthandServiceSpy: jasmine.SpyObj<PeyoteShorthandService>;
+  let zipperServiceSpy: jasmine.SpyObj<ZipperService>;
 
   beforeEach(async () => {
     projectServiceSpy = jasmine.createSpyObj(
@@ -36,9 +37,7 @@ describe('ProjectComponent', () => {
         zippedRows$: new BehaviorSubject<Row[]>([]),
       }
     );
-    peyoteShorthandServiceSpy = jasmine.createSpyObj('PeyoteShorthandService', [
-      'zipperSteps',
-    ]);
+    zipperServiceSpy = jasmine.createSpyObj('ZipperService', ['zipperSteps']);
     /*projectServiceStub = {
       ready: new Subject<boolean>(),
       loadCurrentProject: jasmine.createSpy('loadCurrentProject'),
@@ -57,8 +56,8 @@ describe('ProjectComponent', () => {
         { provide: ProjectService, useValue: projectServiceSpy },
         { provide: SettingsService, useValue: settingsServiceStub },
         {
-          provide: PeyoteShorthandService,
-          useValue: peyoteShorthandServiceSpy,
+          provide: ZipperService,
+          useValue: zipperServiceSpy,
         },
         provideRouter(routes),
       ],
@@ -68,7 +67,7 @@ describe('ProjectComponent', () => {
     projectServiceSpy.loadProject.and.returnValue(
       Promise.resolve({ rows: [], position: { row: 0, step: 0 } } as Project)
     );
-    peyoteShorthandServiceSpy.zipperSteps.and.returnValue([]);
+    zipperServiceSpy.zipperSteps.and.returnValue([]);
     fixture = TestBed.createComponent(ProjectComponent);
     component = fixture.componentInstance;
     //fixture.detectChanges();
