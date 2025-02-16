@@ -168,9 +168,7 @@ export class ProjectComponent implements HierarchicalList {
         )
       )
       .subscribe((step) => {
-        const sub = step.row.project.project$.subscribe((project) => {
-          sub.unsubscribe();
-        });
+        step.row.project.project$.pipe(take(1)).subscribe((project) => {});
         this.currentStep$.next(step);
       });
   }

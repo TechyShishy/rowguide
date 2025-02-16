@@ -1,18 +1,44 @@
 <mat-card class="flam">
   <mat-card-title>FLAM</mat-card-title>
   <mat-card-content>
-    <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector$.value">
+    <ng-template [ngIf]="!settingsService.ppinspector$.value">
+      <mat-list>
         <mat-list-item *ngFor="let flamRow of ObjectValues(( flamService.flam$ | async ) ?? {})">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
         </mat-list-item>
+      </mat-list>
+    </ng-template>
+    <ng-template [ngIf]="settingsService.ppinspector$.value">
+      <table mat-table matSort [dataSource]="dataSource">
+        <ng-container matColumnDef="key">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
+          <td mat-cell *matCellDef="let flamRow">{{flamRow.key}}</td>
+        </ng-container>
+      
+        <ng-container matColumnDef="firstRow">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>First Row</th>
+          <td mat-cell *matCellDef="let flamRow">{{flamRow.firstRow+1}}</td>
+        </ng-container>
+      
+        <ng-container matColumnDef="firstColumn">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>First Column</th>
+          <td mat-cell *matCellDef="let flamRow">{{flamRow.firstColumn+1}}</td>
+        </ng-container>
+      
+        <ng-container matColumnDef="lastRow">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Row</th>
+          <td mat-cell *matCellDef="let flamRow">{{flamRow.lastRow+1}}</td>
+        </ng-container>
+      
+        <ng-container matColumnDef="lastColumn">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Column</th>
+          <td mat-cell *matCellDef="let flamRow">{{flamRow.lastColumn+1}}</td>
+        </ng-container>
+      
+        <tr mat-header-row *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn']"></tr>
+      </table>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector$.value">
-        <mat-list-item *ngFor="let flamRow of ObjectValues((flamService.flam$ | async) ?? {})">
-          {{flamRow.key}} - {{flamRow.firstAppearance[0]+1}}/{{flamRow.lastAppearance[0]+1}}
-        </mat-list-item>
-        </ng-template>
-        </mat-list>
   </mat-card-content>
   </mat-card>
   <mat-card class="project-summary">
@@ -21,11 +47,11 @@
       <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector$.value">
         <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project$.value.rows.length}}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector$.value">
         <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project$.value.rows.length + 1}}</mat-list-item>
+        <mat-list-item>Rows: {{projectService.project$.value.rows.length}}</mat-list-item>
       </ng-template>
     </mat-list>
   </mat-card-content>
