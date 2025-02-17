@@ -36,6 +36,7 @@ import {
     '[class.first]': 'isFirstStep',
     '[class.last]': 'isLastStep',
     '[class.zoom]': 'isZoomed',
+    '[class.marked]': 'marked',
   },
 })
 export class StepComponent implements HierarchicalList, OnInit {
@@ -45,6 +46,7 @@ export class StepComponent implements HierarchicalList, OnInit {
   isZoomed = false;
   isFirstStep = false;
   isLastStep = false;
+  marked: boolean = false;
 
   @Input() index: number = 0;
   @Input() row!: RowComponent;
@@ -97,6 +99,10 @@ export class StepComponent implements HierarchicalList, OnInit {
 
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
+    if (this.row.project.markMode) {
+      this.marked = !this.marked;
+      return;
+    }
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
     if (currentStep) {
       currentStep.isCurrentStep = false;

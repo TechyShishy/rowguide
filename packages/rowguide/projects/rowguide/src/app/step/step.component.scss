@@ -17,6 +17,11 @@
   --mdc-chip-label-text-color: white;
 }
 
+:host(.marked) > mat-chip {
+  --mdc-chip-elevated-container-color: #205216;
+  --mdc-chip-label-text-color: white;
+}
+
 :host(.current.zoom) > mat-chip {
   --mdc-chip-label-text-size: 2rem;
   --mdc-chip-container-height: 64px;

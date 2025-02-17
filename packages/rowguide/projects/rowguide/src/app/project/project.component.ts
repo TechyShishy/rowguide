@@ -4,6 +4,7 @@ import {
   QueryList,
   ViewChildren,
   ChangeDetectorRef,
+  HostBinding,
 } from '@angular/core';
 import { CommonModule, NgFor } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -67,6 +68,7 @@ export class ProjectComponent implements HierarchicalList {
   parent = null;
   prev = null;
   next = null;
+  @HostBinding('class.mark-mode') markMode: boolean = false;
 
   constructor(
     private projectService: ProjectService,
@@ -185,6 +187,10 @@ export class ProjectComponent implements HierarchicalList {
       .subscribe((step) => {
         step.onClick(new Event('click'));
       });
+  }
+
+  toggleMarkMode() {
+    this.markMode = !this.markMode;
   }
 
   onAdvanceRow() {
