@@ -20,8 +20,6 @@ mat-accordion {
   display: grid;
   justify-items: center;
   grid-template-columns: repeat(7, 1fr);
-  padding-left: 15%;
-  padding-right: 15%;
 
   button, mat-card {
     margin: 0.5rem 0rem;
