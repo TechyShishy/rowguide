@@ -79,7 +79,7 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
     this.markFirstStep = false;
   }
 
-  private updateBeadCounts() {
+  updateBeadCounts() {
     let prevCount = 0;
     this.children.forEach((step) => {
       step.beadCount = step.step.count + prevCount;

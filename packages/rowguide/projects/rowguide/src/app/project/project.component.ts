@@ -186,6 +186,7 @@ export class ProjectComponent implements HierarchicalList {
       )
       .subscribe((step) => {
         step.onClick(new Event('click'));
+        step.row.updateBeadCounts();
       });
   }
 
