@@ -19,13 +19,13 @@ mat-accordion {
   height: 4rem;
   display: grid;
   justify-items: center;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   padding-left: 15%;
   padding-right: 15%;
 
   button, mat-card {
     margin: 0.5rem 0rem;
-    width: 5rem;
+    width: 6.5rem;
     height: 3rem;
   }
 

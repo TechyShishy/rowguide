@@ -35,6 +35,7 @@ export class SettingsComponent {
   ppinspectorControl = new FormControl(false);
   zoomControl = new FormControl(false);
   scrolloffsetControl = new FormControl(-1);
+  multiadvanceControl = new FormControl(3);
 
   settings = this.formBuilder.group({
     combine12: this.combine12Control,
@@ -43,6 +44,7 @@ export class SettingsComponent {
     ppinspector: this.ppinspectorControl,
     zoom: this.zoomControl,
     scrolloffset: this.scrolloffsetControl,
+    multiadvance: this.multiadvanceControl,
   });
 
   constructor(
@@ -60,6 +62,7 @@ export class SettingsComponent {
     this.ppinspectorControl.setValue(this.settingsService.ppinspector$.value);
     this.zoomControl.setValue(this.settingsService.zoom$.value);
     this.scrolloffsetControl.setValue(this.settingsService.scrolloffset$.value);
+    this.multiadvanceControl.setValue(this.settingsService.multiadvance$.value);
 
     this.settings.valueChanges.subscribe((value) => {
       this.settingsService.saveSettings(<Settings>{
@@ -69,6 +72,7 @@ export class SettingsComponent {
         ppinspector: value.ppinspector,
         zoom: value.zoom,
         scrolloffset: value.scrolloffset,
+        multiadvance: value.multiadvance,
       });
       this.settingsService.combine12$.next(value.combine12 ?? false);
       this.settingsService.lrdesignators$.next(value.lrdesignators ?? false);
@@ -76,6 +80,7 @@ export class SettingsComponent {
       this.settingsService.ppinspector$.next(value.ppinspector ?? false);
       this.settingsService.zoom$.next(value.zoom ?? false);
       this.settingsService.scrolloffset$.next(value.scrolloffset ?? -1);
+      this.settingsService.multiadvance$.next(value.multiadvance ?? 3);
     });
   }
 }

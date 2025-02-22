@@ -23,6 +23,7 @@ describe('SettingsService', () => {
       ppinspector: true,
       zoom: true,
       scrolloffset: 0,
+      multiadvance: 3,
     };
     service.saveSettings(settings);
     const savedSettings = JSON.parse(localStorage.getItem('settings')!);
@@ -37,6 +38,7 @@ describe('SettingsService', () => {
       ppinspector: true,
       zoom: true,
       scrolloffset: 0,
+      multiadvance: 3,
     };
     localStorage.setItem('settings', JSON.stringify(settings));
     service.loadSettings();
@@ -60,6 +62,7 @@ describe('SettingsService', () => {
       ppinspector: true,
       zoom: true,
       scrolloffset: 0,
+      multiadvance: 3,
     };
     service.saveSettings(settings);
   });

@@ -76,7 +76,7 @@ export class ProjectComponent implements HierarchicalList {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-    private settingsService: SettingsService,
+    public settingsService: SettingsService,
     private peyoteShorthandService: PeyoteShorthandService,
     private zipperService: ZipperService
   ) {}
@@ -205,6 +205,14 @@ export class ProjectComponent implements HierarchicalList {
       }
     }
   }
+  async onAdvanceXSteps(x: number) {
+    for (let i = 0; i < x; i++) {
+      const endOfRow = await this.doStepForward();
+      if (endOfRow) {
+        break;
+      }
+    }
+  }
   onRetreatRow() {
     this.doRowBackward();
   }
@@ -216,6 +224,14 @@ export class ProjectComponent implements HierarchicalList {
         this.resetProject(false);
       }
       this.doStepEnd();
+    }
+  }
+  async onRetreatXSteps(x: number) {
+    for (let i = 0; i < x; i++) {
+      const startOfRow = await this.doStepBackward();
+      if (startOfRow) {
+        break;
+      }
     }
   }
   @HostListener('keydown.ArrowRight', ['$event'])
@@ -284,12 +300,12 @@ export class ProjectComponent implements HierarchicalList {
     if (currentStep === null || currentStep === undefined) {
       return true;
     }
-    currentStep.isCurrentStep = false;
     this.sanityPresumptiveStep();
     const nextStep = currentStep.row.children.get(currentStep.index + 1);
     if (nextStep === null || nextStep === undefined) {
       return true;
     }
+    currentStep.isCurrentStep = false;
     nextStep.isCurrentStep = true;
     nextStep.row.show();
     this.projectService.saveCurrentPosition(nextStep.row.index, nextStep.index);
@@ -301,12 +317,12 @@ export class ProjectComponent implements HierarchicalList {
     if (currentStep === null || currentStep === undefined) {
       return true;
     }
-    currentStep.isCurrentStep = false;
     this.sanityPresumptiveStep();
     const prevStep = currentStep.row.children.get(currentStep.index - 1);
     if (prevStep === null || prevStep === undefined) {
       return true;
     }
+    currentStep.isCurrentStep = false;
     prevStep.isCurrentStep = true;
     prevStep.row.show();
     this.projectService.saveCurrentPosition(prevStep.row.index, prevStep.index);
@@ -338,8 +354,8 @@ export class ProjectComponent implements HierarchicalList {
     }
     nextParent.show();
     nextParent.children.first.onClick(new Event('click'));
-    this.projectService.saveCurrentPosition(nextParent.index, 0);
-    this.currentStep$.next(nextParent.children.first);
+    //this.projectService.saveCurrentPosition(nextParent.index, 0);
+    //this.currentStep$.next(nextParent.children.first);
     return false;
   }
   async doRowBackward(): Promise<boolean> {
@@ -356,9 +372,9 @@ export class ProjectComponent implements HierarchicalList {
       return true;
     }
     prevParent.show();
-    prevParent.children.first.onClick(new Event('click'));
-    this.projectService.saveCurrentPosition(prevParent.index, 0);
-    this.currentStep$.next(prevParent.children.first);
+    await prevParent.children.first.onClick(new Event('click'));
+    //this.projectService.saveCurrentPosition(prevParent.index, 0);
+    //this.currentStep$.next(prevParent.children.first);
     return false;
   }
 

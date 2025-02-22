@@ -12,6 +12,7 @@ export class SettingsService {
   public ppinspector$ = new BehaviorSubject<boolean>(false);
   public zoom$ = new BehaviorSubject<boolean>(false);
   public scrolloffset$ = new BehaviorSubject<number>(-1);
+  public multiadvance$ = new BehaviorSubject<number>(3);
   constructor() {
     this.loadSettings();
   }
@@ -29,6 +30,7 @@ export class SettingsService {
       this.ppinspector$.next(s.ppinspector);
       this.zoom$.next(s.zoom);
       this.scrolloffset$.next(s.scrolloffset);
+      this.multiadvance$.next(s.multiadvance);
     }
   }
 }
@@ -40,4 +42,5 @@ export class Settings {
   ppinspector: boolean = false;
   zoom: boolean = false;
   scrolloffset: number = -1;
+  multiadvance: number = 3;
 }

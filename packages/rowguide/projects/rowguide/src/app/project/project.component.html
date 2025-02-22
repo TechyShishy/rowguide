@@ -4,8 +4,14 @@
 </mat-accordion>
 <div class="advance-button-container">
   <button mat-raised-button color="primary" type="button" (click)="onRetreatRow()">Retreat Row</button>
+  <button mat-raised-button color="primary" type="button"
+    (click)="onRetreatXSteps(settingsService.multiadvance$.value)">Retreat {{settingsService.multiadvance$.value}}
+    Steps</button>
   <button mat-raised-button color="primary" type="button" (click)="onRetreatStep()">Retreat Step</button>
   <button mat-button type="button" (click)="toggleMarkMode()">{{(currentStep$ | async)?.beadCount}}</button>
   <button mat-raised-button color="primary" type="button" (click)="onAdvanceStep()">Advance Step</button>
+  <button mat-raised-button color="primary" type="button"
+    (click)="onAdvanceXSteps(settingsService.multiadvance$.value)">Advance {{settingsService.multiadvance$.value}}
+    Steps</button>
   <button mat-raised-button color="primary" type="button" (click)="onAdvanceRow()">Advance Row</button>
 </div>
