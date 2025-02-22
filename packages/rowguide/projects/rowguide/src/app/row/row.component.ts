@@ -67,9 +67,6 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
     if (this.markFirstStep) {
       this.setFirstStepAsCurrent();
     }
-    if (this.children.last.beadCount === 0) {
-      this.updateBeadCounts();
-    }
   }
 
   private setFirstStepAsCurrent() {
@@ -79,13 +76,6 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
     this.markFirstStep = false;
   }
 
-  updateBeadCounts() {
-    let prevCount = 0;
-    this.children.forEach((step) => {
-      step.beadCount = step.step.count + prevCount;
-      prevCount = step.beadCount;
-    });
-  }
 
   onToggle() {
     this.visible = !this.visible;

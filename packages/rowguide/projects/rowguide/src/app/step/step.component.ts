@@ -21,10 +21,12 @@ import {
   firstValueFrom,
   forkJoin,
   map,
+  Observable,
   of,
   take,
   tap,
 } from 'rxjs';
+import { ZipperService } from '../zipper.service';
 
 @Component({
   selector: 'app-step',
@@ -54,13 +56,14 @@ export class StepComponent implements HierarchicalList, OnInit {
   prev!: HierarchicalList | null;
   next!: HierarchicalList | null;
   children: QueryList<HierarchicalList> = new QueryList<HierarchicalList>();
-  beadCount: number = 0;
+  beadCount$: Observable<number> = of(0);
 
   constructor(
     private flamService: FlamService,
     private settingsService: SettingsService,
     private projectService: ProjectService,
-    private logger: NGXLogger
+    private logger: NGXLogger,
+    private zipperService: ZipperService
   ) {}
 
   ngOnInit() {
@@ -95,6 +98,20 @@ export class StepComponent implements HierarchicalList, OnInit {
       this.isZoomed = value;
     });
     this.isZoomed = this.settingsService.zoom$.value;*/
+
+    this.beadCount$ = this.projectService.zippedRows$.pipe(
+      map((rows) => rows[this.row.index]),
+      map((row) => {
+        let beadCount = 0;
+        const expandedSteps = this.zipperService.expandSteps(row.steps);
+        for (let i = 0; i < row.steps.length; i++) {
+          if (i < this.index) {
+            beadCount += row.steps[i].count;
+          } else break;
+        }
+        return beadCount;
+      })
+    );
   }
 
   @HostListener('click', ['$event'])
