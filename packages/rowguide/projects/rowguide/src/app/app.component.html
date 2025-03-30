@@ -10,9 +10,13 @@
     </mat-list>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar><button mat-icon-button (click)="sidenav.toggle()">
-        <mat-icon>menu</mat-icon></button>Project: {{projectService.project$.value.name}}</mat-toolbar>
-    <router-outlet />
+    <mat-toolbar>
+      <button mat-icon-button (click)="sidenav.toggle()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      Project: {{projectService.project$.value.name}}
+    </mat-toolbar>
+    <div class="router-outlet"><router-outlet /></div>
   </mat-sidenav-content>
   </mat-sidenav-container>
 <app-notification></app-notification>

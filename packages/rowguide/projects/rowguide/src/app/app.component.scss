@@ -49,4 +49,11 @@ mat-list-item {
 
   font-weight: bold;
 }
-
+mat-sidenav-content {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+.router-outlet {
+ overflow-y: auto;
+}
