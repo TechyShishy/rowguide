@@ -82,9 +82,15 @@ export class BeadtoolPdfService {
       ),
       map((textContent) => {
         const pageText: string = this.extractTextContent(textContent);
-        const cleanedText = pageText.replace(
-          /.*\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/gs,
-          ''
+        const cleanedText = pageText
+          .replace(
+            /.*\n?\n?Created with BeadTool 4 - www\.beadtool\.net\n?\n?/gs,
+            ''
+          )
+          .replace(/.* ?Page [0-9]+(?: of [0-9]+)?\n/g, '');
+        this.logger.trace(
+          `Extracted text from page ${pageIndex}:`,
+          cleanedText
         );
         return cleanedText;
       })
@@ -92,18 +98,20 @@ export class BeadtoolPdfService {
   }
 
   private extractTextContent(textContent: any): string {
-    return textContent.items
-      .map((item: TextItem | TextMarkedContent) => {
-        if (this.isTextMarkedContent(item)) {
-          return '';
-        } else if (this.isTextItem(item)) {
-          const textItem = item as TextItem;
-          return textItem.str;
-        } else {
-          return '';
-        }
-      })
-      .join('\n');
+    const items: TextItem[] = textContent.items.filter(
+      (item: TextItem | TextMarkedContent) => this.isTextItem(item)
+    );
+    let itemStr = '';
+    const items2: string[] = [];
+    for (const item of items) {
+      itemStr += item.str;
+      if (item.hasEOL) {
+        items2.push(itemStr);
+        itemStr = '';
+      }
+    }
+    if (itemStr != '') items2.push(itemStr); // Push any remaining text after the last EOL
+    return items2.join('\n');
   }
 
   private cleanText(text: string): string {
