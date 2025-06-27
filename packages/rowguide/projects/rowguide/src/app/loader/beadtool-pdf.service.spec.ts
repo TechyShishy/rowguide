@@ -66,7 +66,7 @@ describe('BeadtoolPdfService', () => {
         return Promise.resolve({
           getTextContent: jasmine.createSpy('getTextContent').and.returnValue(
             Promise.resolve({
-              items: items.map((str: string) => ({ str })),
+              items: items.map((str: string) => ({ str, hasEOL: true })),
             })
           ),
         });

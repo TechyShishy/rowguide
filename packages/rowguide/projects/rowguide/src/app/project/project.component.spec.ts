@@ -48,6 +48,7 @@ describe('ProjectComponent', () => {
 
     settingsServiceStub = {
       combine12$: new BehaviorSubject(false), // Mock combine12$ observable
+      multiadvance$: new BehaviorSubject(3), // Mock multiadvance$ observable
     };
 
     await TestBed.configureTestingModule({

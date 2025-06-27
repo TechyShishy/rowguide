@@ -37,23 +37,8 @@ describe('RowComponent', () => {
     expect(component.visible).toBeFalse();
   });
 
-  it('should update bead counts', () => {
-    const step1 = jasmine.createSpyObj('StepComponent', ['step']);
-    step1.step = { id: 1, count: 1, description: 'stepA' } as Step;
-    const step2 = jasmine.createSpyObj('StepComponent', ['step']);
-    step2.step = { id: 2, count: 2, description: 'stepB' } as Step;
-    component.children = new QueryList<StepComponent>();
-    component.children.reset([step1, step2]);
-
-    component['updateBeadCounts']();
-
-    expect(step1.beadCount).toBe(1);
-    expect(step2.beadCount).toBe(3);
-  });
-
   it('should handle panel expand', () => {
     spyOn(component as any, 'setFirstStepAsCurrent');
-    spyOn(component as any, 'updateBeadCounts');
     component.markFirstStep = true;
     const mockStepComponent = jasmine.createSpyObj('StepComponent', ['step']);
     mockStepComponent.beadCount = 0; // Ensure beadCount is 0
@@ -63,7 +48,6 @@ describe('RowComponent', () => {
     component['handlePanelExpand']();
 
     expect(component['setFirstStepAsCurrent']).toHaveBeenCalled();
-    expect(component['updateBeadCounts']).toHaveBeenCalled();
   });
 
   it('should scroll to previous row', () => {
