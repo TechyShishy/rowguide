@@ -103,11 +103,9 @@ export class StepComponent implements HierarchicalList, OnInit {
       map((rows) => rows[this.row.index]),
       map((row) => {
         let beadCount = 0;
-        const expandedSteps = this.zipperService.expandSteps(row.steps);
-        for (let i = 0; i < row.steps.length; i++) {
-          if (i < this.index) {
-            beadCount += row.steps[i].count;
-          } else break;
+        //const expandedSteps = this.zipperService.expandSteps(row.steps);
+        for (let i = 0; i <= this.index; i++) {
+          beadCount += row.steps[i].count;
         }
         return beadCount;
       })
