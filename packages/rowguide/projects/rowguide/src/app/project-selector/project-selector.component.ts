@@ -39,6 +39,7 @@ import {
   tap,
   of,
   forkJoin,
+  BehaviorSubject,
 } from 'rxjs';
 import { NotificationService } from '../notification.service';
 import { SettingsService } from '../settings.service';
@@ -64,7 +65,7 @@ export class ProjectSelectorComponent {
   file: File = new File([], '');
   fileData: string = '';
   fileData$: Observable<string> = new Observable<string>();
-  projects: Project[] = [];
+  projects$: Observable<Project[]> = new Observable<Project[]>();
   showSpinner: boolean = false;
   private destroy$ = new Subject<void>();
 
@@ -118,7 +119,6 @@ export class ProjectSelectorComponent {
         this.projectService.project$.next(project);
         this.indexedDBService.updateProject(project);
         this.projectService.ready.next(true);
-        this.loadProjectsFromIndexedDB();
         this.router.navigate(['project', { id: project.id }]);
       })
     );
@@ -199,11 +199,7 @@ export class ProjectSelectorComponent {
     const arrayBuffer = await pdfFile.arrayBuffer();
   }
 
-  async loadProjectsFromIndexedDB() {
-    this.projects = await this.indexedDBService.loadProjects();
-  }
-
-  async ngAfterViewInit() {
-    await this.loadProjectsFromIndexedDB();
+  ngAfterViewInit() {
+    this.projects$ = from(this.indexedDBService.loadProjects());
   }
 }
