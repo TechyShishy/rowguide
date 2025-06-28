@@ -43,6 +43,7 @@ import {
 } from 'rxjs';
 import { NotificationService } from '../notification.service';
 import { SettingsService } from '../settings.service';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-project-selector',
@@ -57,6 +58,7 @@ import { SettingsService } from '../settings.service';
     ProjectSummaryComponent,
     MatExpansionModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
   ],
   templateUrl: './project-selector.component.html',
   styleUrl: './project-selector.component.scss',
@@ -68,6 +70,7 @@ export class ProjectSelectorComponent {
   projects$: Observable<Project[]> = new Observable<Project[]>();
   showSpinner: boolean = false;
   private destroy$ = new Subject<void>();
+  sortOrder$ = new BehaviorSubject<string>('dateAsc');
 
   constructor(
     private logger: NGXLogger,
@@ -200,6 +203,47 @@ export class ProjectSelectorComponent {
   }
 
   ngAfterViewInit() {
-    this.projects$ = from(this.indexedDBService.loadProjects());
+    this.projects$ = from(this.indexedDBService.loadProjects()).pipe(
+      switchMap((projects) =>
+        this.sortOrder$.pipe(
+          map((sortOrder) => {
+            this.logger.debug('Loaded projects from IndexedDB:', projects);
+            return projects.sort((a, b) => {
+              if (sortOrder === 'nameAsc') {
+                return (a.name ?? '').localeCompare(b.name ?? '');
+              } else if (sortOrder === 'nameDesc') {
+                return (b.name ?? '').localeCompare(a.name ?? '');
+              } else if (sortOrder === 'rowCountAsc') {
+                return (a.rows?.length ?? 0) - (b.rows?.length ?? 0);
+              } else if (sortOrder === 'rowCountDesc') {
+                return (b.rows?.length ?? 0) - (a.rows?.length ?? 0);
+              } else if (sortOrder === 'colorCountAsc') {
+                return (
+                  Object.keys(a.firstLastAppearanceMap ?? {}).length -
+                  Object.keys(b.firstLastAppearanceMap ?? {}).length
+                );
+              } else if (sortOrder === 'colorCountDesc') {
+                return (
+                  Object.keys(b.firstLastAppearanceMap ?? {}).length -
+                  Object.keys(a.firstLastAppearanceMap ?? {}).length
+                );
+              } else if (sortOrder === 'dateAsc') {
+                return (a.id ?? 0) - (b.id ?? 0);
+              } else if (sortOrder === 'dateDesc') {
+                return (b.id ?? 0) - (a.id ?? 0);
+              }
+              return 0; // Default case
+            });
+          })
+        )
+      )
+    );
+  }
+
+  get sortOrder(): string {
+    return this.sortOrder$.value;
+  }
+  set sortOrder(value: string) {
+    this.sortOrder$.next(value);
   }
 }

@@ -10,6 +10,19 @@
       </button>
       <button mat-raised-button color="primary" (click)="clickImport()">Import File</button>
       <mat-spinner *ngIf="showSpinner"></mat-spinner>
+      <mat-form-field>
+        <mat-label>Sort Order</mat-label>
+        <mat-select [(value)]="sortOrder">
+          <mat-option value="nameAsc">Name (A-Z)</mat-option>
+          <mat-option value="nameDesc">Name (Z-A)</mat-option>
+          <mat-option value="dateAsc">Date (Oldest First)</mat-option>
+          <mat-option value="dateDesc">Date (Newest First)</mat-option>
+          <mat-option value="rowCountAsc">Row Count (Smallest First)</mat-option>
+          <mat-option value="rowCountDesc">Row Count (Largest First)</mat-option>
+          <mat-option value="colorCountAsc">Color Count (Smallest First)</mat-option>
+          <mat-option value="colorCountDesc">Color Count (Largest First)</mat-option>
+        </mat-select>
+      </mat-form-field>
     </mat-expansion-panel>
     <app-project-summary *ngFor="let project of projects$ | async" [project]="project"></app-project-summary>
   </mat-accordion>
