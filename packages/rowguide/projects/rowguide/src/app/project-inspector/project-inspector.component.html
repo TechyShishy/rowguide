@@ -14,27 +14,27 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.key}}</td>
         </ng-container>
-      
+
         <ng-container matColumnDef="firstRow">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>First Row</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.firstRow+1}}</td>
         </ng-container>
-      
+
         <ng-container matColumnDef="firstColumn">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>First Column</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.firstColumn+1}}</td>
         </ng-container>
-      
+
         <ng-container matColumnDef="lastRow">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Row</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.lastRow+1}}</td>
         </ng-container>
-      
+
         <ng-container matColumnDef="lastColumn">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Column</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.lastColumn+1}}</td>
         </ng-container>
-      
+
         <tr mat-header-row *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn']"></tr>
         <tr mat-row *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn']"></tr>
       </table>
@@ -83,6 +83,6 @@
 <mat-card class="project-image">
   <mat-card-title>Project Image</mat-card-title>
   <mat-card-content>
-    <img [src]="image$ | async">
+    <img ngfSelect [(file)]="file" (fileChange)="uploadPicture()" [src]="image$ | async">
   </mat-card-content>
 </mat-card>

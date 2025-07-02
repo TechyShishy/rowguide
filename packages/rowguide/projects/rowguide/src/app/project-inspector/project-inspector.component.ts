@@ -14,11 +14,17 @@ import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { ProjectDbService } from '../project-db.service';
-import { map, Observable, switchMap } from 'rxjs';
 import { Project } from '../project';
 import { FLAM } from '../flam';
 import { FLAMRow } from '../flamrow';
 import { BrowserModule } from '@angular/platform-browser';
+import { ngfModule } from 'angular-file';
+import { Observable } from 'rxjs/internal/Observable';
+import { switchMap } from 'rxjs/internal/operators/switchMap';
+import { map } from 'rxjs/internal/operators/map';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { from } from 'rxjs/internal/observable/from';
+import { of } from 'rxjs/internal/observable/of';
 
 @Component({
   selector: 'app-project-inspector',
@@ -28,6 +34,7 @@ import { BrowserModule } from '@angular/platform-browser';
     MatListModule,
     MatTableModule,
     MatSortModule,
+    ngfModule,
   ],
   templateUrl: './project-inspector.component.html',
   styleUrls: ['./project-inspector.component.scss'],
@@ -35,8 +42,11 @@ import { BrowserModule } from '@angular/platform-browser';
 export class ProjectInspectorComponent implements OnInit {
   ObjectValues = Object.values;
   image$: Observable<string> = this.projectService.project$.pipe(
-    switchMap(this.loadProjectImage)
+    switchMap(this.loadProjectImage),
+    map((image) => (image != '' ? image : 'assets/no-image-available.png'))
   );
+
+  file: File = new File([], '');
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatTable) table!: MatTable<{
@@ -60,7 +70,7 @@ export class ProjectInspectorComponent implements OnInit {
     public projectService: ProjectService,
     public logger: NGXLogger,
     private cdr: ChangeDetectorRef,
-    private indexedDbService: ProjectDbService
+    private indexedDBService: ProjectDbService
   ) {}
 
   ngOnInit() {
@@ -100,6 +110,23 @@ export class ProjectInspectorComponent implements OnInit {
       });
       return result;
     }
-    return '';
+    return firstValueFrom(of(''));
+  }
+
+  uploadPicture(): void {
+    from(this.file.arrayBuffer()).subscribe((buffer) => {
+      const pngHeader = Uint8Array.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ]);
+      const isPng = new Uint8Array(buffer)
+        .subarray(0, 8)
+        .every((value, index) => value === pngHeader[index]);
+      if (isPng) {
+        const project = this.projectService.project$.value;
+        project.image = buffer;
+        this.indexedDBService.updateProject(project);
+        this.projectService.project$.next(project);
+      }
+    });
   }
 }
