@@ -8,7 +8,7 @@ import {
   MatTableDataSource,
   MatTableModule,
 } from '@angular/material/table';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
@@ -96,6 +96,42 @@ export class ProjectInspectorComponent implements OnInit {
         this.dataSource.data = flam;
         this.dataSource.sort = this.sort;
       });
+
+    this.sort.sortChange.subscribe((sortState: Sort) => {
+      if (
+        sortState.active +
+          sortState.direction[0].toUpperCase() +
+          sortState.direction.slice(1) !==
+        this.settingsService.flamsort$.value
+      ) {
+        this.settingsService.flamsort$.next(
+          sortState.active +
+            sortState.direction[0].toUpperCase() +
+            sortState.direction.slice(1)
+        );
+      }
+    });
+
+    this.settingsService.flamsort$.subscribe((flamsort) => {
+      this.logger.debug('flamsort', flamsort);
+      let sortState: Sort = { active: '', direction: '' };
+      if (flamsort.endsWith('Asc')) {
+        this.sort.direction = 'asc';
+        this.sort.active = flamsort.split('Asc')[0];
+      } else if (flamsort.endsWith('Desc')) {
+        this.sort.direction = 'desc';
+        this.sort.active = flamsort.split('Desc')[0];
+      } else {
+        this.sort.direction = '';
+        this.sort.active = '';
+      }
+      sortState = {
+        active: this.sort.active,
+        direction: this.sort.direction,
+      } as Sort;
+      this.sort.sortChange.emit(sortState);
+      this.cdr.detectChanges();
+    });
   }
   async loadProjectImage(project: Project): Promise<string> {
     if (project?.image) {

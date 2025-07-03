@@ -12,7 +12,7 @@
       <mat-spinner *ngIf="showSpinner"></mat-spinner>
       <mat-form-field>
         <mat-label>Sort Order</mat-label>
-        <mat-select [(value)]="sortOrder">
+        <mat-select [value]="sortOrder$ | async" (selectionChange)="sortOrder$.next($event.value)">
           <mat-option value="nameAsc">Name (A-Z)</mat-option>
           <mat-option value="nameDesc">Name (Z-A)</mat-option>
           <mat-option value="dateAsc">Date (Oldest First)</mat-option>

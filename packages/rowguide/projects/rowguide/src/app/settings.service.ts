@@ -13,6 +13,8 @@ export class SettingsService {
   public zoom$ = new BehaviorSubject<boolean>(false);
   public scrolloffset$ = new BehaviorSubject<number>(-1);
   public multiadvance$ = new BehaviorSubject<number>(3);
+  public flamsort$ = new BehaviorSubject<string>('keyAsc');
+  public projectsort$ = new BehaviorSubject<string>('dateAsc');
   constructor() {
     this.loadSettings();
   }
@@ -24,13 +26,15 @@ export class SettingsService {
     let settings = localStorage.getItem('settings');
     if (settings) {
       let s = JSON.parse(settings);
-      this.combine12$.next(s.combine12);
-      this.lrdesignators$.next(s.lrdesignators);
-      this.flammarkers$.next(s.flammarkers);
-      this.ppinspector$.next(s.ppinspector);
-      this.zoom$.next(s.zoom);
-      this.scrolloffset$.next(s.scrolloffset);
-      this.multiadvance$.next(s.multiadvance);
+      this.combine12$.next(s.combine12 ?? false);
+      this.lrdesignators$.next(s.lrdesignators ?? false);
+      this.flammarkers$.next(s.flammarkers ?? false);
+      this.ppinspector$.next(s.ppinspector ?? false);
+      this.zoom$.next(s.zoom ?? false);
+      this.scrolloffset$.next(s.scrolloffset ?? -1);
+      this.multiadvance$.next(s.multiadvance ?? 3);
+      this.flamsort$.next(s.flamsort ?? 'keyAsc');
+      this.projectsort$.next(s.projectsort ?? 'dateAsc');
     }
   }
 }
@@ -43,4 +47,6 @@ export class Settings {
   zoom: boolean = false;
   scrolloffset: number = -1;
   multiadvance: number = 3;
+  flamsort: string = 'keyAsc';
+  projectsort: string = 'dateAsc';
 }
