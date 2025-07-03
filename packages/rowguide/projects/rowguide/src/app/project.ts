@@ -7,6 +7,7 @@ export interface Project {
   name?: string;
   rows: Array<Row>;
   firstLastAppearanceMap?: FLAM;
+  colorMapping?: { [key: string]: string };
   image?: ArrayBuffer;
   position?: Position;
 }

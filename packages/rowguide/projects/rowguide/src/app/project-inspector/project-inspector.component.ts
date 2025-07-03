@@ -1,4 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  ViewChild,
+  AfterViewChecked,
+  ElementRef,
+} from '@angular/core';
 import { FlamService } from '../flam.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -25,6 +32,10 @@ import { map } from 'rxjs/internal/operators/map';
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { from } from 'rxjs/internal/observable/from';
 import { of } from 'rxjs/internal/observable/of';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-project-inspector',
@@ -34,12 +45,16 @@ import { of } from 'rxjs/internal/observable/of';
     MatListModule,
     MatTableModule,
     MatSortModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
     ngfModule,
   ],
   templateUrl: './project-inspector.component.html',
   styleUrls: ['./project-inspector.component.scss'],
 })
-export class ProjectInspectorComponent implements OnInit {
+export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
   ObjectValues = Object.values;
   image$: Observable<string> = this.projectService.project$.pipe(
     switchMap(this.loadProjectImage),
@@ -48,6 +63,7 @@ export class ProjectInspectorComponent implements OnInit {
 
   file: File = new File([], '');
 
+  @ViewChild('colorInput') colorInput!: ElementRef<HTMLInputElement>;
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatTable) table!: MatTable<{
     key: string;
@@ -55,6 +71,8 @@ export class ProjectInspectorComponent implements OnInit {
     firstColumn: number;
     lastRow: number;
     lastColumn: number;
+    count: number;
+    color: string;
   }>;
   dataSource = new MatTableDataSource<{
     key: string;
@@ -62,7 +80,12 @@ export class ProjectInspectorComponent implements OnInit {
     firstColumn: number;
     lastRow: number;
     lastColumn: number;
+    count: number;
+    color: string;
   }>([]);
+
+  editingColorKey: string | null = null;
+  private shouldFocusColorInput = false;
 
   constructor(
     public flamService: FlamService,
@@ -89,6 +112,8 @@ export class ProjectInspectorComponent implements OnInit {
             firstColumn: flam.firstAppearance[1],
             lastRow: flam.lastAppearance[0],
             lastColumn: flam.lastAppearance[1],
+            count: flam.count,
+            color: flam.color ?? '',
           }))
         )
       )
@@ -133,6 +158,20 @@ export class ProjectInspectorComponent implements OnInit {
       this.cdr.detectChanges();
     });
   }
+
+  ngAfterViewChecked() {
+    if (this.shouldFocusColorInput && this.editingColorKey) {
+      this.focusColorInput();
+      this.shouldFocusColorInput = false;
+    }
+  }
+
+  private focusColorInput(): void {
+    if (this.colorInput?.nativeElement) {
+      this.colorInput.nativeElement.focus();
+      this.colorInput.nativeElement.select();
+    }
+  }
   async loadProjectImage(project: Project): Promise<string> {
     if (project?.image) {
       const reader = new FileReader();
@@ -164,5 +203,35 @@ export class ProjectInspectorComponent implements OnInit {
         this.projectService.project$.next(project);
       }
     });
+  }
+
+  updateFlamRowColor(flamRow: any): void {
+    // Update the FLAM data in the service
+    const currentFlam = this.flamService.flam$.value;
+    if (currentFlam[flamRow.key]) {
+      currentFlam[flamRow.key].color = flamRow.color;
+      this.flamService.flam$.next(currentFlam);
+      // Save color mappings to project and database
+      this.flamService.saveColorMappingsToProject();
+    }
+    // Stop editing when focus is lost
+    this.stopEditingColor();
+  }
+
+  startEditingColor(flamRow: any): void {
+    this.editingColorKey = flamRow.key;
+    // Set flag to focus the input after the view updates
+    // Spooky action at a distance: we need to wait for the view to update
+    // before we can focus the input element.
+    this.shouldFocusColorInput = true;
+    this.cdr.detectChanges();
+  }
+
+  stopEditingColor(): void {
+    this.editingColorKey = null;
+  }
+
+  isEditingColor(flamRow: any): boolean {
+    return this.editingColorKey === flamRow.key;
   }
 }
