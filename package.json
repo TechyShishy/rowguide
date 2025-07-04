@@ -1,6 +1,6 @@
 {
   "name": "rowguide-monorepo",
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.9.2",
   "workspaces": [
     "packages/*"
   ],
