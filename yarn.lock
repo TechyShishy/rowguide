@@ -6150,6 +6150,7 @@ __metadata:
     electron: "npm:28.2.2"
     electron-builder: "npm:24.9.1"
     electron-serve: "npm:^1.3.0"
+    rowguide: "workspace:^"
     typescript: "npm:^5.3.3"
   languageName: unknown
   linkType: soft
@@ -10419,7 +10420,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"rowguide@workspace:packages/rowguide":
+"rowguide@workspace:^, rowguide@workspace:packages/rowguide":
   version: 0.0.0-use.local
   resolution: "rowguide@workspace:packages/rowguide"
   dependencies:
