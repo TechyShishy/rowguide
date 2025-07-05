@@ -1,4 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 
+@use '@angular/material' as mat;
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// Here because of view encapsulation issues with ::ng-deep
+app-step.current.zoom + app-step mat-chip,
+app-step.current.zoom + app-step + app-step mat-chip {
+  @include mat.chips-overrides((
+    label-text-size: 1.5rem,
+    container-height: 48px,
+  ));
+}

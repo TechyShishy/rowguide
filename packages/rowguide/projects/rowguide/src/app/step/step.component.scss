@@ -1,86 +1,83 @@
-/*:host {
-  color: rgba(255, 255, 255, 255);
-  font-size: x-large;
-  background-color: #4ab9ec;
-  border-color: rgba(0, 0, 0, 0);
-  border-radius: 0.5rem;
-  display: inline-block;
-  list-style-type: none;
-  margin: 0.125rem 0.25rem 0.125rem 0;
-  width: 5rem;
-  height: $step-height;
-  text-align: center;
-  cursor: pointer;
-}*/
-:host(.current) > mat-chip {
-  --mdc-chip-elevated-container-color: #8b2b28;
-  --mdc-chip-label-text-color: white;
+@use '@angular/material' as mat;
+
+:host(.current) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #8b2b28,
+      label-text-color: white,
+    ));
+  }
 }
 
-:host(.marked) > mat-chip {
-  --mdc-chip-elevated-container-color: #205216;
-  --mdc-chip-label-text-color: white;
+:host(.marked) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #205216,
+      label-text-color: white,
+    ));
+  }
 }
 
-:host(.current.zoom) > mat-chip {
-  --mdc-chip-label-text-size: 2rem;
-  --mdc-chip-container-height: 64px;
+:host(.current.zoom) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-size: 2rem,
+      container-height: 64px,
+    ));
+  }
 }
-:host(.current.zoom) + ::ng-deep app-step > mat-chip,
-:host(.current.zoom) + ::ng-deep app-step + app-step > mat-chip
-{
-  --mdc-chip-label-text-size: 1.5rem;
-  --mdc-chip-container-height: 48px;
+:host:has( + app-step.current.zoom),
+:host:has( + app-step + app-step.current.zoom) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-size: 1.5rem,
+      container-height: 48px,
+    ));
+  }
 }
-:host:has( + ::ng-deep app-step.current.zoom) > mat-chip,
-:host:has( + ::ng-deep app-step + app-step.current.zoom) > mat-chip {
-  --mdc-chip-label-text-size: 1.5rem;
-  --mdc-chip-container-height: 48px;
+:host:has(~ .current) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: yellow,
+      label-text-color: black,
+    ));
+  }
 }
-
-:host:has(~ ::ng-deep .current) > mat-chip {
-  --mdc-chip-elevated-container-color: yellow;
-  --mdc-chip-label-text-color: black;
+:host(.first) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-color: rgb(128, 255, 128),
+    ));
+  }
 }
-:host(.first) > mat-chip {
-  --mdc-chip-label-text-color: rgb(128, 255, 128);
+:host(.first.current) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-color: rgb(0, 255, 0),
+    ));
+  }
 }
-:host(.first.current) > mat-chip {
-  --mdc-chip-label-text-color: rgb(0, 255, 0);
+:host(.first):has(~ .current) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-color: green,
+    ));
+  }
 }
-:host(.first):has(~ ::ng-deep .current) > mat-chip {
-  --mdc-chip-label-text-color: green;
+:host(.last) {
+  mat-chip {
+    @include mat.chips-overrides((
+      label-text-color: red,
+    ));
+  }
 }
-:host(.last) > mat-chip {
-  --mdc-chip-label-text-color: red;
-}
-
-.mat-mdc-standard-chip {
-  // --mdc-chip-disabled-label-text-color: #212121;
-   --mdc-chip-elevated-container-color: #4ab9ec;
-  // --mdc-chip-elevated-selected-container-color: #e0e0e0;
-  // --mdc-chip-elevated-disabled-container-color: #e0e0e0;
-  // --mdc-chip-flat-disabled-selected-container-color: #e0e0e0;
-  // --mdc-chip-focus-state-layer-color: black;
-  // --mdc-chip-hover-state-layer-color: black;
-  // --mdc-chip-selected-hover-state-layer-color: black;
-  // --mdc-chip-focus-state-layer-opacity: 0.12;
-  // --mdc-chip-selected-focus-state-layer-color: black;
-  // --mdc-chip-selected-focus-state-layer-opacity: 0.12;
-   --mdc-chip-label-text-color: white;
-  // --mdc-chip-selected-label-text-color: #212121;
-  // --mdc-chip-with-icon-icon-color: #212121;
-  // --mdc-chip-with-icon-disabled-icon-color: #212121;
-  // --mdc-chip-with-icon-selected-icon-color: #212121;
-  // --mdc-chip-with-trailing-icon-disabled-trailing-icon-color: #212121;
-  // --mdc-chip-with-trailing-icon-trailing-icon-color: #212121;
-  // --mat-chip-selected-disabled-trailing-icon-color: #212121;
-  // --mat-chip-selected-trailing-icon-color: #212121;
-
-
-  // --mdc-chip-label-text-font: Roboto, sans-serif;
-  // --mdc-chip-label-text-line-height: 20px;
-   --mdc-chip-label-text-size: 20px;
-  // --mdc-chip-label-text-tracking: 0.0178571429em;
-   --mdc-chip-label-text-weight: 900;
+:host {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #4ab9ec,
+      label-text-color: white,
+      label-text-size: 20px,
+      label-text-weight: 900,
+    ));
+  }
 }
