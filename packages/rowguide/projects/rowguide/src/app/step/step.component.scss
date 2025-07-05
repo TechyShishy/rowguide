@@ -9,10 +9,50 @@
   }
 }
 
-:host(.marked) {
+:host(.marked-1) {
   mat-chip {
     @include mat.chips-overrides((
       elevated-container-color: #205216,
+      label-text-color: white,
+    ));
+  }
+}
+:host(.marked-2) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #1a3c6c,
+      label-text-color: white,
+    ));
+  }
+}
+:host(.marked-3) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #5c1a6c,
+      label-text-color: white,
+    ));
+  }
+}
+:host(.marked-4) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #6c1a3c,
+      label-text-color: white,
+    ));
+  }
+}
+:host(.marked-5) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #6c4a1a,
+      label-text-color: white,
+    ));
+  }
+}
+:host(.marked-6) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #3c6c1a,
       label-text-color: white,
     ));
   }

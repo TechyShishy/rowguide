@@ -38,7 +38,12 @@ import { ZipperService } from '../zipper.service';
     '[class.first]': 'isFirstStep',
     '[class.last]': 'isLastStep',
     '[class.zoom]': 'isZoomed',
-    '[class.marked]': 'marked',
+    '[class.marked-1]': 'marked === 1',
+    '[class.marked-2]': 'marked === 2',
+    '[class.marked-3]': 'marked === 3',
+    '[class.marked-4]': 'marked === 4',
+    '[class.marked-5]': 'marked === 5',
+    '[class.marked-6]': 'marked === 6',
   },
 })
 export class StepComponent implements HierarchicalList, OnInit {
@@ -48,7 +53,7 @@ export class StepComponent implements HierarchicalList, OnInit {
   isZoomed = false;
   isFirstStep = false;
   isLastStep = false;
-  marked: boolean = false;
+  marked: number = 0;
 
   @Input() index: number = 0;
   @Input() row!: RowComponent;
@@ -115,7 +120,7 @@ export class StepComponent implements HierarchicalList, OnInit {
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
     if (this.row.project.markMode) {
-      this.marked = !this.marked;
+      this.marked = (this.marked + 1) % 7; // Cycle through 0-6
       return;
     }
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
