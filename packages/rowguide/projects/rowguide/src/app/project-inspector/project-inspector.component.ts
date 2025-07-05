@@ -163,6 +163,7 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
     if (this.shouldFocusColorInput && this.editingColorKey) {
       this.focusColorInput();
       this.shouldFocusColorInput = false;
+      this.cdr.detectChanges();
     }
   }
 
