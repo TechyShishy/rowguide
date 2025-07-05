@@ -7,20 +7,16 @@
   "scripts": {
     "start": "yarn run rowguide:start",
     "rowguide:start": "yarn workspace rowguide start",
-    "electron:start": "yarn workspace electron start",
+    "electron:start": "yarn workspace rowguide-electron start",
     "rowguide:build": "yarn workspace rowguide build",
-    "electron:build": "yarn workspace electron build",
+    "electron:build": "yarn run rowguide:build && yarn workspace rowguide-electron build",
     "capacitor:sync": "yarn run rowguide:build && npx cap sync",
     "capacitor:assembleDebug": "yarn run capacitor:sync && cd android && ./gradlew assembleDebug",
     "capacitor:bundleRelease": "yarn run capacitor:sync && cd android && ./gradlew bundleRelease"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
-    "dmg-builder": "^24.13.0",
-    "electron": "^28.2.2",
-    "electron-builder": "24.9.1",
-    "iconv-corefoundation": "^1.1.7",
-    "typescript": "~5.6.0"
+    "typescript": "~5.8.3"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",

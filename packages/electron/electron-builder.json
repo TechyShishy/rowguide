@@ -26,6 +26,7 @@
       ]
     }
   ],
+  "icon": "../../android/app/src/main/ic_launcher-playstore.png",
   "win": {
     "target": [
       "portable"
@@ -38,8 +39,8 @@
   },
   "linux": {
     "target": [
-      "apk"
-    ]
+      "AppImage"
+    ],
+    "category": "Accessories"
   }
-
 }

@@ -1,6 +1,5 @@
 import { app, BrowserWindow } from 'electron';
-// tslint:disable-next-line:no-require-imports
-const serve = require('electron-serve');
+import serve from 'electron-serve';
 
 const loadURL = serve({
   directory: 'rowguide/browser',
@@ -10,15 +9,22 @@ const loadURL = serve({
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 750,
     webPreferences: {
       nodeIntegration: false,
     },
   });
 
   win.loadURL('app://rowguide/index.html');
-  win.webContents.openDevTools();
+
+  // Only open DevTools in development mode
+  if (!app.isPackaged || process.env['NODE_ENV'] === 'development') {
+    win.webContents.openDevTools();
+  } else {
+    // Remove menu bar in production
+    win.setMenuBarVisibility(false);
+  }
 }
 
 app.whenReady().then(() => {
