@@ -235,4 +235,8 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
   isEditingColor(flamRow: any): boolean {
     return this.editingColorKey === flamRow.key;
   }
+
+  resetPosition(): void {
+    this.projectService.saveCurrentPosition(0, 0);
+  }
 }

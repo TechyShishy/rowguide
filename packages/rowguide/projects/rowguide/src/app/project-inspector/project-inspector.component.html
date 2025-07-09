@@ -98,8 +98,9 @@
           }}</mat-list-item>
         <mat-list-item>Step: {{ ( projectService.project$.value.position?.step ?? 0 ) + 1 }}</mat-list-item>
       </ng-template>
-      </mat-list>
-      </mat-card-content>
+    </mat-list>
+    <button mat-raised-button color="warn" (click)="resetPosition()">Reset Position</button>
+  </mat-card-content>
 </mat-card>
 <mat-card class="project-image">
   <mat-card-title>Project Image</mat-card-title>
