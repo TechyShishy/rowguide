@@ -9,7 +9,7 @@
       </mat-list>
     </ng-template>
     <ng-template [ngIf]="settingsService.ppinspector$.value">
-      <table mat-table matSort [dataSource]="dataSource">
+      <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByKey">
         <ng-container matColumnDef="key">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
           <td mat-cell *matCellDef="let flamRow">{{flamRow.key}}</td>
@@ -44,7 +44,7 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Color</th>
           <td mat-cell *matCellDef="let flamRow">
             <span *ngIf="!isEditingColor(flamRow)" (click)="startEditingColor(flamRow)"
-              style="cursor: pointer; min-height: 1em; display: inline-block; width: 100%; padding: 4px;">
+              class="color-cell-span">
               {{flamRow.color || ''}}
             </span>
             <mat-form-field *ngIf="isEditingColor(flamRow)" appearance="fill">
@@ -54,11 +54,22 @@
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color']">
+        <ng-container matColumnDef="hexColor">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let flamRow">
+            <span *ngIf="flamRow.hexColor" [style.background-color]="flamRow.hexColor" class="hex-color-indicator"></span>
+          </td>
+        </ng-container>
+        
+        <tr mat-header-row
+          *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor']">
         </tr>
         <tr mat-row
-          *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color']"></tr>
+          *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor'];"></tr>
       </table>
+      <div class="reset-button-container">
+        <button mat-raised-button color="warn" (click)="resetAllColorCodes()">Reset All Color Codes</button>
+      </div>
       </ng-template>
   </mat-card-content>
   </mat-card>

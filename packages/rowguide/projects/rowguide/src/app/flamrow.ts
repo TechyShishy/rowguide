@@ -4,4 +4,5 @@ export interface FLAMRow {
   lastAppearance: Array<number>;
   count: number;
   color?: string;
+  hexColor?: string;
 }

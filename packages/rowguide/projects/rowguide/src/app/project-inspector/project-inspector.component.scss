@@ -30,3 +30,23 @@ mat-form-field {
     width: auto;
   }
 }
+
+.color-cell-span {
+  cursor: pointer;
+  min-height: 1em;
+  display: inline-block;
+  width: 100%;
+  padding: 4px;
+}
+
+.hex-color-indicator {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+}
+
+.reset-button-container {
+  margin-top: 16px;
+  text-align: center;
+}

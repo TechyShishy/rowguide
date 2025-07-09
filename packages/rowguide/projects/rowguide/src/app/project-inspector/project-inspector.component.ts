@@ -3,8 +3,9 @@ import {
   OnInit,
   ChangeDetectorRef,
   ViewChild,
-  AfterViewChecked,
+  AfterViewInit,
   ElementRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { FlamService } from '../flam.service';
 import { CommonModule } from '@angular/common';
@@ -36,6 +37,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { F } from '@angular/cdk/focus-monitor.d-2iZxjw4R';
 
 @Component({
   selector: 'app-project-inspector',
@@ -53,8 +56,9 @@ import { FormsModule } from '@angular/forms';
   ],
   templateUrl: './project-inspector.component.html',
   styleUrls: ['./project-inspector.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
+export class ProjectInspectorComponent implements OnInit, AfterViewInit {
   ObjectValues = Object.values;
   image$: Observable<string> = this.projectService.project$.pipe(
     switchMap(this.loadProjectImage),
@@ -73,6 +77,7 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
     lastColumn: number;
     count: number;
     color: string;
+    hexColor: string;
   }>;
   dataSource = new MatTableDataSource<{
     key: string;
@@ -82,10 +87,16 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
     lastColumn: number;
     count: number;
     color: string;
+    hexColor: string;
   }>([]);
 
   editingColorKey: string | null = null;
-  private shouldFocusColorInput = false;
+  private delicaColors: { [key: string]: string } = {};
+
+  // TrackBy function to help Angular efficiently track table rows
+  trackByKey(index: number, item: any): string {
+    return item.key;
+  }
 
   constructor(
     public flamService: FlamService,
@@ -93,33 +104,79 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
     public projectService: ProjectService,
     public logger: NGXLogger,
     private cdr: ChangeDetectorRef,
-    private indexedDBService: ProjectDbService
+    private indexedDBService: ProjectDbService,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
+    // Load delica colors mapping
+    this.http
+      .get<{ [key: string]: string }>('assets/delica-colors.json')
+      .subscribe({
+        next: (colors) => {
+          this.delicaColors = colors;
+          // Refresh the table data to apply hex colors now that delica colors are loaded
+          this.refreshTableData();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.logger.error('Failed to load delica colors', err);
+        },
+      });
+
     this.projectService.ready.subscribe(async () => {
       //this.flamService.inititalizeFLAM(true);
+      this.cdr.markForCheck();
     });
   }
+
+  private mapFlamToRow(flamRow: FLAMRow): any {
+    return {
+      key: flamRow.key,
+      firstRow: flamRow.firstAppearance[0],
+      firstColumn: flamRow.firstAppearance[1],
+      lastRow: flamRow.lastAppearance[0],
+      lastColumn: flamRow.lastAppearance[1],
+      count: flamRow.count,
+      color: flamRow.color ?? '',
+      hexColor:
+        flamRow.color && this.delicaColors[flamRow.color]
+          ? this.delicaColors[flamRow.color]
+          : '',
+    };
+  }
+
+  private refreshTableData(): void {
+    // Re-process the current FLAM data to apply hex colors
+    const currentFlam = this.flamService.flam$.value;
+    const flamArray = Object.values(currentFlam).map((flamRow) =>
+      this.mapFlamToRow(flamRow)
+    );
+
+    this.dataSource.data = [...flamArray];
+  }
   ngAfterViewInit() {
+    // Ensure sort is properly initialized before subscribing
+    if (!this.sort) {
+      this.logger.warn('MatSort not initialized');
+      return;
+    }
+
     this.flamService.flam$
       .pipe(
         map((flam) => Object.values(flam)),
-        map((flam) =>
-          flam.map((flam) => ({
-            key: flam.key,
-            firstRow: flam.firstAppearance[0],
-            firstColumn: flam.firstAppearance[1],
-            lastRow: flam.lastAppearance[0],
-            lastColumn: flam.lastAppearance[1],
-            count: flam.count,
-            color: flam.color ?? '',
-          }))
+        map((flamArray) =>
+          flamArray.map((flamRow) => this.mapFlamToRow(flamRow))
         )
       )
-      .subscribe((flam) => {
-        this.dataSource.data = flam;
-        this.dataSource.sort = this.sort;
+      .subscribe((flamRows) => {
+        // Create a new array reference to ensure proper change detection
+        this.dataSource.data = [...flamRows];
+        if (this.sort) {
+          this.dataSource.sort = this.sort;
+        }
+        // Mark for check since we're using OnPush change detection
+        this.cdr.markForCheck();
       });
 
     this.sort.sortChange.subscribe((sortState: Sort) => {
@@ -139,7 +196,7 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
 
     this.settingsService.flamsort$.subscribe((flamsort) => {
       this.logger.debug('flamsort', flamsort);
-      let sortState: Sort = { active: '', direction: '' };
+
       if (flamsort.endsWith('Asc')) {
         this.sort.direction = 'asc';
         this.sort.active = flamsort.split('Asc')[0];
@@ -150,21 +207,17 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
         this.sort.direction = '';
         this.sort.active = '';
       }
-      sortState = {
+
+      // Emit the sort change to trigger proper sorting with OnPush
+      const sortState: Sort = {
         active: this.sort.active,
         direction: this.sort.direction,
-      } as Sort;
+      };
       this.sort.sortChange.emit(sortState);
-      this.cdr.detectChanges();
-    });
-  }
 
-  ngAfterViewChecked() {
-    if (this.shouldFocusColorInput && this.editingColorKey) {
-      this.focusColorInput();
-      this.shouldFocusColorInput = false;
-      this.cdr.detectChanges();
-    }
+      // Mark for check since we're using OnPush change detection
+      this.cdr.markForCheck();
+    });
   }
 
   private focusColorInput(): void {
@@ -206,37 +259,65 @@ export class ProjectInspectorComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  updateFlamRowColor(flamRow: any): void {
+  updateFlamRowColor(flamRow: FLAMRow): void {
     // Update the FLAM data in the service
     const currentFlam = this.flamService.flam$.value;
     if (currentFlam[flamRow.key]) {
       currentFlam[flamRow.key].color = flamRow.color;
-      this.flamService.flam$.next(currentFlam);
+      // Create a new FLAM object to trigger proper change detection
+      const newFlam = { ...currentFlam };
+      this.flamService.flam$.next(newFlam);
       // Save color mappings to project and database
       this.flamService.saveColorMappingsToProject();
+
+      if (flamRow.color && this.delicaColors[flamRow.color]) {
+        flamRow.hexColor = this.delicaColors[flamRow.color];
+        this.logger.debug(
+          `DB color ${flamRow.color} maps to hex ${flamRow.hexColor}`
+        );
+      }
     }
     // Stop editing when focus is lost
     this.stopEditingColor();
   }
 
-  startEditingColor(flamRow: any): void {
+  startEditingColor(flamRow: FLAMRow): void {
     this.editingColorKey = flamRow.key;
-    // Set flag to focus the input after the view updates
-    // Spooky action at a distance: we need to wait for the view to update
-    // before we can focus the input element.
-    this.shouldFocusColorInput = true;
     this.cdr.detectChanges();
+
+    // Focus the input after change detection has completed
+    this.focusColorInput();
   }
 
   stopEditingColor(): void {
     this.editingColorKey = null;
+    this.cdr.markForCheck();
   }
 
-  isEditingColor(flamRow: any): boolean {
+  isEditingColor(flamRow: FLAMRow): boolean {
     return this.editingColorKey === flamRow.key;
   }
 
   resetPosition(): void {
     this.projectService.saveCurrentPosition(0, 0);
+  }
+
+  resetAllColorCodes(): void {
+    const currentFlam = this.flamService.flam$.value;
+
+    // Clear all color assignments
+    Object.keys(currentFlam).forEach((key) => {
+      currentFlam[key].color = '';
+    });
+
+    // Create a new FLAM object to trigger proper change detection
+    const newFlam = { ...currentFlam };
+    this.flamService.flam$.next(newFlam);
+
+    this.flamService.saveColorMappingsToProject();
+    this.refreshTableData();
+    this.cdr.markForCheck();
+
+    this.logger.debug('All color codes have been reset');
   }
 }
