@@ -114,7 +114,11 @@ export class StepComponent implements HierarchicalList, OnInit {
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
     if (this.row.project.markMode) {
-      this.marked = this.row.project.markMode;
+      if (this.marked === this.row.project.markMode) {
+        this.marked = 0;
+      } else {
+        this.marked = this.row.project.markMode;
+      }
       return;
     }
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
