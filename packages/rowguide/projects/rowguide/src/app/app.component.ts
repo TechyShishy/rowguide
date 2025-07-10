@@ -3,13 +3,7 @@ import {
   RouterLink,
   RouterOutlet,
 } from '@angular/router';
-import { MatTabGroup, MatTab } from '@angular/material/tabs';
-import { ProjectSelectorComponent } from './project-selector/project-selector.component';
-import { ProjectComponent } from './project/project.component';
-import { SettingsComponent } from './settings/settings.component';
-import { ProjectInspectorComponent } from './project-inspector/project-inspector.component';
 import { ProjectService } from './project.service';
-import { Project } from './project';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';

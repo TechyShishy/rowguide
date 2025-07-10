@@ -4,7 +4,7 @@ import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../project.service';
 import { SettingsService } from '../settings.service';
-import { BehaviorSubject, Observable, Subject, firstValueFrom, of } from 'rxjs';
+import { BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
 import { Row } from '../row';
 import { provideRouter } from '@angular/router';
 import { routes } from '../app.routes';
@@ -13,7 +13,6 @@ import { Position } from '../position';
 import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 import { RowComponent } from '../row/row.component';
-import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { ZipperService } from '../zipper.service';
 
 describe('ProjectComponent', () => {

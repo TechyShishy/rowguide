@@ -13,7 +13,6 @@ import { ProjectService } from '../project.service';
 import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
 import { FlamService } from '../flam.service';
-import { take } from 'rxjs/internal/operators/take';
 
 @Component({
   selector: 'app-settings',

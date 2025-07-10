@@ -3,13 +3,7 @@ import { Project } from './project';
 import {
   Subject,
   BehaviorSubject,
-  switchMap,
-  of,
-  firstValueFrom,
-  lastValueFrom,
-  tap,
   map,
-  skipWhile,
   filter,
   take,
 } from 'rxjs';
@@ -19,7 +13,6 @@ import { StepComponent } from './step/step.component';
 import { SettingsService } from './settings.service';
 import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from './project-db.service';
-import { Position } from './position';
 import { ActivatedRoute } from '@angular/router';
 import { Row } from './row';
 

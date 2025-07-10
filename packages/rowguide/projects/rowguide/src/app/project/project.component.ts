@@ -34,8 +34,6 @@ import { HierarchicalList } from '../hierarchical-list';
 import { sanity } from '../sanity';
 import { Position } from '../position';
 import { Project } from '../project';
-import { FlamService } from '../flam.service';
-import { tap } from 'rxjs/internal/operators/tap';
 import { SettingsService } from '../settings.service';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { filter } from 'rxjs';

@@ -10,8 +10,7 @@ import { Observable } from 'rxjs/internal/Observable';
 import { from } from 'rxjs/internal/observable/from';
 import { switchMap } from 'rxjs/internal/operators/switchMap';
 import { map } from 'rxjs/internal/operators/map';
-import { mergeMap } from 'rxjs/internal/operators/mergeMap';
-import { forkJoin, firstValueFrom, tap } from 'rxjs';
+import { forkJoin, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',

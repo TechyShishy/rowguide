@@ -6,7 +6,6 @@ import { ProjectDbService } from './project-db.service';
 import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Project } from './project';
-import { from } from 'rxjs/internal/observable/from';
 import { Step } from './step';
 import { Row } from './row';
 

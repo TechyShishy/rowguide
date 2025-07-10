@@ -24,6 +24,8 @@ describe('SettingsService', () => {
       zoom: true,
       scrolloffset: 0,
       multiadvance: 3,
+      flamsort: 'keyAsc',
+      projectsort: 'dateAsc',
     };
     service.saveSettings(settings);
     const savedSettings = JSON.parse(localStorage.getItem('settings')!);
@@ -39,6 +41,8 @@ describe('SettingsService', () => {
       zoom: true,
       scrolloffset: 0,
       multiadvance: 3,
+      flamsort: 'keyAsc',
+      projectsort: 'dateAsc',
     };
     localStorage.setItem('settings', JSON.stringify(settings));
     service.loadSettings();
@@ -63,6 +67,8 @@ describe('SettingsService', () => {
       zoom: true,
       scrolloffset: 0,
       multiadvance: 3,
+      flamsort: 'keyAsc',
+      projectsort: 'dateAsc',
     };
     service.saveSettings(settings);
   });

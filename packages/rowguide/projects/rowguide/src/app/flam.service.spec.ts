@@ -1,12 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 import { FlamService } from './flam.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from './project.service';
-import { Project } from './project';
 import { Step } from './step';
-import { FLAM } from './flam';
 import { Row } from './row';
 import { routes } from './app.routes';
 import { provideRouter } from '@angular/router';

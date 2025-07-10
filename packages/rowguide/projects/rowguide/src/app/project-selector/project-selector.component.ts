@@ -1,8 +1,5 @@
 import {
-  ChangeDetectorRef,
   Component,
-  ElementRef,
-  ViewChild,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NGXLogger } from 'ngx-logger';
@@ -11,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {
   MatExpansionModule,
-  MatExpansionPanel,
 } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
@@ -26,15 +22,12 @@ import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
 import { Router } from '@angular/router';
 import {
-  buffer,
   combineLatestWith,
   from,
   map,
-  mergeWith,
   Observable,
   Subject,
   switchMap,
-  takeUntil,
   firstValueFrom,
   tap,
   of,

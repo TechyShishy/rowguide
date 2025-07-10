@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Project } from './project';
 import { ProjectService } from './project.service';
 import { ProjectDbService } from './project-db.service';
 import { FLAM } from './flam';

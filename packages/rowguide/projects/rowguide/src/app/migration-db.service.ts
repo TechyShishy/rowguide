@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IDBPDatabase, openDB } from 'idb';
 import { NGXLogger } from 'ngx-logger';
-import { MigrationDb } from './migration-db';
 import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({

@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
-import { openDB } from 'idb';
 import { MigrationDbService } from './migration-db.service';
-import { from, map, Observable, take } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from './project-db.service';
-import { PeyoteShorthandService } from './loader/peyote-shorthand.service';
 import { Step } from './step';
 import { ZipperService } from './zipper.service';
 

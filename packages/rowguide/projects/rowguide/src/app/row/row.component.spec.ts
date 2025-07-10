@@ -3,13 +3,8 @@ import { RowComponent } from './row.component';
 import { LoggerTestingModule, NGXLoggerMock } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NGXLogger } from 'ngx-logger';
-import { MatExpansionPanel } from '@angular/material/expansion';
 import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
-import { ProjectComponent } from '../project/project.component';
-import { Row } from '../row';
-import { Step } from '../step';
-import { SettingsService } from '../settings.service';
 
 describe('RowComponent', () => {
   let component: RowComponent;

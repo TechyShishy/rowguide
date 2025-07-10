@@ -20,12 +20,9 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { SettingsService } from '../settings.service';
 import { ProjectService } from '../project.service';
 import { NGXLogger } from 'ngx-logger';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { ProjectDbService } from '../project-db.service';
 import { Project } from '../project';
-import { FLAM } from '../flam';
 import { FLAMRow } from '../flamrow';
-import { BrowserModule } from '@angular/platform-browser';
 import { ngfModule } from 'angular-file';
 import { Observable } from 'rxjs/internal/Observable';
 import { switchMap } from 'rxjs/internal/operators/switchMap';
@@ -38,7 +35,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { F } from '@angular/cdk/focus-monitor.d-2iZxjw4R';
 
 @Component({
   selector: 'app-project-inspector',

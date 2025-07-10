@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { IDBPDatabase, openDB } from 'idb';
-import { MigrationDb } from './migration-db';
 import { RowguideDb } from './rowguide-db';
 
 @Injectable({

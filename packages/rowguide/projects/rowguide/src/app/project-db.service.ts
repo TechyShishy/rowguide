@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Project } from './project';
-import { openDB } from 'idb';
-import { ProjectDb } from './project-db';
 import { NGXLogger } from 'ngx-logger';
 import { IndexedDbService } from './indexed-db.service';
 

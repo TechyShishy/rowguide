@@ -2,7 +2,6 @@ import { Component, ElementRef, Input } from '@angular/core';
 import { Project } from '../project';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
-import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
 import { ProjectDbService } from '../project-db.service';
 import { FormsModule } from '@angular/forms';

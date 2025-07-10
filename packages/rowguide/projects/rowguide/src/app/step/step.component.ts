@@ -1,6 +1,5 @@
 import {
   Component,
-  HostBinding,
   HostListener,
   Input,
   OnInit,
@@ -8,23 +7,18 @@ import {
 } from '@angular/core';
 import { Step } from '../step';
 import { HierarchicalList } from '../hierarchical-list';
-import { ProjectComponent } from '../project/project.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { ProjectService } from '../project.service';
 import { RowComponent } from '../row/row.component';
 import { FlamService } from '../flam.service';
 import { SettingsService } from '../settings.service';
 import { NGXLogger } from 'ngx-logger';
-import { lastValueFrom } from 'rxjs/internal/lastValueFrom';
 import {
   combineLatest,
   firstValueFrom,
-  forkJoin,
   map,
   Observable,
   of,
-  take,
-  tap,
 } from 'rxjs';
 import { ZipperService } from '../zipper.service';
 

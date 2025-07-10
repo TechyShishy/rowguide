@@ -4,7 +4,6 @@ import { ProjectService } from '../project.service';
 import { ProjectDbService } from '../project-db.service';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
 import { FlamService } from '../flam.service';
-import { NGXLogger } from 'ngx-logger';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BehaviorSubject, firstValueFrom, from, of, Subject } from 'rxjs';
@@ -72,7 +71,8 @@ describe('ProjectSelectorComponent', () => {
 
     await component.ngAfterViewInit();
 
-    expect(component.projects).toEqual(mockProjects);
+    const projects = await firstValueFrom(component.projects$);
+    expect(projects).toEqual(mockProjects);
   });
 
   it('should detect gzip file and process it', async () => {

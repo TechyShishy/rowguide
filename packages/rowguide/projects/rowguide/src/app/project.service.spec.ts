@@ -5,7 +5,6 @@ import { SettingsService } from './settings.service';
 import { NullProject } from './null-project';
 import { Subject } from 'rxjs';
 import { BeadProject } from './bead-project';
-import { LoggerModule } from 'ngx-logger';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
