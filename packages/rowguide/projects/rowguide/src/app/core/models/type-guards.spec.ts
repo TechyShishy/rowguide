@@ -6,6 +6,24 @@ import { Project } from './project';
 import { Row } from './row';
 import { Step } from './step';
 
+/**
+ * @fileoverview Test Suite for Null Safety System
+ *
+ * This test suite validates the null safety utilities including type guards,
+ * safe factories, and safe access methods. These tests ensure that the
+ * null safety system handles edge cases correctly and provides reliable
+ * validation and fallback behavior.
+ *
+ * Test Categories:
+ * - Type Guards: Runtime validation and type narrowing
+ * - Model Factory: Safe object creation with validation
+ * - Safe Access: Null-aware property access
+ * - Default Values: Consistent fallback values
+ *
+ * The tests cover both positive cases (valid data) and negative cases
+ * (null, undefined, malformed data) to ensure robust error handling.
+ */
+
 describe('Type Guards and Null Safety', () => {
   describe('Type Guards', () => {
     it('should validate valid projects', () => {
