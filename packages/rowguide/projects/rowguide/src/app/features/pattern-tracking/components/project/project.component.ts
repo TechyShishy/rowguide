@@ -25,8 +25,13 @@ import {
 } from 'rxjs/operators';
 
 import { Position } from '../../../../core/models/position';
-import { Project } from '../../../../core/models/project';
-import { Row } from '../../../../core/models/row';
+import {
+  Project,
+  Row,
+  isValidProject,
+  SafeAccess,
+  hasValidId,
+} from '../../../../core/models';
 import { MarkModeService, SettingsService } from '../../../../core/services';
 import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { sanity } from '../../../../shared/utils/sanity';
@@ -51,16 +56,16 @@ import { StepComponent } from '../step/step.component';
   styleUrl: './project.component.scss',
 })
 export class ProjectComponent implements HierarchicalList {
-  rows$: Observable<Row[]> = of([] as Row[]);
+  rows$: Observable<Row[]> = of([]);
   position$: Observable<Position> = of({ row: 0, step: 0 });
-  project$: Observable<Project> = new BehaviorSubject<Project>({} as Project);
+  project$: Observable<Project> = of({ rows: [] } as Project);
 
   @ViewChildren(RowComponent) children!: QueryList<RowComponent>;
   children$: BehaviorSubject<QueryList<RowComponent>> = new BehaviorSubject<
     QueryList<RowComponent>
-  >({} as QueryList<RowComponent>);
-  currentStep$: BehaviorSubject<StepComponent> =
-    new BehaviorSubject<StepComponent>({} as StepComponent);
+  >(new QueryList<RowComponent>());
+  currentStep$: BehaviorSubject<StepComponent | null> =
+    new BehaviorSubject<StepComponent | null>(null);
   index: number = 0;
   parent = null;
   prev = null;
@@ -104,35 +109,32 @@ export class ProjectComponent implements HierarchicalList {
       map((params) => {
         let id = parseInt(params.get('id') ?? '');
         if (isNaN(id)) {
-          id = this.projectService.loadCurrentProjectId()?.id ?? 0;
+          const currentId = this.projectService.loadCurrentProjectId();
+          id = currentId?.id ?? 0;
         }
         return id;
       }),
       switchMap((id) => this.projectService.loadProject(id)),
       map((project) => {
-        if (project === null || project === undefined) {
-          return {} as Project;
+        if (!project || !isValidProject(project)) {
+          this.logger.warn(
+            'Invalid or null project loaded, using empty project'
+          );
+          return { rows: [] } as Project;
         }
         return project;
-      }) /*,
-      tap((project) => {
-        if (project.firstLastAppearanceMap !== undefined) {
-          this.logger.debug('Applying Flam');
-          this.flamService.flam$.next(project.firstLastAppearanceMap);
-        }
-        return project;
-      })*/
+      })
     );
     this.rows$ = this.project$.pipe(
-      filter((project) => project.rows !== undefined),
-      map((project) => project.rows),
+      filter((project) => isValidProject(project)),
+      map((project) => SafeAccess.getProjectRows(project)),
       combineLatestWith(this.settingsService.combine12$),
       map(([rows, combine12]) => {
         const newRows = deepCopy(rows);
-        if (combine12) {
+        if (combine12 && newRows.length >= 2) {
           const zipperSteps = this.zipperService.zipperSteps(
-            newRows[0].steps,
-            newRows[1].steps
+            newRows[0]?.steps ?? [],
+            newRows[1]?.steps ?? []
           );
           if (zipperSteps.length > 0) {
             newRows[0].steps = zipperSteps;
@@ -146,9 +148,8 @@ export class ProjectComponent implements HierarchicalList {
       this.projectService.zippedRows$.next(rows);
     });
     this.position$ = this.project$.pipe(
-      switchMap((project) =>
-        of(project.position ?? ({ row: 0, step: 0 } as Position))
-      ),
+      filter((project) => isValidProject(project)),
+      switchMap((project) => of(SafeAccess.getProjectPosition(project))),
       distinctUntilChanged(
         (prev, curr) => prev.row === curr.row && prev.step === curr.step
       )
@@ -166,16 +167,17 @@ export class ProjectComponent implements HierarchicalList {
         }),
         map(([children, position]) => {
           const row = children?.get(position.row);
-          if (row === null || row === undefined) {
-            return {} as StepComponent;
+          if (!row) {
+            return null;
           }
           row.show();
           const step = row.children.get(position.step);
-          if (step === null || step === undefined) {
-            return {} as StepComponent;
+          if (!step) {
+            return null;
           }
           return step;
         }),
+        filter((step): step is StepComponent => step !== null),
         skipWhile(
           (step) =>
             step === null || step === undefined || step.index === undefined
@@ -193,7 +195,10 @@ export class ProjectComponent implements HierarchicalList {
     });
     this.currentStep$
       .pipe(
-        skipWhile((step) => step.index === undefined),
+        filter(
+          (step): step is StepComponent =>
+            step !== null && step.index !== undefined
+        ),
         distinctUntilChanged((prev, curr) => prev === curr)
       )
       .subscribe((step) => {
@@ -205,6 +210,9 @@ export class ProjectComponent implements HierarchicalList {
     this.currentStep$
       .pipe(
         take(1),
+        filter(
+          (currentStep): currentStep is StepComponent => currentStep !== null
+        ),
         switchMap((currentStep) => currentStep.beadCount$)
       )
       .subscribe((beadCount) => {

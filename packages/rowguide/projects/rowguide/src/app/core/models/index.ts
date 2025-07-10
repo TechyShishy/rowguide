@@ -5,3 +5,5 @@ export * from './step';
 export * from './position';
 export * from './flam';
 export * from './flamrow';
+export * from './type-guards';
+export * from './model-factory';

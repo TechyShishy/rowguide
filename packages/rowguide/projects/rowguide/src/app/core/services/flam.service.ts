@@ -14,7 +14,7 @@ import { SettingsService } from './settings.service';
   providedIn: 'root',
 })
 export class FlamService {
-  flam$: BehaviorSubject<FLAM> = new BehaviorSubject({} as FLAM);
+  flam$: BehaviorSubject<FLAM> = new BehaviorSubject<FLAM>({});
 
   constructor(
     private logger: NGXLogger,
