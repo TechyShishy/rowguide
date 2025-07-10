@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
+
 import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({

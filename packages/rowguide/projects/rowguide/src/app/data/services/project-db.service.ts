@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Project } from '../../core/models/project';
 import { NGXLogger } from 'ngx-logger';
+
+import { Project } from '../../core/models/project';
 import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({

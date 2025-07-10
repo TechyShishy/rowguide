@@ -1,11 +1,12 @@
+import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import {
-  MatBottomSheetRef,
   MAT_BOTTOM_SHEET_DATA,
+  MatBottomSheetRef,
 } from '@angular/material/bottom-sheet';
-import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
+import { MatListModule } from '@angular/material/list';
+
 import { MarkModeService } from '../../../../core/services';
 
 @Component({

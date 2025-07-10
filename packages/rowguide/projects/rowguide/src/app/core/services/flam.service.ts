@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
-import { ProjectService } from '../../features/project-management/services';
-import { ProjectDbService } from '../../data/services';
-import { FLAM } from '../models/flam';
 import { NGXLogger } from 'ngx-logger';
-import { Step } from '../models/step';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { SettingsService } from './settings.service';
+
+import { ProjectDbService } from '../../data/services';
+import { ProjectService } from '../../features/project-management/services';
+import { FLAM } from '../models/flam';
 import { Row } from '../models/row';
+import { Step } from '../models/step';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',

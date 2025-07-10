@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { NotificationService } from '../../../core/services';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { skipWhile } from 'rxjs/operators';
+
+import { NotificationService } from '../../../core/services';
 
 @Component({
   selector: 'app-notification',

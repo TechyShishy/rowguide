@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
-import { PdfjslibService } from '../services/pdfjslib.service';
+import { NGXLogger } from 'ngx-logger';
 import {
   PDFDocumentProxy,
   TextItem,
   TextMarkedContent,
 } from 'pdfjs-dist/types/src/display/api';
-import { NGXLogger } from 'ngx-logger';
-import { Observable, from, forkJoin } from 'rxjs';
-import { switchMap, map, tap } from 'rxjs/operators';
+import { Observable, forkJoin, from } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
+
+import { PdfjslibService } from '../services/pdfjslib.service';
 
 @Injectable({
   providedIn: 'root',

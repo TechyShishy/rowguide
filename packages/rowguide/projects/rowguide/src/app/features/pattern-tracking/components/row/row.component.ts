@@ -1,28 +1,29 @@
+import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   Input,
   QueryList,
   ViewChild,
   ViewChildren,
-  AfterViewInit,
-  ChangeDetectorRef,
 } from '@angular/core';
-import { Row } from '../../../../core/models/row';
-import { StepComponent } from '../step/step.component';
-import { Step } from '../../../../core/models/step';
-import { CommonModule } from '@angular/common';
-import { NGXLogger } from 'ngx-logger';
-import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { MatButtonModule } from '@angular/material/button';
-import { SettingsService } from '../../../../core/services';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import {
   MatExpansionModule,
   MatExpansionPanel,
 } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
+import { NGXLogger } from 'ngx-logger';
+
+import { Row } from '../../../../core/models/row';
+import { Step } from '../../../../core/models/step';
+import { SettingsService } from '../../../../core/services';
+import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { ProjectComponent } from '../project/project.component';
+import { StepComponent } from '../step/step.component';
 
 @Component({
   selector: 'app-row',
@@ -75,7 +76,6 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
     this.show();
     this.markFirstStep = false;
   }
-
 
   onToggle() {
     this.visible = !this.visible;

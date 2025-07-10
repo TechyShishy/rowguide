@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
+
 import { ProjectComponent } from './features/pattern-tracking/components/project/project.component';
-import { ProjectSelectorComponent } from './features/project-management/components/project-selector/project-selector.component';
 import { ProjectInspectorComponent } from './features/project-management/components/project-inspector/project-inspector.component';
+import { ProjectSelectorComponent } from './features/project-management/components/project-selector/project-selector.component';
 import { SettingsComponent } from './features/settings/components/settings/settings.component';
 
 export const routes: Routes = [

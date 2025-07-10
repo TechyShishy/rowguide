@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   FormBuilder,
@@ -8,11 +9,14 @@ import {
 import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
-import { Settings, SettingsService } from '../../../../core/services';
-import { ProjectService } from '../../../project-management/services';
-import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
-import { FlamService } from '../../../../core/services';
+
+import {
+  FlamService,
+  Settings,
+  SettingsService,
+} from '../../../../core/services';
+import { ProjectService } from '../../../project-management/services';
 
 @Component({
   selector: 'app-settings',

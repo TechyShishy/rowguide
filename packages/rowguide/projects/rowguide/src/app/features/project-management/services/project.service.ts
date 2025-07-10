@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Project, Row } from '../../../core/models';
-import { Subject, BehaviorSubject, take } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
-import { PeyoteShorthandService } from '../../file-import/loaders';
-import { NullProject } from '../models';
-import { StepComponent } from '../../pattern-tracking/components/step/step.component';
-import { SettingsService } from '../../../core/services';
-import { NGXLogger } from 'ngx-logger';
-import { ProjectDbService } from '../../../data/services';
 import { ActivatedRoute } from '@angular/router';
+import { NGXLogger } from 'ngx-logger';
+import { BehaviorSubject, Subject, take } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+import { Project, Row } from '../../../core/models';
+import { SettingsService } from '../../../core/services';
+import { ProjectDbService } from '../../../data/services';
+import { PeyoteShorthandService } from '../../file-import/loaders';
+import { StepComponent } from '../../pattern-tracking/components/step/step.component';
+import { NullProject } from '../models';
 
 @Injectable({
   providedIn: 'root',

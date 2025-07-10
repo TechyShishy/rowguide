@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Project, Row, Step } from '../../../core/models';
 import { NGXLogger } from 'ngx-logger';
-import { SettingsService } from '../../../core/services';
-import { NotificationService } from '../../../core/services';
+
+import { Project, Row, Step } from '../../../core/models';
+import { NotificationService, SettingsService } from '../../../core/services';
 import { ZipperService } from '../services';
 
 @Injectable({

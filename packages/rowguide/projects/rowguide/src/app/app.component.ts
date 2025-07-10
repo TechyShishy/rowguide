@@ -1,17 +1,15 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
-import {
-  RouterLink,
-  RouterOutlet,
-} from '@angular/router';
-import { ProjectService } from './features/project-management/services/project.service';
 import { CommonModule } from '@angular/common';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatIconModule } from '@angular/material/icon';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { NotificationComponent } from "./shared/components";
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { RouterLink, RouterOutlet } from '@angular/router';
+
 import { UpgradeService } from './data/migrations/upgrade.service';
+import { ProjectService } from './features/project-management/services/project.service';
+import { NotificationComponent } from './shared/components';
 
 @Component({
   selector: 'app-root',

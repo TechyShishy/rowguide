@@ -1,38 +1,34 @@
-import {
-  Component,
-} from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { NGXLogger } from 'ngx-logger';
-import { ngfModule } from 'angular-file';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import {
-  MatExpansionModule,
-} from '@angular/material/expansion';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { FormsModule } from '@angular/forms';
-import { ProjectService } from '../../services';
-import { MatCardModule } from '@angular/material/card';
-import { inflate } from 'pako';
 import { CommonModule } from '@angular/common';
-import { Project } from '../../../../core/models/project';
-import { ProjectDbService } from '../../../../data/services';
-import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
-import { BeadtoolPdfService } from '../../../file-import/loaders';
-import { FlamService } from '../../../../core/services';
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
+import { ngfModule } from 'angular-file';
+import { NGXLogger } from 'ngx-logger';
+import { inflate } from 'pako';
 import {
-  combineLatestWith,
-  from,
+  BehaviorSubject,
   Observable,
   Subject,
+  combineLatestWith,
   firstValueFrom,
-  of,
   forkJoin,
-  BehaviorSubject,
+  from,
+  of,
 } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { NotificationService } from '../../../../core/services';
+
+import { Project } from '../../../../core/models/project';
+import { FlamService, NotificationService } from '../../../../core/services';
+import { ProjectDbService } from '../../../../data/services';
+import { BeadtoolPdfService } from '../../../file-import/loaders';
+import { ProjectService } from '../../services';
+import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { SettingsService } from '../../../../core/services';
 import { MatSelectModule } from '@angular/material/select';
 

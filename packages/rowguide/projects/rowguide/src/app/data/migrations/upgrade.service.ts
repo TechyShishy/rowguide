@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { MigrationDbService } from '../services';
 import { NGXLogger } from 'ngx-logger';
-import { ProjectDbService } from '../services';
+
 import { Step } from '../../core/models';
 import { ZipperService } from '../../features/file-import/services';
+import { MigrationDbService, ProjectDbService } from '../services';
 
 @Injectable({
   providedIn: 'root',

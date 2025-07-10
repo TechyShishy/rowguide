@@ -5,22 +5,17 @@ import {
   OnInit,
   QueryList,
 } from '@angular/core';
-import { Step } from '../../../../core/models/step';
-import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { MatChipsModule } from '@angular/material/chips';
+import { NGXLogger } from 'ngx-logger';
+import { Observable, combineLatest, firstValueFrom, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { Step } from '../../../../core/models/step';
+import { FlamService, SettingsService } from '../../../../core/services';
+import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
+import { ZipperService } from '../../../file-import/services';
 import { ProjectService } from '../../../project-management/services';
 import { RowComponent } from '../row/row.component';
-import { FlamService } from '../../../../core/services';
-import { SettingsService } from '../../../../core/services';
-import { NGXLogger } from 'ngx-logger';
-import {
-  combineLatest,
-  firstValueFrom,
-  Observable,
-  of,
-} from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ZipperService } from '../../../file-import/services';
 
 @Component({
   selector: 'app-step',

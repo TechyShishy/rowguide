@@ -1,14 +1,15 @@
 import { Component, ElementRef, Input } from '@angular/core';
-import { Project } from '../../../../core/models/project';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
-import { ProjectDbService } from '../../../../data/services';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatInputModule } from '@angular/material/input';
+import { Router } from '@angular/router';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
-import { Router } from '@angular/router';
+
+import { Project } from '../../../../core/models/project';
+import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
 
 @Component({

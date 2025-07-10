@@ -1,36 +1,36 @@
-import {
-  Component,
-  OnInit,
-  ChangeDetectorRef,
-  ViewChild,
-  AfterViewInit,
-  ElementRef,
-  ChangeDetectionStrategy,
-} from '@angular/core';
-import { FlamService } from '../../../../core/services';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import {
   MatTable,
   MatTableDataSource,
   MatTableModule,
 } from '@angular/material/table';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { SettingsService } from '../../../../core/services';
-import { ProjectService } from '../../services';
-import { NGXLogger } from 'ngx-logger';
-import { ProjectDbService } from '../../../../data/services';
-import { Project } from '../../../../core/models/project';
-import { FLAMRow } from '../../../../core/models/flamrow';
 import { ngfModule } from 'angular-file';
-import { Observable, from, of, firstValueFrom } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { NGXLogger } from 'ngx-logger';
+import { Observable, firstValueFrom, from, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+
+import { FLAMRow } from '../../../../core/models/flamrow';
+import { Project } from '../../../../core/models/project';
+import { FlamService, SettingsService } from '../../../../core/services';
+import { ProjectDbService } from '../../../../data/services';
+import { ProjectService } from '../../services';
 
 @Component({
   selector: 'app-project-inspector',

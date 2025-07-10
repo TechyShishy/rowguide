@@ -1,37 +1,41 @@
+import { CommonModule, NgFor } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
+  HostBinding,
   HostListener,
   QueryList,
   ViewChildren,
-  ChangeDetectorRef,
-  HostBinding,
 } from '@angular/core';
-import { CommonModule, NgFor } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { MatBottomSheet } from '@angular/material/bottom-sheet';
-
-import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
-import { distinctUntilChanged, switchMap, take, skipWhile, combineLatestWith, map } from 'rxjs/operators';
-
+import { ActivatedRoute, Router } from '@angular/router';
 import { NGXLogger } from 'ngx-logger';
+import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
+import {
+  combineLatestWith,
+  distinctUntilChanged,
+  filter,
+  map,
+  skipWhile,
+  switchMap,
+  take,
+} from 'rxjs/operators';
 
-import { RowComponent } from '../row/row.component';
-import { StepComponent } from '../step/step.component';
-import { Row } from '../../../../core/models/row';
-import { ProjectService } from '../../../project-management/services';
-import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
-import { sanity } from '../../../../shared/utils/sanity';
 import { Position } from '../../../../core/models/position';
 import { Project } from '../../../../core/models/project';
-import { SettingsService } from '../../../../core/services';
+import { Row } from '../../../../core/models/row';
+import { MarkModeService, SettingsService } from '../../../../core/services';
+import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
+import { sanity } from '../../../../shared/utils/sanity';
 import { PeyoteShorthandService } from '../../../file-import/loaders';
-import { filter } from 'rxjs/operators';
 import { ZipperService } from '../../../file-import/services';
+import { ProjectService } from '../../../project-management/services';
 import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
-import { MarkModeService } from '../../../../core/services';
+import { RowComponent } from '../row/row.component';
+import { StepComponent } from '../step/step.component';
 
 @Component({
   selector: 'app-project',
