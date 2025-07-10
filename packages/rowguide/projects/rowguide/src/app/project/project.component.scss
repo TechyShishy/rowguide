@@ -1,3 +1,5 @@
+@use '../../styles/colors' as colors;
+
 mat-accordion {
   height: calc(100vh - 8rem);
   overflow-y: scroll;
@@ -13,27 +15,27 @@ mat-accordion {
 
 
  :host(.mark-mode-1) .advance-button-container {
-  background-color: #ffb3ba; /* Light red */
+  background-color: colors.$rg-mark-bg-1; /* Soft Rose */
  }
 
  :host(.mark-mode-2) .advance-button-container {
-  background-color: #ffdfba; /* Light orange */
+  background-color: colors.$rg-mark-bg-2; /* Soft Amber */
  }
 
  :host(.mark-mode-3) .advance-button-container {
-  background-color: #ffffba; /* Light yellow */
+  background-color: colors.$rg-mark-bg-3; /* Soft Yellow */
  }
 
  :host(.mark-mode-4) .advance-button-container {
-  background-color: #baffc9; /* Light green */
+  background-color: colors.$rg-mark-bg-4; /* Soft Emerald */
  }
 
  :host(.mark-mode-5) .advance-button-container {
-  background-color: #bae1ff; /* Light blue */
+  background-color: colors.$rg-mark-bg-5; /* Soft Sky */
  }
 
  :host(.mark-mode-6) .advance-button-container {
-  background-color: #d4baff; /* Light purple */
+  background-color: colors.$rg-mark-bg-6; /* Soft Violet */
  }
 
  .advance-button-container {

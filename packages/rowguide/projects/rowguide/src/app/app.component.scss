@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use '../styles/colors' as colors;
 
 body {
   margin: 0;
@@ -15,7 +16,7 @@ mat-sidenav-container {
 mat-sidenav a {
   @include mat.button-overrides(
     (
-      text-state-layer-color:blue,
+      text-state-layer-color: colors.$rg-brand-accent,
       text-hover-state-layer-opacity: 0.5,
 
     )
@@ -24,7 +25,7 @@ mat-sidenav a {
 mat-sidenav mat-list-item:has(a):hover {
   @include mat.button-overrides(
     (
-      text-label-text-color:white,
+      text-label-text-color: colors.$rg-white,
     )
   );
 }

@@ -1,0 +1,79 @@
+// RowGuide Color Palette
+// Modern, accessible color system
+
+// Primary Colors
+:root {
+  --rg-primary-blue: #2563eb;
+  --rg-brand-accent: #1d4ed8;
+  --rg-current-state: #dc2626;
+
+  // Mark Mode Colors - Pastel Backgrounds
+  --rg-mark-bg-1: #fce7f3; // Soft Rose
+  --rg-mark-bg-2: #fef3c7; // Soft Amber
+  --rg-mark-bg-3: #fefce8; // Soft Yellow
+  --rg-mark-bg-4: #ecfdf5; // Soft Emerald
+  --rg-mark-bg-5: #e0f2fe; // Soft Sky
+  --rg-mark-bg-6: #f3e8ff; // Soft Violet
+
+  // Mark Mode Colors - Active States
+  --rg-mark-active-1: #e11d48; // Rose
+  --rg-mark-active-2: #f59e0b; // Amber
+  --rg-mark-active-3: #eab308; // Yellow
+  --rg-mark-active-4: #10b981; // Emerald
+  --rg-mark-active-5: #0ea5e9; // Sky
+  --rg-mark-active-6: #8b5cf6; // Violet
+
+  // Status & Feedback Colors
+  --rg-success: #059669;
+  --rg-warning: #d97706;
+  --rg-error: #dc2626;
+  --rg-info: #0284c7;
+
+  // Neutral Colors
+  --rg-gray-50: #f9fafb;
+  --rg-gray-200: #e5e7eb;
+  --rg-gray-600: #4b5563;
+  --rg-gray-900: #111827;
+  --rg-white: #ffffff;
+
+  // Legacy Support (for transition)
+  --rg-completed: #ccfbf1; // Light Teal - calm indicator for completed/passed steps
+  --rg-first-step: #84cc16; // Bright Lime Green - high contrast against blue backgrounds
+  --rg-first-current: #15803d;
+  --rg-last-step: var(--rg-error);
+}
+
+// SCSS Variables for easier use in components
+$rg-primary-blue: var(--rg-primary-blue);
+$rg-brand-accent: var(--rg-brand-accent);
+$rg-current-state: var(--rg-current-state);
+
+$rg-mark-bg-1: var(--rg-mark-bg-1);
+$rg-mark-bg-2: var(--rg-mark-bg-2);
+$rg-mark-bg-3: var(--rg-mark-bg-3);
+$rg-mark-bg-4: var(--rg-mark-bg-4);
+$rg-mark-bg-5: var(--rg-mark-bg-5);
+$rg-mark-bg-6: var(--rg-mark-bg-6);
+
+$rg-mark-active-1: var(--rg-mark-active-1);
+$rg-mark-active-2: var(--rg-mark-active-2);
+$rg-mark-active-3: var(--rg-mark-active-3);
+$rg-mark-active-4: var(--rg-mark-active-4);
+$rg-mark-active-5: var(--rg-mark-active-5);
+$rg-mark-active-6: var(--rg-mark-active-6);
+
+$rg-success: var(--rg-success);
+$rg-warning: var(--rg-warning);
+$rg-error: var(--rg-error);
+$rg-info: var(--rg-info);
+
+$rg-gray-50: var(--rg-gray-50);
+$rg-gray-200: var(--rg-gray-200);
+$rg-gray-600: var(--rg-gray-600);
+$rg-gray-900: var(--rg-gray-900);
+$rg-white: var(--rg-white);
+
+$rg-completed: var(--rg-completed);
+$rg-first-step: var(--rg-first-step);
+$rg-first-current: var(--rg-first-current);
+$rg-last-step: var(--rg-last-step);

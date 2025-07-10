@@ -1,10 +1,11 @@
 @use '@angular/material' as mat;
+@use '../../styles/colors' as colors;
 
 :host(.current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #8b2b28,
-      label-text-color: white,
+      elevated-container-color: colors.$rg-current-state,
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -13,8 +14,8 @@
 :host(.marked-1):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #dc3545, /* Red - non-pastel version of #ffb3ba */
-      label-text-color: white,
+      elevated-container-color: colors.$rg-mark-active-1, /* Rose */
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -22,8 +23,8 @@
 :host(.marked-2):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #fd7e14, /* Orange - non-pastel version of #ffdfba */
-      label-text-color: white,
+      elevated-container-color: colors.$rg-mark-active-2, /* Amber */
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -31,8 +32,8 @@
 :host(.marked-3):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #ffc107, /* Yellow - non-pastel version of #ffffba */
-      label-text-color: black,
+      elevated-container-color: colors.$rg-mark-active-3, /* Yellow */
+      label-text-color: colors.$rg-gray-900,
     ));
   }
 }
@@ -40,8 +41,8 @@
 :host(.marked-4):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #28a745, /* Green - non-pastel version of #baffc9 */
-      label-text-color: white,
+      elevated-container-color: colors.$rg-mark-active-4, /* Emerald */
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -49,8 +50,8 @@
 :host(.marked-5):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #007bff, /* Blue - non-pastel version of #bae1ff */
-      label-text-color: white,
+      elevated-container-color: colors.$rg-mark-active-5, /* Sky */
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -58,8 +59,8 @@
 :host(.marked-6):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #6f42c1, /* Purple - non-pastel version of #d4baff */
-      label-text-color: white,
+      elevated-container-color: colors.$rg-mark-active-6, /* Violet */
+      label-text-color: colors.$rg-white,
     ));
   }
 }
@@ -84,44 +85,44 @@
 :host:has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: yellow,
-      label-text-color: black,
+      elevated-container-color: colors.$rg-completed,
+      label-text-color: colors.$rg-gray-900,
     ));
   }
 }
 :host(.first) {
   mat-chip {
     @include mat.chips-overrides((
-      label-text-color: rgb(128, 255, 128),
+      label-text-color: colors.$rg-first-step,
     ));
   }
 }
 :host(.first.current) {
   mat-chip {
     @include mat.chips-overrides((
-      label-text-color: rgb(0, 255, 0),
+      label-text-color: colors.$rg-first-current,
     ));
   }
 }
 :host(.first):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      label-text-color: green,
+      label-text-color: colors.$rg-success,
     ));
   }
 }
 :host(.last) {
   mat-chip {
     @include mat.chips-overrides((
-      label-text-color: red,
+      label-text-color: colors.$rg-last-step,
     ));
   }
 }
 :host {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #4ab9ec,
-      label-text-color: white,
+      elevated-container-color: colors.$rg-primary-blue,
+      label-text-color: colors.$rg-white,
       label-text-size: 20px,
       label-text-weight: 900,
     ));
