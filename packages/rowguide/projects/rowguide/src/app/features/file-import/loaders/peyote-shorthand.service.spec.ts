@@ -4,7 +4,7 @@ import { PeyoteShorthandService } from './peyote-shorthand.service';
 import { Project, Row } from '../../../core/models';
 import { NotificationService } from '../../../core/services';
 import { SettingsService } from '../../../core/services';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 
 describe('PeyoteShorthandService', () => {
   let service: PeyoteShorthandService;

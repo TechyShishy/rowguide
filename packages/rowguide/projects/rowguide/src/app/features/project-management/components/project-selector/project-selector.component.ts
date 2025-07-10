@@ -24,16 +24,14 @@ import { Router } from '@angular/router';
 import {
   combineLatestWith,
   from,
-  map,
   Observable,
   Subject,
-  switchMap,
   firstValueFrom,
-  tap,
   of,
   forkJoin,
   BehaviorSubject,
 } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { NotificationService } from '../../../../core/services';
 import { SettingsService } from '../../../../core/services';
 import { MatSelectModule } from '@angular/material/select';

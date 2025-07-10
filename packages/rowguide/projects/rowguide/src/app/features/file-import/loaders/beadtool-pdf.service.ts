@@ -6,11 +6,8 @@ import {
   TextMarkedContent,
 } from 'pdfjs-dist/types/src/display/api';
 import { NGXLogger } from 'ngx-logger';
-import { Observable } from 'rxjs/internal/Observable';
-import { from } from 'rxjs/internal/observable/from';
-import { switchMap } from 'rxjs/internal/operators/switchMap';
-import { map } from 'rxjs/internal/operators/map';
-import { forkJoin, tap } from 'rxjs';
+import { Observable, from, forkJoin } from 'rxjs';
+import { switchMap, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',

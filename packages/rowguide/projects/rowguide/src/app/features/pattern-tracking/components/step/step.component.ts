@@ -16,10 +16,10 @@ import { NGXLogger } from 'ngx-logger';
 import {
   combineLatest,
   firstValueFrom,
-  map,
   Observable,
   of,
 } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ZipperService } from '../../../file-import/services';
 
 @Component({

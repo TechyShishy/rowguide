@@ -1,12 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Project, Row } from '../../../core/models';
-import {
-  Subject,
-  BehaviorSubject,
-  map,
-  filter,
-  take,
-} from 'rxjs';
+import { Subject, BehaviorSubject, take } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 import { PeyoteShorthandService } from '../../file-import/loaders';
 import { NullProject } from '../models';
 import { StepComponent } from '../../pattern-tracking/components/step/step.component';
@@ -103,5 +98,3 @@ export class ProjectService {
 class CurrentProject {
   id: number = 0;
 }
-
-

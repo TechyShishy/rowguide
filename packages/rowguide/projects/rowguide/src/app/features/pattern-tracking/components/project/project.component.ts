@@ -13,16 +13,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { Observable } from 'rxjs/internal/Observable';
-import { of } from 'rxjs/internal/observable/of';
-import { distinctUntilChanged } from 'rxjs/internal/operators/distinctUntilChanged';
-import { switchMap } from 'rxjs/internal/operators/switchMap';
-import { take } from 'rxjs/internal/operators/take';
-import { skipWhile } from 'rxjs/internal/operators/skipWhile';
-import { combineLatestWith } from 'rxjs/internal/operators/combineLatestWith';
-import { map } from 'rxjs/internal/operators/map';
-import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
+import { distinctUntilChanged, switchMap, take, skipWhile, combineLatestWith, map } from 'rxjs/operators';
 
 import { NGXLogger } from 'ngx-logger';
 
@@ -36,7 +28,7 @@ import { Position } from '../../../../core/models/position';
 import { Project } from '../../../../core/models/project';
 import { SettingsService } from '../../../../core/services';
 import { PeyoteShorthandService } from '../../../file-import/loaders';
-import { filter } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { ZipperService } from '../../../file-import/services';
 import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
 import { MarkModeService } from '../../../../core/services';
