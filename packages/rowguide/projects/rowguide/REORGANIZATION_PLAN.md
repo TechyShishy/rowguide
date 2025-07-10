@@ -54,43 +54,49 @@ src/app/
 - ✅ Removed duplicate files from original locations
 - ✅ Verified application builds successfully
 
-### Phase 3: Reorganize Services by Domain
+### ✅ Phase 3: Reorganize Services by Domain (COMPLETED)
 
 **Core Services (`core/services/`):**
-- `notification.service.ts`
-- `mark-mode.service.ts`
-- `settings.service.ts`
+- ✅ `notification.service.ts`
+- ✅ `mark-mode.service.ts`
+- ✅ `settings.service.ts`
+- ✅ `flam.service.ts`
 
 **Data Services (`data/services/`):**
-- `indexed-db.service.ts`
-- `project-db.service.ts`
-- `migration-db.service.ts`
+- ✅ `indexed-db.service.ts`
+- ✅ `project-db.service.ts`
+- ✅ `migration-db.service.ts`
 
 **Data Schemas (`data/schemas/`):**
-- `rowguide-db.ts`
-- `project-db.ts`
-- `migration-db.ts`
+- ✅ `rowguide-db.ts`
+- ✅ `project-db.ts`
+- ✅ `migration-db.ts`
 
 **Migration Services (`data/migrations/`):**
-- `upgrade.service.ts`
+- ✅ `upgrade.service.ts`
 
 **File Import (`features/file-import/`):**
-- `loader/` → `loaders/`
-  - `beadtool-pdf.service.ts`
-  - `peyote-shorthand.service.ts`
-  - `c2ccrochet-shorthand.service.ts`
-- `pdfjslib.service.ts` → `services/`
-- `zipper.service.ts` → `services/`
+- ✅ `loader/` → `loaders/`
+  - ✅ `beadtool-pdf.service.ts`
+  - ✅ `peyote-shorthand.service.ts`
+  - ✅ `c2ccrochet-shorthand.service.ts`
+- ✅ `pdfjslib.service.ts` → `services/`
+- ✅ `zipper.service.ts` → `services/`
 
 **Project Management (`features/project-management/`):**
-- `project.service.ts` → `services/`
-- `bead-project.ts` → `models/`
-- `null-project.ts` → `models/`
-- `mock-project.ts` → `models/`
+- ✅ `project.service.ts` → `services/`
+- ✅ `bead-project.ts` → `models/`
+- ✅ `null-project.ts` → `models/`
+- ✅ `mock-project.ts` → `models/`
 
 **Shared Utilities (`shared/utils/`):**
-- `hierarchical-list.ts`
-- `sanity.ts`
+- ✅ `hierarchical-list.ts`
+- ✅ `sanity.ts`
+
+**✅ All services reorganized by domain with updated imports**
+**✅ Created index files for easy importing**
+**✅ Updated ALL import statements across the codebase**
+**✅ Verified application builds successfully**
 
 ### Phase 4: Group Components into Feature Modules
 

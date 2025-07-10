@@ -29,17 +29,17 @@ import { NGXLogger } from 'ngx-logger';
 import { RowComponent } from '../row/row.component';
 import { StepComponent } from '../step/step.component';
 import { Row } from '../core/models/row';
-import { ProjectService } from '../project.service';
-import { HierarchicalList } from '../hierarchical-list';
-import { sanity } from '../sanity';
+import { ProjectService } from '../features/project-management/services';
+import { HierarchicalList } from '../shared/utils/hierarchical-list';
+import { sanity } from '../shared/utils/sanity';
 import { Position } from '../core/models/position';
 import { Project } from '../core/models/project';
-import { SettingsService } from '../settings.service';
-import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
+import { SettingsService } from '../core/services';
+import { PeyoteShorthandService } from '../features/file-import/loaders';
 import { filter } from 'rxjs';
-import { ZipperService } from '../zipper.service';
+import { ZipperService } from '../features/file-import/services';
 import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
-import { MarkModeService } from '../mark-mode.service';
+import { MarkModeService } from '../core/services';
 
 @Component({
   selector: 'app-project',

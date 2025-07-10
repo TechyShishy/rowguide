@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectInspectorComponent } from './project-inspector.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { ProjectService } from '../project.service';
-import { SettingsService } from '../settings.service';
-import { FlamService } from '../flam.service';
+import { ProjectService } from '../features/project-management/services';
+import { SettingsService } from '../core/services';
+import { FlamService } from '../core/services';
 import { ProjectDbService } from '../project-db.service';
 import {
   BehaviorSubject,

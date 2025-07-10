@@ -3,13 +3,13 @@ import { Project } from '../core/models/project';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
-import { ProjectDbService } from '../project-db.service';
+import { ProjectDbService } from '../data/services';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
 import { Router } from '@angular/router';
-import { ProjectService } from '../project.service';
+import { ProjectService } from '../features/project-management/services';
 
 @Component({
   selector: 'app-project-summary',

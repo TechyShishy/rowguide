@@ -6,12 +6,12 @@ import {
   QueryList,
 } from '@angular/core';
 import { Step } from '../core/models/step';
-import { HierarchicalList } from '../hierarchical-list';
+import { HierarchicalList } from '../shared/utils/hierarchical-list';
 import { MatChipsModule } from '@angular/material/chips';
-import { ProjectService } from '../project.service';
+import { ProjectService } from '../features/project-management/services';
 import { RowComponent } from '../row/row.component';
-import { FlamService } from '../flam.service';
-import { SettingsService } from '../settings.service';
+import { FlamService } from '../core/services';
+import { SettingsService } from '../core/services';
 import { NGXLogger } from 'ngx-logger';
 import {
   combineLatest,
@@ -20,7 +20,7 @@ import {
   Observable,
   of,
 } from 'rxjs';
-import { ZipperService } from '../zipper.service';
+import { ZipperService } from '../features/file-import/services';
 
 @Component({
   selector: 'app-step',

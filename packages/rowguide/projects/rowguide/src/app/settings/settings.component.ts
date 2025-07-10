@@ -8,11 +8,11 @@ import {
 import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
-import { Settings, SettingsService } from '../settings.service';
-import { ProjectService } from '../project.service';
+import { Settings, SettingsService } from '../core/services';
+import { ProjectService } from '../features/project-management/services';
 import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
-import { FlamService } from '../flam.service';
+import { FlamService } from '../core/services';
 
 @Component({
   selector: 'app-settings',

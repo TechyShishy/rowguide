@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
-import { ProjectService } from '../project.service';
+import { ProjectService } from '../features/project-management/services';
 import { ProjectDbService } from '../project-db.service';
-import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';
-import { FlamService } from '../flam.service';
+import { BeadtoolPdfService } from '../features/file-import/loaders';
+import { FlamService } from '../core/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BehaviorSubject, firstValueFrom, from, of, Subject } from 'rxjs';

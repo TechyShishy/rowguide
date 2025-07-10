@@ -6,7 +6,7 @@ import {
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { MarkModeService } from '../mark-mode.service';
+import { MarkModeService } from '../core/services';
 
 @Component({
   selector: 'app-bead-count-bottom-sheet',
