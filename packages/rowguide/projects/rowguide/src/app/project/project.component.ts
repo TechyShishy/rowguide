@@ -11,6 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { Observable } from 'rxjs/internal/Observable';
@@ -39,6 +40,8 @@ import { SettingsService } from '../settings.service';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { filter } from 'rxjs';
 import { ZipperService } from '../zipper.service';
+import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
+import { MarkModeService } from '../mark-mode.service';
 
 @Component({
   selector: 'app-project',
@@ -68,7 +71,15 @@ export class ProjectComponent implements HierarchicalList {
   parent = null;
   prev = null;
   next = null;
-  @HostBinding('class.mark-mode') markMode: boolean = false;
+  @HostBinding('class') get cssClasses() {
+    const classes = [];
+    if (this.markMode > 0) {
+      classes.push('mark-mode');
+      classes.push(`mark-mode-${this.markMode}`);
+    }
+    return classes.join(' ');
+  }
+  markMode: number = 0;
 
   constructor(
     private projectService: ProjectService,
@@ -78,10 +89,17 @@ export class ProjectComponent implements HierarchicalList {
     private router: Router,
     public settingsService: SettingsService,
     private peyoteShorthandService: PeyoteShorthandService,
-    private zipperService: ZipperService
+    private zipperService: ZipperService,
+    private bottomSheet: MatBottomSheet,
+    private markModeService: MarkModeService
   ) {}
 
   ngOnInit() {
+    // Subscribe to real-time mark mode changes
+    this.markModeService.markModeChanged$.subscribe((markMode) => {
+      this.setMarkMode(markMode);
+    });
+
     this.route.paramMap.subscribe((params) => {
       if (params.get('id') === null) {
         const currentId = this.projectService.loadCurrentProjectId();
@@ -189,8 +207,32 @@ export class ProjectComponent implements HierarchicalList {
       });
   }
 
-  toggleMarkMode() {
-    this.markMode = !this.markMode;
+  openBeadCountBottomSheet() {
+    this.currentStep$
+      .pipe(
+        take(1),
+        switchMap((currentStep) => currentStep.beadCount$)
+      )
+      .subscribe((beadCount) => {
+        const bottomSheetRef = this.bottomSheet.open(BeadCountBottomSheet, {
+          data: {
+            markMode: this.markMode,
+            beadCount: beadCount,
+          },
+        });
+
+        bottomSheetRef.afterDismissed().subscribe((result) => {
+          // Get the final mark mode from the bottom sheet data
+          const finalMarkMode = bottomSheetRef.instance.data.markMode;
+          if (finalMarkMode !== this.markMode) {
+            this.setMarkMode(finalMarkMode);
+          }
+        });
+      });
+  }
+
+  private setMarkMode(mode: number) {
+    this.markMode = mode;
   }
 
   onAdvanceRow() {

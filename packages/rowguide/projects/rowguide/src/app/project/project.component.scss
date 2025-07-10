@@ -11,8 +11,29 @@ mat-accordion {
   align-items: stretch;
  }
 
- :host(.mark-mode) .advance-button-container {
-  background-color: #a3ffe8;
+
+ :host(.mark-mode-1) .advance-button-container {
+  background-color: #ffb3ba; /* Light red */
+ }
+
+ :host(.mark-mode-2) .advance-button-container {
+  background-color: #ffdfba; /* Light orange */
+ }
+
+ :host(.mark-mode-3) .advance-button-container {
+  background-color: #ffffba; /* Light yellow */
+ }
+
+ :host(.mark-mode-4) .advance-button-container {
+  background-color: #baffc9; /* Light green */
+ }
+
+ :host(.mark-mode-5) .advance-button-container {
+  background-color: #bae1ff; /* Light blue */
+ }
+
+ :host(.mark-mode-6) .advance-button-container {
+  background-color: #d4baff; /* Light purple */
  }
 
  .advance-button-container {

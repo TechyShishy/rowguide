@@ -120,7 +120,7 @@ export class StepComponent implements HierarchicalList, OnInit {
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
     if (this.row.project.markMode) {
-      this.marked = (this.marked + 1) % 7; // Cycle through 0-6
+      this.marked = this.row.project.markMode;
       return;
     }
     const currentStep = await firstValueFrom(this.row.project.currentStep$);

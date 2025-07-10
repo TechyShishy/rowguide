@@ -9,50 +9,56 @@
   }
 }
 
-:host(.marked-1) {
+:host(.marked-1),
+:host(.marked-1):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #205216,
+      elevated-container-color: #dc3545, /* Red - non-pastel version of #ffb3ba */
       label-text-color: white,
     ));
   }
 }
-:host(.marked-2) {
+:host(.marked-2),
+:host(.marked-2):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #1a3c6c,
+      elevated-container-color: #fd7e14, /* Orange - non-pastel version of #ffdfba */
       label-text-color: white,
     ));
   }
 }
-:host(.marked-3) {
+:host(.marked-3),
+:host(.marked-3):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #5c1a6c,
+      elevated-container-color: #ffc107, /* Yellow - non-pastel version of #ffffba */
+      label-text-color: black,
+    ));
+  }
+}
+:host(.marked-4),
+:host(.marked-4):has(~ .current) {
+  mat-chip {
+    @include mat.chips-overrides((
+      elevated-container-color: #28a745, /* Green - non-pastel version of #baffc9 */
       label-text-color: white,
     ));
   }
 }
-:host(.marked-4) {
+:host(.marked-5),
+:host(.marked-5):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #6c1a3c,
+      elevated-container-color: #007bff, /* Blue - non-pastel version of #bae1ff */
       label-text-color: white,
     ));
   }
 }
-:host(.marked-5) {
+:host(.marked-6),
+:host(.marked-6):has(~ .current) {
   mat-chip {
     @include mat.chips-overrides((
-      elevated-container-color: #6c4a1a,
-      label-text-color: white,
-    ));
-  }
-}
-:host(.marked-6) {
-  mat-chip {
-    @include mat.chips-overrides((
-      elevated-container-color: #3c6c1a,
+      elevated-container-color: #6f42c1, /* Purple - non-pastel version of #d4baff */
       label-text-color: white,
     ));
   }
