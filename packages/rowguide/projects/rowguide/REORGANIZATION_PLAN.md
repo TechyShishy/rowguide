@@ -41,14 +41,18 @@ src/app/
 - Add documentation and README files
 - Add .gitkeep files for empty directories
 
-### Phase 2: Move Models and Interfaces
-**Target files to move to `core/models/`:**
-- `project.ts` → `core/models/project.ts`
-- `row.ts` → `core/models/row.ts`
-- `step.ts` → `core/models/step.ts`
-- `position.ts` → `core/models/position.ts`
-- `flam.ts` → `core/models/flam.ts`
-- `flamrow.ts` → `core/models/flamrow.ts`
+### ✅ Phase 2: Move Models and Interfaces (COMPLETED)
+**Target files moved to `core/models/`:**
+- ✅ `project.ts` → `core/models/project.ts`
+- ✅ `row.ts` → `core/models/row.ts`
+- ✅ `step.ts` → `core/models/step.ts`
+- ✅ `position.ts` → `core/models/position.ts`
+- ✅ `flam.ts` → `core/models/flam.ts`
+- ✅ `flamrow.ts` → `core/models/flamrow.ts`
+- ✅ Created index files for easy importing
+- ✅ Updated ALL imports across components, services, and tests
+- ✅ Removed duplicate files from original locations
+- ✅ Verified application builds successfully
 
 ### Phase 3: Reorganize Services by Domain
 
@@ -132,4 +136,4 @@ src/app/
 
 ## Next Steps
 
-Ready to proceed with Phase 2: Moving models and interfaces to the core module.
+Ready to proceed with Phase 3: Reorganizing services by domain.

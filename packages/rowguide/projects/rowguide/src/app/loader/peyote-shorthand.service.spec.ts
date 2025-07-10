@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { NGXLogger } from 'ngx-logger';
 import { PeyoteShorthandService } from './peyote-shorthand.service';
-import { Project } from '../project';
-import { Row } from '../row';
+import { Project } from '../core/models/project';
+import { Row } from '../core/models/row';
 import { NotificationService } from '../notification.service';
 import { SettingsService } from '../settings.service';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';

@@ -1,4 +1,4 @@
-import { Row } from './row';
+import { Row } from './core/models/row';
 
 export const PROJECTSTRING: string = `1(D) 4(A) 2(B)
 2(B) 1(A) 2(B) 1(A) 2(B) 1(A)

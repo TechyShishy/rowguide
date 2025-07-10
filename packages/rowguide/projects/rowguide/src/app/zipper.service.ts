@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Step } from './step';
+import { Step } from './core/models/step';
 import { NGXLogger } from 'ngx-logger';
 
 @Injectable({

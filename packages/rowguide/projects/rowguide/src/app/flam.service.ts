@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { ProjectService } from './project.service';
 import { ProjectDbService } from './project-db.service';
-import { FLAM } from './flam';
+import { FLAM } from './core/models/flam';
 import { NGXLogger } from 'ngx-logger';
-import { Step } from './step';
+import { Step } from './core/models/step';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { SettingsService } from './settings.service';
-import { Row } from './row';
+import { Row } from './core/models/row';
 import { filter } from 'rxjs/internal/operators/filter';
 import { map } from 'rxjs/internal/operators/map';
 import { Observable } from 'rxjs/internal/Observable';

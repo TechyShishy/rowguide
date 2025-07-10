@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { MigrationDbService } from './migration-db.service';
 import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from './project-db.service';
-import { Step } from './step';
+import { Step } from './core/models/step';
 import { ZipperService } from './zipper.service';
 
 @Injectable({

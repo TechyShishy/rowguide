@@ -8,8 +8,8 @@ import { ProjectDbService } from '../project-db.service';
 import {
   BehaviorSubject,
 } from 'rxjs';
-import { Project } from '../project';
-import { FLAM } from '../flam';
+import { Project } from '../core/models/project';
+import { FLAM } from '../core/models/flam';
 
 describe('ProjectInspectorComponent', () => {
   let component: ProjectInspectorComponent;

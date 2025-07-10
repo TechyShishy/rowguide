@@ -15,7 +15,7 @@ import { ProjectService } from '../project.service';
 import { MatCardModule } from '@angular/material/card';
 import { inflate } from 'pako';
 import { CommonModule } from '@angular/common';
-import { Project } from '../project';
+import { Project } from '../core/models/project';
 import { ProjectDbService } from '../project-db.service';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { BeadtoolPdfService } from '../loader/beadtool-pdf.service';

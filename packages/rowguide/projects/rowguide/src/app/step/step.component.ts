@@ -5,7 +5,7 @@ import {
   OnInit,
   QueryList,
 } from '@angular/core';
-import { Step } from '../step';
+import { Step } from '../core/models/step';
 import { HierarchicalList } from '../hierarchical-list';
 import { MatChipsModule } from '@angular/material/chips';
 import { ProjectService } from '../project.service';

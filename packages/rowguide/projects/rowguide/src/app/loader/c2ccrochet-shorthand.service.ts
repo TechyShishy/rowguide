@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
-import { Project } from '../project';
-import { Step } from '../step';
-import { Row } from '../row';
+import { Project } from '../core/models/project';
+import { Step } from '../core/models/step';
+import { Row } from '../core/models/row';
 
 @Injectable({
   providedIn: 'root',

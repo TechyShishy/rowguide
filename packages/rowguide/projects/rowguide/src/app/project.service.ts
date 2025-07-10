@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Project } from './project';
+import { Project } from './core/models/project';
 import {
   Subject,
   BehaviorSubject,
@@ -14,7 +14,7 @@ import { SettingsService } from './settings.service';
 import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from './project-db.service';
 import { ActivatedRoute } from '@angular/router';
-import { Row } from './row';
+import { Row } from './core/models/row';
 
 @Injectable({
   providedIn: 'root',

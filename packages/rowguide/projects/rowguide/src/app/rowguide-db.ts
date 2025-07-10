@@ -1,5 +1,5 @@
 import { DBSchema } from 'idb';
-import { Project } from './project';
+import { Project } from './core/models/project';
 
 export interface RowguideDb extends DBSchema {
   projects: {

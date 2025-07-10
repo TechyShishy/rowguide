@@ -8,9 +8,9 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { Row } from '../row';
+import { Row } from '../core/models/row';
 import { StepComponent } from '../step/step.component';
-import { Step } from '../step';
+import { Step } from '../core/models/step';
 import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
 import { HierarchicalList } from '../hierarchical-list';

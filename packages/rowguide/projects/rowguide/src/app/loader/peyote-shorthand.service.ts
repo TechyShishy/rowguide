@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Project } from '../project';
-import { Row } from '../row';
+import { Project } from '../core/models/project';
+import { Row } from '../core/models/row';
 import { NGXLogger } from 'ngx-logger';
 import { SettingsService } from '../settings.service';
 import { NotificationService } from '../notification.service';
-import { Step } from '../step';
+import { Step } from '../core/models/step';
 import { ZipperService } from '../zipper.service';
 
 @Injectable({

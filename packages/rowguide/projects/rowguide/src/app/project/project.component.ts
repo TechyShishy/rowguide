@@ -28,12 +28,12 @@ import { NGXLogger } from 'ngx-logger';
 
 import { RowComponent } from '../row/row.component';
 import { StepComponent } from '../step/step.component';
-import { Row } from '../row';
+import { Row } from '../core/models/row';
 import { ProjectService } from '../project.service';
 import { HierarchicalList } from '../hierarchical-list';
 import { sanity } from '../sanity';
-import { Position } from '../position';
-import { Project } from '../project';
+import { Position } from '../core/models/position';
+import { Project } from '../core/models/project';
 import { SettingsService } from '../settings.service';
 import { PeyoteShorthandService } from '../loader/peyote-shorthand.service';
 import { filter } from 'rxjs';

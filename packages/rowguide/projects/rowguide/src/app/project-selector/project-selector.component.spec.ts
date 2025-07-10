@@ -8,8 +8,8 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BehaviorSubject, firstValueFrom, from, of, Subject } from 'rxjs';
 import * as pako from 'pako';
-import { Project } from '../project';
-import { FLAM } from '../flam';
+import { Project } from '../core/models/project';
+import { FLAM } from '../core/models/flam';
 import { provideRouter } from '@angular/router';
 import { routes } from '../app.routes';
 
