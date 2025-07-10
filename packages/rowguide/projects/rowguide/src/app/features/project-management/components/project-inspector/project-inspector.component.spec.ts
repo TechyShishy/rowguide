@@ -1,15 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectInspectorComponent } from './project-inspector.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { ProjectService } from '../features/project-management/services';
-import { SettingsService } from '../core/services';
-import { FlamService } from '../core/services';
-import { ProjectDbService } from '../project-db.service';
+import { ProjectService } from '../../services';
+import { SettingsService } from '../../../../core/services';
+import { FlamService } from '../../../../core/services';
+import { ProjectDbService } from '../../../../data/services/project-db.service';
 import {
   BehaviorSubject,
 } from 'rxjs';
-import { Project } from '../core/models/project';
-import { FLAM } from '../core/models/flam';
+import { Project } from '../../../../core/models/project';
+import { FLAM } from '../../../../core/models/flam';
 
 describe('ProjectInspectorComponent', () => {
   let component: ProjectInspectorComponent;

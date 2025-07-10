@@ -3,7 +3,7 @@ import { ProjectSummaryComponent } from './project-summary.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { provideRouter } from '@angular/router';
-import { routes } from '../app.routes';
+import { routes } from '../../../../app.routes';
 
 describe('ProjectSummaryComponent', () => {
   let component: ProjectSummaryComponent;

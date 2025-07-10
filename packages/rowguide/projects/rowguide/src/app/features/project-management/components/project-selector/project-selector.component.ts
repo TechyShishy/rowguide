@@ -11,15 +11,15 @@ import {
 } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { ProjectService } from '../features/project-management/services';
+import { ProjectService } from '../../services';
 import { MatCardModule } from '@angular/material/card';
 import { inflate } from 'pako';
 import { CommonModule } from '@angular/common';
-import { Project } from '../core/models/project';
-import { ProjectDbService } from '../data/services';
+import { Project } from '../../../../core/models/project';
+import { ProjectDbService } from '../../../../data/services';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
-import { BeadtoolPdfService } from '../features/file-import/loaders';
-import { FlamService } from '../core/services';
+import { BeadtoolPdfService } from '../../../file-import/loaders';
+import { FlamService } from '../../../../core/services';
 import { Router } from '@angular/router';
 import {
   combineLatestWith,
@@ -34,8 +34,8 @@ import {
   forkJoin,
   BehaviorSubject,
 } from 'rxjs';
-import { NotificationService } from '../core/services';
-import { SettingsService } from '../core/services';
+import { NotificationService } from '../../../../core/services';
+import { SettingsService } from '../../../../core/services';
 import { MatSelectModule } from '@angular/material/select';
 
 @Component({

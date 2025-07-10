@@ -1,5 +1,5 @@
 @use '@angular/material' as mat;
-@use '../../styles/colors' as colors;
+@use '../../../../../styles/colors' as colors;
 
 :host(.current) {
   mat-chip {

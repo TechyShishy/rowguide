@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
-import { ProjectService } from '../features/project-management/services';
-import { ProjectDbService } from '../project-db.service';
-import { BeadtoolPdfService } from '../features/file-import/loaders';
-import { FlamService } from '../core/services';
+import { ProjectService } from '../../services';
+import { ProjectDbService } from '../../../../data/services/project-db.service';
+import { BeadtoolPdfService } from '../../../file-import/loaders';
+import { FlamService } from '../../../../core/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BehaviorSubject, firstValueFrom, from, of, Subject } from 'rxjs';
 import * as pako from 'pako';
-import { Project } from '../core/models/project';
-import { FLAM } from '../core/models/flam';
+import { Project } from '../../../../core/models/project';
+import { FLAM } from '../../../../core/models/flam';
 import { provideRouter } from '@angular/router';
-import { routes } from '../app.routes';
+import { routes } from '../../../../app.routes';
 
 describe('ProjectSelectorComponent', () => {
   let component: ProjectSelectorComponent;

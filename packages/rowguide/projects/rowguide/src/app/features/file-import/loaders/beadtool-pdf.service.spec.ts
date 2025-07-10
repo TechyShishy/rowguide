@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { BeadtoolPdfService } from './beadtool-pdf.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { PdfjslibService } from '../pdfjslib.service';
+import { PdfjslibService } from '../services/pdfjslib.service';
 import { firstValueFrom } from 'rxjs';
 import { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 

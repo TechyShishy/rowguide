@@ -1,2 +1,2 @@
-// Shared components will be moved here in Phase 4
-// Currently empty
+// Shared components
+export * from './notification/notification.component';

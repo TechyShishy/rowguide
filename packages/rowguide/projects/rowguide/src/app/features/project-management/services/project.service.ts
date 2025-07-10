@@ -9,7 +9,7 @@ import {
 } from 'rxjs';
 import { PeyoteShorthandService } from '../../file-import/loaders';
 import { NullProject } from '../models';
-import { StepComponent } from '../../../step/step.component';
+import { StepComponent } from '../../pattern-tracking/components/step/step.component';
 import { SettingsService } from '../../../core/services';
 import { NGXLogger } from 'ngx-logger';
 import { ProjectDbService } from '../../../data/services';

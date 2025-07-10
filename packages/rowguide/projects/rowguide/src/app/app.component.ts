@@ -10,7 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { NotificationComponent } from "./notification/notification.component";
+import { NotificationComponent } from "./shared/components";
 import { UpgradeService } from './data/migrations/upgrade.service';
 
 @Component({

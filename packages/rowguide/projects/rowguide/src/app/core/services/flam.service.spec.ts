@@ -3,10 +3,10 @@ import { firstValueFrom } from 'rxjs';
 
 import { FlamService } from './flam.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { ProjectService } from './project.service';
-import { Step } from './step';
-import { Row } from './row';
-import { routes } from './app.routes';
+import { ProjectService } from '../../features/project-management/services/project.service';
+import { Step } from '../models/step';
+import { Row } from '../models/row';
+import { routes } from '../../app.routes';
 import { provideRouter } from '@angular/router';
 
 describe('FlamService', () => {

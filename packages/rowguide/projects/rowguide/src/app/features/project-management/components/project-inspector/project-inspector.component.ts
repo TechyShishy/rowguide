@@ -7,7 +7,7 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { FlamService } from '../core/services';
+import { FlamService } from '../../../../core/services';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -17,12 +17,12 @@ import {
   MatTableModule,
 } from '@angular/material/table';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { SettingsService } from '../core/services';
-import { ProjectService } from '../features/project-management/services';
+import { SettingsService } from '../../../../core/services';
+import { ProjectService } from '../../services';
 import { NGXLogger } from 'ngx-logger';
-import { ProjectDbService } from '../data/services';
-import { Project } from '../core/models/project';
-import { FLAMRow } from '../core/models/flamrow';
+import { ProjectDbService } from '../../../../data/services';
+import { Project } from '../../../../core/models/project';
+import { FLAMRow } from '../../../../core/models/flamrow';
 import { ngfModule } from 'angular-file';
 import { Observable } from 'rxjs/internal/Observable';
 import { switchMap } from 'rxjs/internal/operators/switchMap';

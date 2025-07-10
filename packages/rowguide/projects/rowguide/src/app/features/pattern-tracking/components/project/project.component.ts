@@ -28,18 +28,18 @@ import { NGXLogger } from 'ngx-logger';
 
 import { RowComponent } from '../row/row.component';
 import { StepComponent } from '../step/step.component';
-import { Row } from '../core/models/row';
-import { ProjectService } from '../features/project-management/services';
-import { HierarchicalList } from '../shared/utils/hierarchical-list';
-import { sanity } from '../shared/utils/sanity';
-import { Position } from '../core/models/position';
-import { Project } from '../core/models/project';
-import { SettingsService } from '../core/services';
-import { PeyoteShorthandService } from '../features/file-import/loaders';
+import { Row } from '../../../../core/models/row';
+import { ProjectService } from '../../../project-management/services';
+import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
+import { sanity } from '../../../../shared/utils/sanity';
+import { Position } from '../../../../core/models/position';
+import { Project } from '../../../../core/models/project';
+import { SettingsService } from '../../../../core/services';
+import { PeyoteShorthandService } from '../../../file-import/loaders';
 import { filter } from 'rxjs';
-import { ZipperService } from '../features/file-import/services';
+import { ZipperService } from '../../../file-import/services';
 import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
-import { MarkModeService } from '../core/services';
+import { MarkModeService } from '../../../../core/services';
 
 @Component({
   selector: 'app-project',

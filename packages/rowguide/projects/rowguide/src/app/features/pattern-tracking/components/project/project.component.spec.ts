@@ -2,18 +2,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { ProjectService } from '../features/project-management/services';
-import { SettingsService } from '../core/services';
+import { ProjectService } from '../../../project-management/services';
+import { SettingsService } from '../../../../core/services';
 import { BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
-import { Row } from '../core/models/row';
+import { Row } from '../../../../core/models/row';
 import { provideRouter } from '@angular/router';
-import { routes } from '../app.routes';
-import { Project } from '../core/models/project';
-import { Position } from '../core/models/position';
+import { routes } from '../../../../app.routes';
+import { Project } from '../../../../core/models/project';
+import { Position } from '../../../../core/models/position';
 import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 import { RowComponent } from '../row/row.component';
-import { ZipperService } from '../features/file-import/services';
+import { ZipperService } from '../../../file-import/services';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;

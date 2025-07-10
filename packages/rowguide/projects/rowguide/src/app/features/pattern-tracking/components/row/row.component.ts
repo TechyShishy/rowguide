@@ -8,14 +8,14 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { Row } from '../core/models/row';
+import { Row } from '../../../../core/models/row';
 import { StepComponent } from '../step/step.component';
-import { Step } from '../core/models/step';
+import { Step } from '../../../../core/models/step';
 import { CommonModule } from '@angular/common';
 import { NGXLogger } from 'ngx-logger';
-import { HierarchicalList } from '../shared/utils/hierarchical-list';
+import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { MatButtonModule } from '@angular/material/button';
-import { SettingsService } from '../core/services';
+import { SettingsService } from '../../../../core/services';
 import { MatCardModule } from '@angular/material/card';
 import {
   MatExpansionModule,
