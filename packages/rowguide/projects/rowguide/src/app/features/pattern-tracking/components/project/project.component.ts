@@ -194,7 +194,7 @@ export class ProjectComponent implements HierarchicalList {
     this.currentStep$
       .pipe(
         skipWhile((step) => step.index === undefined),
-        take(1)
+        distinctUntilChanged((prev, curr) => prev === curr)
       )
       .subscribe((step) => {
         step.onClick(new Event('click'));
