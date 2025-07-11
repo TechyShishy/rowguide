@@ -235,19 +235,28 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
   }
 
   uploadPicture(): void {
-    from(this.file.arrayBuffer()).subscribe((buffer) => {
-      const pngHeader = Uint8Array.from([
-        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-      ]);
-      const isPng = new Uint8Array(buffer)
-        .subarray(0, 8)
-        .every((value, index) => value === pngHeader[index]);
-      if (isPng) {
-        const project = this.projectService.project$.value;
-        project.image = buffer;
-        this.indexedDBService.updateProject(project);
-        this.projectService.project$.next(project);
-      }
+    from(this.file.arrayBuffer()).subscribe({
+      next: (buffer) => {
+        const pngHeader = Uint8Array.from([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+        const isPng = new Uint8Array(buffer)
+          .subarray(0, 8)
+          .every((value, index) => value === pngHeader[index]);
+        if (isPng) {
+          const project = this.projectService.project$.value;
+          if (project) {
+            project.image = buffer;
+            this.indexedDBService.updateProject(project);
+            this.projectService.project$.next(project);
+          } else {
+            this.logger.error('No project available for image upload');
+          }
+        }
+      },
+      error: (error) => {
+        this.logger.error('Failed to read file for upload:', error);
+      },
     });
   }
 
