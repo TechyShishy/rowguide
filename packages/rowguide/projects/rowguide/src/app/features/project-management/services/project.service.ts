@@ -157,14 +157,6 @@ export class ProjectService {
       }
 
       project.id = projectId;
-      const savedProject = await this.indexedDBService.loadProject(projectId);
-
-      if (!savedProject) {
-        this.logger.error('Project not found in IndexedDB after save');
-        throw new Error('Failed to retrieve saved project');
-      }
-
-      project = savedProject;
       this.project$.next(project);
       this.ready.next(true);
 
