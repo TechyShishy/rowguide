@@ -82,8 +82,10 @@ yarn workspace rowguide run ng generate component features/[domain]/components/[
 
 - **Unit tests**: All services must have `.spec.ts` files
 - **Test location**: Co-located with source files
-- **Test runner**: Use `yarn workspace rowguide test` for Karma-based testing
-- **Chrome headless**: For CI/automation, run `yarn workspace rowguide test --browsers=ChromeHeadless`
+- **Test runner**: Use `yarn workspace rowguide test --browsers=ChromeHeadless` for Karma-based testing
+- **Headless mode**: Default for AI agents - runs tests without opening browser window
+- **Headed mode**: Use `yarn workspace rowguide test` if browser debugging is needed
+- **Watch mode**: Use `yarn workspace rowguide test --watch --browsers=ChromeHeadless` for continuous testing
 
 ## Build Verification Commands
 
