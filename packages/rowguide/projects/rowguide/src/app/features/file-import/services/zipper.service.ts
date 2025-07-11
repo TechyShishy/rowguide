@@ -11,7 +11,10 @@ export class ZipperService {
 
   expandSteps(steps: Step[]): Step[] {
     const rowSteps: Step[] = [];
-    steps.forEach((step, index) => {
+    // Filter out steps with invalid counts before processing
+    const validSteps = steps.filter((step) => step.count > 0);
+
+    validSteps.forEach((step, index) => {
       for (let i = 0; i < step.count; i++) {
         rowSteps.push(
           ModelFactory.createStep({
@@ -67,16 +70,21 @@ export class ZipperService {
       this.logger.warn('Row steps do not match:', steps1, steps2);
       return [];
     }
+
     const expandedZippedSteps: Step[] = [];
-    expandedSteps1.forEach((step, index) => {
-      expandedZippedSteps.push(step);
+    const maxLength = Math.max(expandedSteps1.length, expandedSteps2.length);
+
+    for (let index = 0; index < maxLength; index++) {
+      // Add step from first array if it exists
+      if (expandedSteps1[index]) {
+        expandedZippedSteps.push(expandedSteps1[index]);
+      }
+      // Add step from second array if it exists
       if (expandedSteps2[index]) {
         expandedZippedSteps.push(expandedSteps2[index]);
       }
-    });
-    if (expandedSteps1.length > expandedSteps2.length) {
-      expandedZippedSteps.push(expandedSteps1[expandedSteps1.length - 1]);
     }
+
     const zippedSteps = this.compressSteps(expandedZippedSteps);
     return zippedSteps;
   }

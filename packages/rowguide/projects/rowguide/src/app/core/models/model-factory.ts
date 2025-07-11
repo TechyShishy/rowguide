@@ -120,7 +120,7 @@ export class ModelFactory {
    *   count: 5
    * });
    *
-   * // Handles invalid count (negative values become 1)
+   * // Handles invalid count (negative or zero values become 1)
    * const safeStep = ModelFactory.createStep({
    *   id: 2,
    *   count: -10 // Will become 1
