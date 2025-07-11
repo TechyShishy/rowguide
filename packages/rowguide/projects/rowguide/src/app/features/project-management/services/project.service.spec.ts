@@ -65,7 +65,20 @@ describe('ProjectService', () => {
   it('should load Peyote project', () => {
     const projectName = 'Test Project';
     const data = 'some,data';
+
+    // Create a valid project with required data
     const project = new BeadProject();
+    project.rows = [
+      {
+        id: 1,
+        steps: [
+          { id: 1, count: 5, description: 'A' },
+          { id: 2, count: 3, description: 'B' },
+        ],
+      },
+    ];
+    project.position = { row: 0, step: 0 };
+
     peyoteShorthandService.toProject.and.returnValue(project);
 
     service.loadPeyote(projectName, data);

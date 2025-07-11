@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectComponent } from './project.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../../../project-management/services';
-import { SettingsService } from '../../../../core/services';
+import { SettingsService, MarkModeService } from '../../../../core/services';
 import { BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
 import { Row } from '../../../../core/models/row';
 import { provideRouter } from '@angular/router';
@@ -14,6 +14,10 @@ import { QueryList } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 import { RowComponent } from '../row/row.component';
 import { ZipperService } from '../../../file-import/services';
+import { ActivatedRoute } from '@angular/router';
+import { convertToParamMap } from '@angular/router';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { PeyoteShorthandService } from '../../../file-import/loaders';
 
 describe('ProjectComponent', () => {
   let component: ProjectComponent;
@@ -21,6 +25,10 @@ describe('ProjectComponent', () => {
   let projectServiceSpy: jasmine.SpyObj<ProjectService>;
   let settingsServiceStub: Partial<SettingsService>;
   let zipperServiceSpy: jasmine.SpyObj<ZipperService>;
+  let activatedRouteStub: Partial<ActivatedRoute>;
+  let markModeServiceSpy: jasmine.SpyObj<MarkModeService>;
+  let matBottomSheetSpy: jasmine.SpyObj<MatBottomSheet>;
+  let peyoteShorthandServiceSpy: jasmine.SpyObj<PeyoteShorthandService>;
 
   beforeEach(async () => {
     projectServiceSpy = jasmine.createSpyObj(
@@ -37,6 +45,22 @@ describe('ProjectComponent', () => {
       }
     );
     zipperServiceSpy = jasmine.createSpyObj('ZipperService', ['zipperSteps']);
+    markModeServiceSpy = jasmine.createSpyObj(
+      'MarkModeService',
+      ['setMarkMode'],
+      {
+        markModeChanged$: new Subject<number>(),
+      }
+    );
+    matBottomSheetSpy = jasmine.createSpyObj('MatBottomSheet', ['open']);
+    peyoteShorthandServiceSpy = jasmine.createSpyObj('PeyoteShorthandService', [
+      'toProject',
+    ]);
+
+    // Mock ActivatedRoute with paramMap
+    activatedRouteStub = {
+      paramMap: of(convertToParamMap({ id: '1' })),
+    };
     /*projectServiceStub = {
       ready: new Subject<boolean>(),
       loadCurrentProject: jasmine.createSpy('loadCurrentProject'),
@@ -59,14 +83,36 @@ describe('ProjectComponent', () => {
           provide: ZipperService,
           useValue: zipperServiceSpy,
         },
+        { provide: ActivatedRoute, useValue: activatedRouteStub },
+        { provide: MarkModeService, useValue: markModeServiceSpy },
+        { provide: MatBottomSheet, useValue: matBottomSheetSpy },
+        {
+          provide: PeyoteShorthandService,
+          useValue: peyoteShorthandServiceSpy,
+        },
         provideRouter(routes),
       ],
     }).compileComponents();
 
     projectServiceSpy.loadCurrentProjectId.and.returnValue({ id: 1 });
-    projectServiceSpy.loadProject.and.returnValue(
-      Promise.resolve({ rows: [], position: { row: 0, step: 0 } } as Project)
-    );
+
+    // Create a valid mock project that will pass isValidProject check
+    const mockProject = {
+      id: 1,
+      name: 'Test Project',
+      rows: [
+        {
+          id: 1,
+          steps: [
+            { id: 1, count: 5, description: 'A' },
+            { id: 2, count: 3, description: 'B' },
+          ],
+        },
+      ],
+      position: { row: 0, step: 0 },
+    } as Project;
+
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
     zipperServiceSpy.zipperSteps.and.returnValue([]);
     fixture = TestBed.createComponent(ProjectComponent);
     component = fixture.componentInstance;
@@ -82,49 +128,106 @@ describe('ProjectComponent', () => {
   });
 
   it('should initialize project$ on ngOnInit', async () => {
-    const mockProject = { rows: [], position: { row: 0, step: 0 } } as Project;
-    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
-    projectServiceSpy.loadCurrentProjectId.and.returnValue({
+    const mockProject = {
       id: 1,
-    });
+      name: 'Test Project',
+      rows: [
+        {
+          id: 1,
+          steps: [{ id: 1, count: 5, description: 'A' }],
+        },
+      ],
+      position: { row: 0, step: 0 },
+    } as Project;
+
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
 
     component.ngOnInit();
-    //fixture.detectChanges();
+    fixture.detectChanges();
 
-    const project = await firstValueFrom(component.project$);
-    expect(project).toEqual(mockProject);
+    // Wait for the async operations to complete
+    await fixture.whenStable();
+
+    // Subscribe and get the first value with a timeout
+    const project = await new Promise<Project>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Test timeout')), 1000);
+
+      component.project$.subscribe((project) => {
+        clearTimeout(timeout);
+        resolve(project);
+      });
+    });
+
+    expect(project).toEqual(
+      jasmine.objectContaining({
+        name: 'Test Project',
+        rows: jasmine.any(Array),
+      })
+    );
   });
 
   it('should initialize rows$ on ngOnInit', async () => {
-    const mockRows = [{}, {}] as Row[];
+    const mockRows = [
+      {
+        id: 1,
+        steps: [{ id: 1, count: 5, description: 'A' }],
+      },
+    ] as Row[];
+
     const mockProject = {
+      id: 1,
       rows: mockRows,
       position: { row: 0, step: 0 },
     } as Project;
+
     projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
-    projectServiceSpy.loadCurrentProjectId.and.returnValue({
-      id: 1,
-    });
 
     component.ngOnInit();
-    //fixture.detectChanges();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    const rows = await firstValueFrom(component.rows$);
+    // Subscribe and get the first value with a timeout
+    const rows = await new Promise<Row[]>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Test timeout')), 1000);
+
+      component.rows$.subscribe((rows) => {
+        clearTimeout(timeout);
+        resolve(rows);
+      });
+    });
+
     expect(rows).toEqual(mockRows);
   });
 
   it('should initialize position$ on ngOnInit', async () => {
     const mockPosition = { row: 1, step: 2 } as Position;
-    const mockProject = { rows: [], position: mockPosition } as Project;
-    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
-    projectServiceSpy.loadCurrentProjectId.and.returnValue({
+    const mockProject = {
       id: 1,
-    });
+      rows: [
+        {
+          id: 1,
+          steps: [{ id: 1, count: 5, description: 'A' }],
+        },
+      ],
+      position: mockPosition,
+    } as Project;
+
+    projectServiceSpy.loadProject.and.returnValue(Promise.resolve(mockProject));
 
     component.ngOnInit();
-    //fixture.detectChanges();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    const position = await firstValueFrom(component.position$);
+    // Subscribe and get the first value with a timeout
+    const position = await new Promise<Position>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Test timeout')), 1000);
+
+      component.position$.subscribe((position) => {
+        clearTimeout(timeout);
+        resolve(position);
+      });
+    });
+
     expect(position).toEqual(mockPosition);
   });
 

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ProjectInspectorComponent } from './project-inspector.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../../services';
@@ -52,7 +53,11 @@ describe('ProjectInspectorComponent', () => {
     mockImage$ = new BehaviorSubject<string>('');
 
     await TestBed.configureTestingModule({
-      imports: [ProjectInspectorComponent, LoggerTestingModule],
+      imports: [
+        ProjectInspectorComponent,
+        LoggerTestingModule,
+        HttpClientTestingModule,
+      ],
       providers: [
         { provide: ProjectService, useValue: mockProjectService },
         { provide: SettingsService, useValue: mockSettingsService },
