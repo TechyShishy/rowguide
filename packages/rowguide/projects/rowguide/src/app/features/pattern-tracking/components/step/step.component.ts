@@ -38,11 +38,24 @@ import { RowComponent } from '../row/row.component';
 export class StepComponent implements HierarchicalList, OnInit {
   @Input() step!: Step;
   highlighted: boolean = false;
-  isCurrentStep = false;
-  isZoomed = false;
-  isFirstStep = false;
-  isLastStep = false;
-  marked: number = 0;
+  isCurrentStep = false; // Can be set externally (via onClick)
+  marked: number = 0; // Can be set externally (via onClick in mark mode)
+
+  // Private backing fields for reactive properties
+  private _isZoomed = false;
+  private _isFirstStep = false;
+  private _isLastStep = false;
+
+  // Read-only getters for properties managed by internal observables
+  get isZoomed(): boolean {
+    return this._isZoomed;
+  }
+  get isFirstStep(): boolean {
+    return this._isFirstStep;
+  }
+  get isLastStep(): boolean {
+    return this._isLastStep;
+  }
 
   @Input() index: number = 0;
   @Input() row!: RowComponent;
@@ -68,13 +81,13 @@ export class StepComponent implements HierarchicalList, OnInit {
       this.flamService.isLastStep(this.row.index, this.step),
     ]).subscribe(([flammarkers, zoom, isFirstStep, isLastStep]) => {
       if (flammarkers) {
-        this.isFirstStep = isFirstStep;
-        this.isLastStep = isLastStep;
+        this._isFirstStep = isFirstStep;
+        this._isLastStep = isLastStep;
       } else {
-        this.isFirstStep = false;
-        this.isLastStep = false;
+        this._isFirstStep = false;
+        this._isLastStep = false;
       }
-      this.isZoomed = zoom;
+      this._isZoomed = zoom;
     });
 
     /*if (this.settingsService.flammarkers$.value) {
