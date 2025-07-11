@@ -26,10 +26,10 @@ export class MigrationDbService {
   }
   async updateMigration(key: number, migration: boolean): Promise<void> {
     const db = await this.indexedDbService.openDB();
-    db.put('migrations', migration, key);
+    await db.put('migrations', migration, key);
   }
   async deleteMigration(key: number): Promise<void> {
     const db = await this.indexedDbService.openDB();
-    db.delete('migrations', key);
+    await db.delete('migrations', key);
   }
 }
