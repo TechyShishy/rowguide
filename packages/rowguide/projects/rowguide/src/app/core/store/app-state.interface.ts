@@ -1,0 +1,144 @@
+/**
+ * Root application state interface for Rowguide pattern tracking application.
+ *
+ * This interface defines the complete state tree structure following
+ * domain-driven design principles with clear separation of concerns.
+ */
+
+import { Project } from '../models/project';
+import { Position } from '../models/position';
+import { Row } from '../models/row';
+
+/**
+ * Root application state
+ */
+export interface AppState {
+  readonly projects: ProjectState;
+  readonly ui: UiState;
+  readonly system: SystemState;
+}
+
+/**
+ * Project domain state
+ */
+export interface ProjectState {
+  readonly entities: { [id: number]: Project };
+  readonly currentProjectId: number | null;
+  readonly loading: boolean;
+  readonly error: string | null;
+  readonly lastSaved: Date | null;
+  readonly isDirty: boolean;
+}
+
+/**
+ * UI state for pattern tracking interface
+ */
+export interface UiState {
+  readonly currentPosition: Position | null;
+  readonly selectedStepId: number | null;
+  readonly zoomLevel: number;
+  readonly sidebarOpen: boolean;
+  readonly beadCountVisible: boolean;
+  readonly darkMode: boolean;
+  readonly notifications: UiNotification[];
+}
+
+/**
+ * System state for performance and diagnostics
+ */
+export interface SystemState {
+  readonly isOnline: boolean;
+  readonly storageQuota: StorageQuota | null;
+  readonly performanceMetrics: PerformanceMetrics;
+  readonly featureFlags: FeatureFlags;
+}
+
+/**
+ * UI notification for user feedback
+ */
+export interface UiNotification {
+  readonly id: string;
+  readonly message: string;
+  readonly type: 'info' | 'success' | 'warning' | 'error';
+  readonly duration?: number;
+  readonly actions?: NotificationAction[];
+  readonly timestamp: Date;
+}
+
+/**
+ * Notification action button
+ */
+export interface NotificationAction {
+  readonly label: string;
+  readonly action: string;
+  readonly primary?: boolean;
+}
+
+/**
+ * Storage quota information
+ */
+export interface StorageQuota {
+  readonly used: number;
+  readonly available: number;
+  readonly total: number;
+  readonly percentage: number;
+}
+
+/**
+ * Performance metrics for monitoring
+ */
+export interface PerformanceMetrics {
+  readonly renderTime: number;
+  readonly memoryUsage: number;
+  readonly errorCount: number;
+  readonly lastUpdate: Date;
+}
+
+/**
+ * Feature flags for progressive enhancement
+ */
+export interface FeatureFlags {
+  readonly virtualScrolling: boolean;
+  readonly advancedPatterns: boolean;
+  readonly exportFeatures: boolean;
+  readonly betaFeatures: boolean;
+}
+
+/**
+ * Initial state factory
+ */
+export const createInitialState = (): AppState => ({
+  projects: {
+    entities: {},
+    currentProjectId: null,
+    loading: false,
+    error: null,
+    lastSaved: null,
+    isDirty: false,
+  },
+  ui: {
+    currentPosition: null,
+    selectedStepId: null,
+    zoomLevel: 1.0,
+    sidebarOpen: true,
+    beadCountVisible: false,
+    darkMode: false,
+    notifications: [],
+  },
+  system: {
+    isOnline: navigator.onLine,
+    storageQuota: null,
+    performanceMetrics: {
+      renderTime: 0,
+      memoryUsage: 0,
+      errorCount: 0,
+      lastUpdate: new Date(),
+    },
+    featureFlags: {
+      virtualScrolling: true,
+      advancedPatterns: false,
+      exportFeatures: true,
+      betaFeatures: false,
+    },
+  },
+});
