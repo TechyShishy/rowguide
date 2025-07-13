@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
 
+import { ErrorHandlerService } from './error-handler.service';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,7 +19,10 @@ export class SettingsService {
   public flamsort$ = new BehaviorSubject<string>('keyAsc');
   public projectsort$ = new BehaviorSubject<string>('dateAsc');
 
-  constructor(private logger: NGXLogger) {
+  constructor(
+    private logger: NGXLogger,
+    private errorHandler: ErrorHandlerService
+  ) {
     this.loadSettings();
   }
   saveSettings(settings: Settings) {
@@ -25,8 +30,19 @@ export class SettingsService {
       localStorage.setItem('settings', JSON.stringify(settings));
       this.ready.next(true);
     } catch (error) {
-      // Handle localStorage errors gracefully (quota exceeded, etc.)
-      this.logger.warn('Failed to save settings to localStorage:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveSettings',
+          details: 'Failed to save settings to localStorage',
+          settingsKeys: Object.keys(settings),
+          settingsCount: Object.keys(settings).length,
+          storageType: 'localStorage',
+          settings: settings, // Restore: useful for debugging, minimal risk in local app
+        },
+        'Unable to save your settings. They may not persist after refreshing.',
+        'medium'
+      );
       this.ready.next(true); // Still emit ready even if save failed
     }
   }
@@ -51,8 +67,17 @@ export class SettingsService {
         }
       }
     } catch (error) {
-      // Handle localStorage access errors and JSON parsing errors gracefully
-      this.logger.warn('Failed to load settings from localStorage:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadSettings',
+          details: 'Failed to load settings from localStorage',
+          storageType: 'localStorage',
+          storageKey: 'settings',
+        },
+        'Unable to load your saved settings. Default settings will be used.',
+        'medium'
+      );
       // Service will maintain default values when errors occur
     }
   }

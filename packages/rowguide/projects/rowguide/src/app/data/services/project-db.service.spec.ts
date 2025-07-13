@@ -5,6 +5,10 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectDbService } from './project-db.service';
 import { IndexedDbService } from './indexed-db.service';
 import {
+  ErrorHandlerService,
+  ErrorContext,
+} from '../../core/services/error-handler.service';
+import {
   Project,
   ModelFactory,
   isValidProject,
@@ -34,6 +38,7 @@ describe('ProjectDbService', () => {
   let service: ProjectDbService;
   let indexedDbServiceSpy: jasmine.SpyObj<IndexedDbService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
   let mockDb: jasmine.SpyObj<any>;
 
   // Test data factory
@@ -77,6 +82,119 @@ describe('ProjectDbService', () => {
     ]);
     indexedDbServiceSpy = jasmine.createSpyObj('IndexedDbService', ['openDB']);
     loggerSpy = jasmine.createSpyObj('NGXLogger', ['warn', 'error']);
+    errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
+
+    // Configure ErrorHandlerService mock to work with structured context objects
+    errorHandlerSpy.handleError.and.callFake(
+      (
+        error: any,
+        context: string | ErrorContext,
+        userMessage?: string,
+        severity?: string
+      ) => {
+        // Handle structured context objects
+        if (typeof context === 'object' && context !== null) {
+          const operation = context['operation'];
+          const details = context['details'];
+
+          if (
+            operation === 'loadProject' &&
+            details === 'invalid key provided'
+          ) {
+            loggerSpy.warn('Invalid project key provided:', context['key']);
+          } else if (
+            operation === 'loadProjects' &&
+            details === 'Failed to load projects from IndexedDB'
+          ) {
+            loggerSpy.error('Failed to load projects:', error);
+          } else if (
+            operation === 'addProject' &&
+            details === 'Failed to save project to database'
+          ) {
+            loggerSpy.error('Failed to add project:', error);
+          } else if (
+            operation === 'updateProject' &&
+            details === 'Failed to update project in database'
+          ) {
+            loggerSpy.error('Failed to update project:', error);
+          } else if (
+            operation === 'deleteProject' &&
+            details === 'Failed to delete project from database'
+          ) {
+            loggerSpy.error('Failed to delete project:', error);
+          } else if (
+            operation === 'loadProject' &&
+            details === 'Failed to load project from database'
+          ) {
+            loggerSpy.error('Failed to load project:', error);
+          } else if (
+            operation === 'loadProjects' &&
+            details === 'project validation failed'
+          ) {
+            loggerSpy.warn(
+              'Invalid project found in database:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'addProject' &&
+            details === 'Project validation failed'
+          ) {
+            loggerSpy.error(
+              'Cannot save invalid project:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'updateProject' &&
+            details === 'Missing ID for project'
+          ) {
+            loggerSpy.error(
+              'Cannot update project without valid ID:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'updateProject' &&
+            details === 'Project validation failed'
+          ) {
+            loggerSpy.error(
+              'Cannot update invalid project:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'deleteProject' &&
+            details === 'Missing ID for project'
+          ) {
+            loggerSpy.warn(
+              'Cannot delete project without valid ID:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'loadProject' &&
+            details === 'Project validation failed'
+          ) {
+            loggerSpy.error(
+              'Invalid project data loaded from database:',
+              context['invalidProject']
+            );
+          } else {
+            // Fallback for unhandled structured contexts
+            loggerSpy.error('Operation failed:', error);
+          }
+        } else {
+          // Fallback for any remaining string contexts
+          loggerSpy.error('Operation failed:', error);
+        }
+
+        return {
+          error: {
+            message: error?.message || error?.toString() || 'Unknown error',
+          },
+          userMessage: userMessage || 'Operation failed',
+          severity: severity || 'medium',
+        };
+      }
+    );
 
     // Configure TestBed
     TestBed.configureTestingModule({
@@ -85,6 +203,7 @@ describe('ProjectDbService', () => {
         ProjectDbService,
         { provide: IndexedDbService, useValue: indexedDbServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
       ],
     });
 
@@ -93,6 +212,9 @@ describe('ProjectDbService', () => {
       IndexedDbService
     ) as jasmine.SpyObj<IndexedDbService>;
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    errorHandlerSpy = TestBed.inject(
+      ErrorHandlerService
+    ) as jasmine.SpyObj<ErrorHandlerService>;
 
     // Default mock setup
     indexedDbServiceSpy.openDB.and.returnValue(Promise.resolve(mockDb));

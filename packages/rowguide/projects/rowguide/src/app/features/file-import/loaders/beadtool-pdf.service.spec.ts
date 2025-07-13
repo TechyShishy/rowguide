@@ -3,13 +3,19 @@ import { NGXLogger } from 'ngx-logger';
 import { BeadtoolPdfService } from './beadtool-pdf.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { PdfjslibService } from '../services/pdfjslib.service';
+import { ErrorHandlerService } from '../../../core/services';
 import { firstValueFrom } from 'rxjs';
-import { PDFDocumentLoadingTask, PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import {
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+  PDFPageProxy,
+} from 'pdfjs-dist';
 
 describe('BeadtoolPdfService', () => {
   let service: BeadtoolPdfService;
   let pdfjslibServiceSpy: jasmine.SpyObj<PdfjslibService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   // Test data constants
   const docDataPlain = [
@@ -55,7 +61,9 @@ describe('BeadtoolPdfService', () => {
     } as unknown as PDFDocumentProxy;
   };
 
-  const createMockPDFDocumentTask = (pdfDoc: PDFDocumentProxy): PDFDocumentLoadingTask => {
+  const createMockPDFDocumentTask = (
+    pdfDoc: PDFDocumentProxy
+  ): PDFDocumentLoadingTask => {
     return {
       promise: Promise.resolve(pdfDoc),
       onProgress: undefined,
@@ -73,6 +81,9 @@ describe('BeadtoolPdfService', () => {
       'warn',
       'error',
     ]);
+    errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
     const pdfjslibSpy = jasmine.createSpyObj('PdfjslibService', [
       'getDocument',
     ]);
@@ -83,6 +94,7 @@ describe('BeadtoolPdfService', () => {
         BeadtoolPdfService,
         { provide: PdfjslibService, useValue: pdfjslibSpy },
         { provide: NGXLogger, useValue: loggerSpy },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
       ],
     });
 
@@ -432,9 +444,16 @@ describe('BeadtoolPdfService', () => {
         );
         fail('Expected error to be thrown');
       } catch (error) {
-        expect(error).toBe('Failed to get canvas context');
-        expect(loggerSpy.error).toHaveBeenCalledWith(
-          'Failed to get canvas context'
+        expect((error as Error).message).toBe('Failed to get canvas context');
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          {
+            operation: 'renderPageToCanvas',
+            details: 'Canvas getContext(2d) returned null',
+            canvasSize: { width: 100, height: 200 },
+          },
+          undefined,
+          'medium'
         );
       }
     });
@@ -507,9 +526,18 @@ describe('BeadtoolPdfService', () => {
         );
         fail('Expected error to be thrown');
       } catch (error) {
-        expect(error).toBe('Failed to create blob from canvas');
-        expect(loggerSpy.error).toHaveBeenCalledWith(
+        expect((error as Error).message).toBe(
           'Failed to create blob from canvas'
+        );
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          {
+            operation: 'canvasToArrayBuffer',
+            details: 'Canvas toBlob returned null',
+            canvasSize: { width: 100, height: 200 },
+          },
+          undefined,
+          'medium'
         );
       }
     });
@@ -570,9 +598,18 @@ describe('BeadtoolPdfService', () => {
         );
         fail('Expected error to be thrown');
       } catch (error) {
-        expect(error).toBe('Failed to read blob as ArrayBuffer');
-        expect(loggerSpy.error).toHaveBeenCalledWith(
+        expect((error as Error).message).toBe(
           'Failed to read blob as ArrayBuffer'
+        );
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          {
+            operation: 'canvasToArrayBuffer',
+            details: 'FileReader result is null',
+            blobSize: jasmine.any(Number),
+          },
+          undefined,
+          'medium'
         );
       }
     });
@@ -676,10 +713,14 @@ describe('BeadtoolPdfService', () => {
   describe('Logging', () => {
     it('should log trace information during PDF processing', async () => {
       const mockPdfDoc = createMockPDFDoc(docDataBeadtoolComments);
-      pdfjslibServiceSpy.getDocument.and.returnValue(createMockPDFDocumentTask(mockPdfDoc));
+      pdfjslibServiceSpy.getDocument.and.returnValue(
+        createMockPDFDocumentTask(mockPdfDoc)
+      );
 
       const buffer = new ArrayBuffer(8);
-      await firstValueFrom(service.loadDocument(new File([buffer], 'test.pdf')));
+      await firstValueFrom(
+        service.loadDocument(new File([buffer], 'test.pdf'))
+      );
 
       expect(loggerSpy.trace).toHaveBeenCalledWith(
         'PDF text:',

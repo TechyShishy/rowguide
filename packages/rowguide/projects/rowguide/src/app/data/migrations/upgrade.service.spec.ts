@@ -7,6 +7,7 @@ import { ProjectDbService } from '../services';
 import { ZipperService } from '../../features/file-import/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Project, Step, Row, ModelFactory } from '../../core/models';
+import { ErrorHandlerService } from '../../core/services';
 
 /**
  * @fileoverview Comprehensive Test Suite for UpgradeService
@@ -27,6 +28,7 @@ describe('UpgradeService', () => {
   let migrationDbServiceSpy: jasmine.SpyObj<MigrationDbService>;
   let zipperServiceSpy: jasmine.SpyObj<ZipperService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   // Test data factories for creating consistent test projects
   const createTestProject = (overrides: Partial<Project> = {}): Project => {
@@ -108,6 +110,9 @@ describe('UpgradeService', () => {
       'error',
       'debug',
     ]);
+    errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
 
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
@@ -117,6 +122,7 @@ describe('UpgradeService', () => {
         { provide: MigrationDbService, useValue: migrationDbServiceSpy },
         { provide: ZipperService, useValue: zipperServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
       ],
     });
 
@@ -255,6 +261,15 @@ describe('UpgradeService', () => {
 
       await expectAsync(service.doNewMigrations()).toBeRejected();
       expect(service.applyMigration).not.toHaveBeenCalled();
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'doNewMigrations',
+          details: 'Failed to apply database migrations',
+        }),
+        'Unable to upgrade your data. Please restart the application and try again.',
+        'critical'
+      );
     });
   });
 
@@ -265,13 +280,27 @@ describe('UpgradeService', () => {
       expect(loggerSpy.info).toHaveBeenCalledWith('Applying migration ', 1);
     });
 
-    it('should handle unknown migration IDs gracefully', () => {
+    it('should handle unknown migration IDs gracefully', async () => {
       spyOn(service, 'migration1');
 
-      service.applyMigration(999);
+      try {
+        await service.applyMigration(999);
+      } catch (error) {
+        // Expected to throw error for unknown migration ID
+      }
 
       expect(loggerSpy.info).toHaveBeenCalledWith('Applying migration ', 999);
       expect(service.migration1).not.toHaveBeenCalled();
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'applyMigration',
+          details: 'Failed to apply migration 999',
+          migrationId: 999,
+        }),
+        'Data migration failed. Your data may be in an inconsistent state.',
+        'critical'
+      );
     });
 
     it('should route migration ID 1 to migration1 method', () => {
@@ -385,6 +414,15 @@ describe('UpgradeService', () => {
       );
 
       await expectAsync(service.migration1()).toBeRejected();
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'migration1',
+          details: 'Failed to execute data migration for row restructuring',
+        }),
+        'Data migration failed. Your projects may not display correctly.',
+        'critical'
+      );
     });
 
     it('should handle project update errors', async () => {
@@ -398,6 +436,15 @@ describe('UpgradeService', () => {
 
       // Now that we fixed the bug, the service properly awaits updateProject and propagates errors
       await expectAsync(service.migration1()).toBeRejected();
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'migration1',
+          details: 'Failed to execute data migration for row restructuring',
+        }),
+        'Data migration failed. Your projects may not display correctly.',
+        'critical'
+      );
     });
 
     it('should handle zipper service errors gracefully', async () => {
@@ -412,6 +459,15 @@ describe('UpgradeService', () => {
         fail('Expected migration1 to throw an error');
       } catch (error) {
         expect(error).toBeDefined();
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          jasmine.objectContaining({
+            operation: 'migration1',
+            details: 'Failed to execute data migration for row restructuring',
+          }),
+          'Data migration failed. Your projects may not display correctly.',
+          'critical'
+        );
       }
     });
 

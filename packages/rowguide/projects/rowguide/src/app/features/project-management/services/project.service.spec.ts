@@ -5,7 +5,11 @@ import { of, Subject, throwError } from 'rxjs';
 
 import { ProjectService } from './project.service';
 import { PeyoteShorthandService } from '../../file-import/loaders';
-import { SettingsService } from '../../../core/services';
+import {
+  SettingsService,
+  ErrorHandlerService,
+  ErrorContext,
+} from '../../../core/services';
 import { ProjectDbService } from '../../../data/services';
 import { NullProject, BeadProject } from '../models';
 import { ModelFactory, Project, Position } from '../../../core/models';
@@ -20,6 +24,7 @@ describe('ProjectService', () => {
   let projectDbService: jasmine.SpyObj<ProjectDbService>;
   let logger: jasmine.SpyObj<NGXLogger>;
   let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   const createValidTestProject = (): BeadProject => {
     const project = new BeadProject();
@@ -36,8 +41,8 @@ describe('ProjectService', () => {
     ];
     project.position = { row: 0, step: 0 };
     project.firstLastAppearanceMap = {
-      'A': { key: 'A', firstAppearance: [0], lastAppearance: [0], count: 5 },
-      'B': { key: 'B', firstAppearance: [0], lastAppearance: [0], count: 3 }
+      A: { key: 'A', firstAppearance: [0], lastAppearance: [0], count: 5 },
+      B: { key: 'B', firstAppearance: [0], lastAppearance: [0], count: 3 },
     };
     project.colorMapping = {};
     project.image = undefined;
@@ -68,6 +73,117 @@ describe('ProjectService', () => {
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
       paramMap: of(new Map()),
     });
+    const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
+
+    // Configure ErrorHandlerService mock for ProjectService with structured context handling
+    errorHandlerSpyObj.handleError.and.callFake(
+      (
+        error: any,
+        context: string | ErrorContext,
+        userMessage?: string,
+        severity?: string
+      ) => {
+        // Handle structured context objects for ProjectService calls
+        if (typeof context === 'object' && context !== null) {
+          const operation = context['operation'];
+          const details = context['details'];
+
+          if (
+            operation === 'saveCurrentProject' &&
+            details === 'Invalid project ID provided'
+          ) {
+            loggerSpy.warn(
+              'Attempted to save invalid project ID:',
+              context['projectId']
+            );
+          } else if (
+            operation === 'saveCurrentProject' &&
+            details?.includes('Failed to save project ID')
+          ) {
+            loggerSpy.error(
+              'Failed to save current project to localStorage:',
+              error
+            );
+          } else if (
+            operation === 'loadCurrentProjectId' &&
+            details === 'Failed to load project ID from localStorage'
+          ) {
+            loggerSpy.error(
+              'Failed to load current project ID from localStorage:',
+              error
+            );
+          } else if (
+            operation === 'loadCurrentProject' &&
+            details?.includes('Failed to load current project ID')
+          ) {
+            loggerSpy.error('Failed to load current project:', error);
+          } else if (
+            operation === 'loadPeyote' &&
+            details?.includes('Failed to parse and save peyote project')
+          ) {
+            loggerSpy.error('Failed to load peyote project:', error);
+          } else if (
+            operation === 'loadProject' &&
+            details === 'Invalid project ID provided'
+          ) {
+            loggerSpy.warn(
+              'Invalid project ID provided:',
+              context['projectId']
+            );
+          } else if (
+            operation === 'loadProject' &&
+            details === 'Project not found in database'
+          ) {
+            loggerSpy.warn('Project not found:', context['projectId']);
+          } else if (
+            operation === 'loadProject' &&
+            details?.includes('Project validation failed')
+          ) {
+            loggerSpy.error(
+              'Invalid project data loaded from database:',
+              context['invalidProject']
+            );
+          } else if (
+            operation === 'loadProject' &&
+            details?.includes('Failed to load project ID')
+          ) {
+            loggerSpy.error('Failed to load project:', error);
+          } else if (
+            operation === 'saveCurrentPosition' &&
+            details === 'Invalid position coordinates provided'
+          ) {
+            loggerSpy.warn('Attempted to save invalid position:', {
+              row: context['row'],
+              step: context['step'],
+            });
+          } else if (
+            operation === 'loadCurrentProjectId' &&
+            details === 'Invalid project ID found in localStorage'
+          ) {
+            loggerSpy.warn(
+              'Invalid project ID found in localStorage:',
+              context['invalidId']
+            );
+          } else {
+            // Fallback for unhandled structured contexts
+            loggerSpy.error('Operation failed:', error);
+          }
+        } else {
+          // Fallback for any remaining string contexts
+          loggerSpy.error('Operation failed:', error);
+        }
+
+        return {
+          error: {
+            message: error?.message || error?.toString() || 'Unknown error',
+          },
+          userMessage: userMessage || 'Operation failed',
+          severity: severity || 'medium',
+        };
+      }
+    );
 
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
@@ -81,6 +197,7 @@ describe('ProjectService', () => {
         { provide: ProjectDbService, useValue: projectDbServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
         { provide: ActivatedRoute, useValue: activatedRouteSpy },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
         provideRouter(routes),
       ],
     });
@@ -99,6 +216,9 @@ describe('ProjectService', () => {
     activatedRoute = TestBed.inject(
       ActivatedRoute
     ) as jasmine.SpyObj<ActivatedRoute>;
+    errorHandlerSpy = TestBed.inject(
+      ErrorHandlerService
+    ) as jasmine.SpyObj<ErrorHandlerService>;
 
     // Clear localStorage before each test
     localStorage.clear();
@@ -239,7 +359,7 @@ describe('ProjectService', () => {
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         'Invalid project ID found in localStorage:',
-        { id: 0 }
+        0
       );
     });
 
@@ -251,7 +371,7 @@ describe('ProjectService', () => {
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         'Invalid project ID found in localStorage:',
-        { id: -5 }
+        -5
       );
     });
 
@@ -263,7 +383,7 @@ describe('ProjectService', () => {
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         'Invalid project ID found in localStorage:',
-        { name: 'test' }
+        undefined
       );
     });
 

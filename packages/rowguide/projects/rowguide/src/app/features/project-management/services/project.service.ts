@@ -12,7 +12,7 @@ import {
   ModelFactory,
   SafeAccess,
 } from '../../../core/models';
-import { SettingsService } from '../../../core/services';
+import { SettingsService, ErrorHandlerService } from '../../../core/services';
 import { ProjectDbService } from '../../../data/services';
 import { PeyoteShorthandService } from '../../file-import/loaders';
 import { StepComponent } from '../../pattern-tracking/components/step/step.component';
@@ -33,7 +33,8 @@ export class ProjectService {
     private settingsService: SettingsService,
     private logger: NGXLogger,
     private indexedDBService: ProjectDbService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandler: ErrorHandlerService
   ) {
     this.settingsService.ready.subscribe(() => {
       this.loadCurrentProject();
@@ -44,7 +45,16 @@ export class ProjectService {
    */
   async saveCurrentProject(id: number): Promise<void> {
     if (id <= 0) {
-      this.logger.warn('Attempted to save invalid project ID:', id);
+      this.errorHandler.handleError(
+        new Error('Attempted to save invalid project ID'),
+        {
+          operation: 'saveCurrentProject',
+          details: 'Invalid project ID provided',
+          projectId: id,
+        },
+        undefined,
+        'medium'
+      );
       return;
     }
 
@@ -54,9 +64,16 @@ export class ProjectService {
         JSON.stringify(<CurrentProject>{ id })
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to save current project to localStorage:',
-        error
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveCurrentProject',
+          details: `Failed to save project ID: ${id} to localStorage`,
+          projectId: id,
+          storageType: 'localStorage',
+        },
+        'Unable to remember your current project. Settings may not persist.',
+        'medium'
       );
     }
   }
@@ -66,7 +83,17 @@ export class ProjectService {
    */
   async saveCurrentPosition(row: number, step: number): Promise<void> {
     if (row < 0 || step < 0) {
-      this.logger.warn('Attempted to save invalid position:', { row, step });
+      this.errorHandler.handleError(
+        new Error('Attempted to save invalid position'),
+        {
+          operation: 'saveCurrentPosition',
+          details: 'Invalid position coordinates provided',
+          row: row,
+          step: step,
+        },
+        undefined,
+        'medium'
+      );
       return;
     }
 
@@ -85,7 +112,17 @@ export class ProjectService {
           this.indexedDBService.updateProject(project);
         },
         error: (error) => {
-          this.logger.error('Failed to save current position:', error);
+          this.errorHandler.handleError(
+            error,
+            {
+              operation: 'saveCurrentPosition',
+              details: 'Failed to save position coordinates',
+              row: row,
+              step: step,
+            },
+            'Unable to save your current position. Progress may not be saved.',
+            'medium'
+          );
         },
       });
   }
@@ -102,15 +139,31 @@ export class ProjectService {
 
       const parsed = JSON.parse(data) as CurrentProject;
       if (!parsed.id || parsed.id <= 0) {
-        this.logger.warn('Invalid project ID found in localStorage:', parsed);
+        this.errorHandler.handleError(
+          new Error('Invalid project ID found in localStorage'),
+          {
+            operation: 'loadCurrentProjectId',
+            details: 'Invalid project ID found in localStorage',
+            invalidId: parsed?.id,
+            storageType: 'localStorage',
+          },
+          undefined,
+          'medium'
+        );
         return null;
       }
 
       return parsed;
     } catch (error) {
-      this.logger.error(
-        'Failed to load current project ID from localStorage:',
-        error
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadCurrentProjectId',
+          details: 'Failed to load project ID from localStorage',
+          storageType: 'localStorage',
+        },
+        'Unable to restore your last project. You may need to select a project manually.',
+        'medium'
       );
       return null;
     }
@@ -129,7 +182,16 @@ export class ProjectService {
     try {
       await this.loadProject(currentProject.id);
     } catch (error) {
-      this.logger.error('Failed to load current project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadCurrentProject',
+          details: `Failed to load current project ID: ${currentProject.id}`,
+          projectId: currentProject.id,
+        },
+        'Unable to load your current project. Please select a project manually.',
+        'medium'
+      );
     }
   }
   /**
@@ -137,7 +199,19 @@ export class ProjectService {
    */
   async loadPeyote(projectName: string, data: string): Promise<Project> {
     if (!projectName?.trim() || !data?.trim()) {
-      throw new Error('Project name and data are required');
+      const error = new Error('Project name and data are required');
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadPeyote',
+          details: 'Missing required project data',
+          projectName: projectName,
+          dataLength: data?.length || 0,
+        },
+        'Please provide both a project name and pattern data.',
+        'high'
+      );
+      throw error;
     }
 
     try {
@@ -162,7 +236,17 @@ export class ProjectService {
 
       return project;
     } catch (error) {
-      this.logger.error('Failed to load peyote project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadPeyote',
+          details: 'Failed to parse and save peyote project',
+          projectName: projectName,
+          dataLength: data?.length || 0,
+        },
+        'Unable to import the pattern. Please check the pattern data format.',
+        'high'
+      );
       throw error;
     }
   }
@@ -172,7 +256,16 @@ export class ProjectService {
    */
   async loadProject(id: number): Promise<Project | null> {
     if (!id || id <= 0) {
-      this.logger.warn('Invalid project ID provided:', id);
+      this.errorHandler.handleError(
+        new Error('Invalid project ID provided'),
+        {
+          operation: 'loadProject',
+          details: 'Invalid project ID provided',
+          projectId: id,
+        },
+        undefined,
+        'medium'
+      );
       this.project$.next(new NullProject());
       this.ready.next(true);
       return null;
@@ -182,16 +275,32 @@ export class ProjectService {
       const project = await this.indexedDBService.loadProject(id);
 
       if (!project) {
-        this.logger.warn('Project not found:', id);
+        this.errorHandler.handleError(
+          new Error('Project not found'),
+          {
+            operation: 'loadProject',
+            details: 'Project not found in database',
+            projectId: id,
+          },
+          'The selected project could not be found. It may have been deleted.',
+          'medium'
+        );
         this.project$.next(new NullProject());
         this.ready.next(true);
         return null;
       }
 
       if (!isValidProject(project)) {
-        this.logger.error(
-          'Invalid project data loaded from database:',
-          project
+        this.errorHandler.handleError(
+          new Error('Invalid project data loaded from database'),
+          {
+            operation: 'loadProject',
+            details: `Project validation failed for ID: ${id}`,
+            projectId: id,
+            invalidProject: project,
+          },
+          'The project data appears to be corrupted. Please try selecting a different project.',
+          'high'
         );
         this.project$.next(new NullProject());
         this.ready.next(true);
@@ -202,7 +311,16 @@ export class ProjectService {
       this.ready.next(true);
       return project;
     } catch (error) {
-      this.logger.error('Failed to load project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadProject',
+          details: `Failed to load project ID: ${id}`,
+          projectId: id,
+        },
+        'Unable to load the selected project. Please try again or select a different project.',
+        'high'
+      );
       this.project$.next(new NullProject());
       this.ready.next(true);
       return null;

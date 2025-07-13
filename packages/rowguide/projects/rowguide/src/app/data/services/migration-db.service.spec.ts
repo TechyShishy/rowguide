@@ -4,6 +4,7 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 
 import { MigrationDbService } from './migration-db.service';
 import { IndexedDbService } from './indexed-db.service';
+import { ErrorHandlerService, ErrorContext } from '../../core/services';
 
 /**
  * @fileoverview Comprehensive Test Suite for MigrationDbService
@@ -30,13 +31,85 @@ describe('MigrationDbService', () => {
   let service: MigrationDbService;
   let indexedDbServiceSpy: jasmine.SpyObj<IndexedDbService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
   let mockDb: jasmine.SpyObj<any>;
 
   beforeEach(() => {
     // Create spy objects
-    mockDb = jasmine.createSpyObj('IDBPDatabase', ['getAll', 'get', 'add', 'put', 'delete']);
+    mockDb = jasmine.createSpyObj('IDBPDatabase', [
+      'getAll',
+      'get',
+      'add',
+      'put',
+      'delete',
+    ]);
     indexedDbServiceSpy = jasmine.createSpyObj('IndexedDbService', ['openDB']);
-    loggerSpy = jasmine.createSpyObj('NGXLogger', ['warn', 'error', 'debug', 'info']);
+    loggerSpy = jasmine.createSpyObj('NGXLogger', [
+      'warn',
+      'error',
+      'debug',
+      'info',
+    ]);
+    errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
+
+    // Configure ErrorHandlerService mock to handle structured context objects
+    errorHandlerSpy.handleError.and.callFake(
+      (
+        error: any,
+        context: string | ErrorContext,
+        userMessage?: string,
+        severity?: string
+      ) => {
+        // Handle structured context objects for MigrationDbService
+        if (typeof context === 'object' && context !== null) {
+          const operation = context['operation'];
+          const details = context['details'];
+
+          if (
+            operation === 'loadMigrations' &&
+            details === 'Failed to load migration records from IndexedDB'
+          ) {
+            loggerSpy.error('Failed to load migrations:', error);
+          } else if (
+            operation === 'loadMigration' &&
+            details === 'Failed to load migration from IndexedDB'
+          ) {
+            loggerSpy.error('Failed to load migration:', error);
+          } else if (
+            operation === 'addMigration' &&
+            details === 'Failed to record migration in IndexedDB'
+          ) {
+            loggerSpy.error('Failed to add migration:', error);
+          } else if (
+            operation === 'updateMigration' &&
+            details === 'Failed to update migration in IndexedDB'
+          ) {
+            loggerSpy.error('Failed to update migration:', error);
+          } else if (
+            operation === 'deleteMigration' &&
+            details === 'Failed to delete migration from IndexedDB'
+          ) {
+            loggerSpy.error('Failed to delete migration:', error);
+          } else {
+            // Fallback for unhandled structured contexts
+            loggerSpy.error('Operation failed:', error);
+          }
+        } else {
+          // Fallback for any remaining string contexts
+          loggerSpy.error('Operation failed:', error);
+        }
+
+        return {
+          error: {
+            message: error?.message || error?.toString() || 'Unknown error',
+          },
+          userMessage: userMessage || 'Operation failed',
+          severity: severity || 'medium',
+        };
+      }
+    );
 
     // Configure TestBed
     TestBed.configureTestingModule({
@@ -44,12 +117,15 @@ describe('MigrationDbService', () => {
       providers: [
         MigrationDbService,
         { provide: IndexedDbService, useValue: indexedDbServiceSpy },
-        { provide: NGXLogger, useValue: loggerSpy }
-      ]
+        { provide: NGXLogger, useValue: loggerSpy },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+      ],
     });
 
     service = TestBed.inject(MigrationDbService);
-    indexedDbServiceSpy = TestBed.inject(IndexedDbService) as jasmine.SpyObj<IndexedDbService>;
+    indexedDbServiceSpy = TestBed.inject(
+      IndexedDbService
+    ) as jasmine.SpyObj<IndexedDbService>;
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
 
     // Default mock setup
@@ -100,7 +176,9 @@ describe('MigrationDbService', () => {
       const serviceError = new Error('Failed to open database');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(serviceError));
 
-      await expectAsync(service.loadMigrations()).toBeRejectedWith(serviceError);
+      await expectAsync(service.loadMigrations()).toBeRejectedWith(
+        serviceError
+      );
       expect(indexedDbServiceSpy.openDB).toHaveBeenCalled();
     });
 
@@ -111,7 +189,9 @@ describe('MigrationDbService', () => {
       const result = await service.loadMigrations();
 
       expect(result).toEqual(mockMigrations);
-      expect(result.every(migration => typeof migration === 'boolean')).toBe(true);
+      expect(result.every((migration) => typeof migration === 'boolean')).toBe(
+        true
+      );
     });
   });
 
@@ -174,7 +254,9 @@ describe('MigrationDbService', () => {
       const dbError = new Error('Database read error');
       mockDb.get.and.returnValue(Promise.reject(dbError));
 
-      await expectAsync(service.loadMigration(migrationKey)).toBeRejectedWith(dbError);
+      await expectAsync(service.loadMigration(migrationKey)).toBeRejectedWith(
+        dbError
+      );
       expect(mockDb.get).toHaveBeenCalledWith('migrations', migrationKey);
     });
 
@@ -183,7 +265,9 @@ describe('MigrationDbService', () => {
       const serviceError = new Error('Failed to open database');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(serviceError));
 
-      await expectAsync(service.loadMigration(migrationKey)).toBeRejectedWith(serviceError);
+      await expectAsync(service.loadMigration(migrationKey)).toBeRejectedWith(
+        serviceError
+      );
     });
   });
 
@@ -196,7 +280,11 @@ describe('MigrationDbService', () => {
       const result = await service.addMigration(migrationKey, migrationState);
 
       expect(result).toBe(migrationKey);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should add migration with false state', async () => {
@@ -207,7 +295,11 @@ describe('MigrationDbService', () => {
       const result = await service.addMigration(migrationKey, migrationState);
 
       expect(result).toBe(migrationKey);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle zero migration key', async () => {
@@ -218,7 +310,11 @@ describe('MigrationDbService', () => {
       const result = await service.addMigration(migrationKey, migrationState);
 
       expect(result).toBe(migrationKey);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle large migration key numbers', async () => {
@@ -229,7 +325,11 @@ describe('MigrationDbService', () => {
       const result = await service.addMigration(migrationKey, migrationState);
 
       expect(result).toBe(migrationKey);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle database add errors', async () => {
@@ -238,8 +338,14 @@ describe('MigrationDbService', () => {
       const dbError = new Error('Database write error');
       mockDb.add.and.returnValue(Promise.reject(dbError));
 
-      await expectAsync(service.addMigration(migrationKey, migrationState)).toBeRejectedWith(dbError);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      await expectAsync(
+        service.addMigration(migrationKey, migrationState)
+      ).toBeRejectedWith(dbError);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle IndexedDB service errors', async () => {
@@ -248,7 +354,9 @@ describe('MigrationDbService', () => {
       const serviceError = new Error('Failed to open database');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(serviceError));
 
-      await expectAsync(service.addMigration(migrationKey, migrationState)).toBeRejectedWith(serviceError);
+      await expectAsync(
+        service.addMigration(migrationKey, migrationState)
+      ).toBeRejectedWith(serviceError);
     });
 
     it('should handle duplicate key conflicts', async () => {
@@ -257,8 +365,14 @@ describe('MigrationDbService', () => {
       const conflictError = new Error('Key already exists');
       mockDb.add.and.returnValue(Promise.reject(conflictError));
 
-      await expectAsync(service.addMigration(migrationKey, migrationState)).toBeRejectedWith(conflictError);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      await expectAsync(
+        service.addMigration(migrationKey, migrationState)
+      ).toBeRejectedWith(conflictError);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
   });
 
@@ -270,7 +384,11 @@ describe('MigrationDbService', () => {
 
       await service.updateMigration(migrationKey, migrationState);
 
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should update migration state to false', async () => {
@@ -280,7 +398,11 @@ describe('MigrationDbService', () => {
 
       await service.updateMigration(migrationKey, migrationState);
 
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle zero migration key', async () => {
@@ -290,7 +412,11 @@ describe('MigrationDbService', () => {
 
       await service.updateMigration(migrationKey, migrationState);
 
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should update non-existent migration (upsert behavior)', async () => {
@@ -300,7 +426,11 @@ describe('MigrationDbService', () => {
 
       await service.updateMigration(migrationKey, migrationState);
 
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle database update errors', async () => {
@@ -309,8 +439,14 @@ describe('MigrationDbService', () => {
       const dbError = new Error('Database update error');
       mockDb.put.and.returnValue(Promise.reject(dbError));
 
-      await expectAsync(service.updateMigration(migrationKey, migrationState)).toBeRejectedWith(dbError);
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      await expectAsync(
+        service.updateMigration(migrationKey, migrationState)
+      ).toBeRejectedWith(dbError);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
 
     it('should handle IndexedDB service errors', async () => {
@@ -319,7 +455,9 @@ describe('MigrationDbService', () => {
       const serviceError = new Error('Failed to open database');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(serviceError));
 
-      await expectAsync(service.updateMigration(migrationKey, migrationState)).toBeRejectedWith(serviceError);
+      await expectAsync(
+        service.updateMigration(migrationKey, migrationState)
+      ).toBeRejectedWith(serviceError);
     });
 
     it('should handle negative migration keys', async () => {
@@ -329,7 +467,11 @@ describe('MigrationDbService', () => {
 
       await service.updateMigration(migrationKey, migrationState);
 
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', migrationState, migrationKey);
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        migrationState,
+        migrationKey
+      );
     });
   });
 
@@ -375,7 +517,9 @@ describe('MigrationDbService', () => {
       const dbError = new Error('Database delete error');
       mockDb.delete.and.returnValue(Promise.reject(dbError));
 
-      await expectAsync(service.deleteMigration(migrationKey)).toBeRejectedWith(dbError);
+      await expectAsync(service.deleteMigration(migrationKey)).toBeRejectedWith(
+        dbError
+      );
       expect(mockDb.delete).toHaveBeenCalledWith('migrations', migrationKey);
     });
 
@@ -384,7 +528,9 @@ describe('MigrationDbService', () => {
       const serviceError = new Error('Failed to open database');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(serviceError));
 
-      await expectAsync(service.deleteMigration(migrationKey)).toBeRejectedWith(serviceError);
+      await expectAsync(service.deleteMigration(migrationKey)).toBeRejectedWith(
+        serviceError
+      );
     });
 
     it('should handle large migration key numbers for deletion', async () => {
@@ -404,7 +550,11 @@ describe('MigrationDbService', () => {
       // Add migration
       mockDb.add.and.returnValue(Promise.resolve(migrationKey));
       await service.addMigration(migrationKey, false);
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', false, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        false,
+        migrationKey
+      );
 
       // Load specific migration
       mockDb.get.and.returnValue(Promise.resolve(false));
@@ -439,7 +589,7 @@ describe('MigrationDbService', () => {
       // Add multiple migrations concurrently
       const [result1, result2] = await Promise.all([
         service.addMigration(migration1Key, true),
-        service.addMigration(migration2Key, false)
+        service.addMigration(migration2Key, false),
       ]);
 
       expect(result1).toBe(migration1Key);
@@ -501,8 +651,16 @@ describe('MigrationDbService', () => {
       await service.updateMigration(migrationKey, updatedState);
 
       // Verify state consistency - each operation should be isolated
-      expect(mockDb.add).toHaveBeenCalledWith('migrations', initialState, migrationKey);
-      expect(mockDb.put).toHaveBeenCalledWith('migrations', updatedState, migrationKey);
+      expect(mockDb.add).toHaveBeenCalledWith(
+        'migrations',
+        initialState,
+        migrationKey
+      );
+      expect(mockDb.put).toHaveBeenCalledWith(
+        'migrations',
+        updatedState,
+        migrationKey
+      );
     });
   });
 
@@ -511,10 +669,18 @@ describe('MigrationDbService', () => {
       const timeoutError = new Error('Database connection timeout');
       indexedDbServiceSpy.openDB.and.returnValue(Promise.reject(timeoutError));
 
-      await expectAsync(service.loadMigrations()).toBeRejectedWith(timeoutError);
-      await expectAsync(service.addMigration(1, true)).toBeRejectedWith(timeoutError);
-      await expectAsync(service.updateMigration(1, false)).toBeRejectedWith(timeoutError);
-      await expectAsync(service.deleteMigration(1)).toBeRejectedWith(timeoutError);
+      await expectAsync(service.loadMigrations()).toBeRejectedWith(
+        timeoutError
+      );
+      await expectAsync(service.addMigration(1, true)).toBeRejectedWith(
+        timeoutError
+      );
+      await expectAsync(service.updateMigration(1, false)).toBeRejectedWith(
+        timeoutError
+      );
+      await expectAsync(service.deleteMigration(1)).toBeRejectedWith(
+        timeoutError
+      );
     });
 
     it('should handle corrupted migration data gracefully', async () => {
@@ -527,7 +693,9 @@ describe('MigrationDbService', () => {
     });
 
     it('should handle very large migration datasets', async () => {
-      const largeMigrationSet = new Array(10000).fill(true).map((_, i) => i % 2 === 0);
+      const largeMigrationSet = new Array(10000)
+        .fill(true)
+        .map((_, i) => i % 2 === 0);
       mockDb.getAll.and.returnValue(Promise.resolve(largeMigrationSet));
 
       const result = await service.loadMigrations();

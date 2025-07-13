@@ -4,6 +4,10 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 
 import { ZipperService } from './zipper.service';
 import { Step, ModelFactory } from '../../../core/models';
+import {
+  ErrorHandlerService,
+  ErrorContext,
+} from '../../../core/services/error-handler.service';
 
 /**
  * @fileoverview Comprehensive Test Suite for ZipperService
@@ -25,6 +29,7 @@ import { Step, ModelFactory } from '../../../core/models';
 describe('ZipperService', () => {
   let service: ZipperService;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   // Test data factories
   const createTestStep = (id: number, count: number, description: string): Step => {
@@ -39,13 +44,55 @@ describe('ZipperService', () => {
       'trace',
     ]);
 
+    const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
+
+    // Configure ErrorHandlerService mock for ZipperService with structured context handling
+    errorHandlerSpyObj.handleError.and.callFake(
+      (error: any, context: string | ErrorContext) => {
+        // Handle structured context objects for ZipperService calls
+        if (typeof context === 'object' && context !== null) {
+          const operation = context['operation'];
+          const details = context['details'];
+
+          // ZipperService doesn't make additional logger calls in ErrorHandlerService - the direct logger.warn is separate
+          // Just return the error result without additional logging
+        } else if (
+          typeof context === 'string' &&
+          context.includes('Row step counts do not match')
+        ) {
+          // Handle any legacy string context calls
+          loggerSpyObj.warn(
+            'Row steps do not match:',
+            jasmine.any(Array),
+            jasmine.any(Array)
+          );
+        }
+
+        return {
+          error: {
+            message: error?.message || error?.toString() || 'Unknown error',
+          },
+          userMessage: 'Zipper operation failed',
+          severity: 'medium',
+        };
+      }
+    );
+
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
-      providers: [{ provide: NGXLogger, useValue: loggerSpyObj }],
+      providers: [
+        { provide: NGXLogger, useValue: loggerSpyObj },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
+      ],
     });
 
     service = TestBed.inject(ZipperService);
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    errorHandlerSpy = TestBed.inject(
+      ErrorHandlerService
+    ) as jasmine.SpyObj<ErrorHandlerService>;
   });
 
   describe('Service Initialization', () => {

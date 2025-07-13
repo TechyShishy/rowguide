@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 
 import { Project, isValidProject, hasValidId } from '../../core/models';
+import { ErrorHandlerService } from '../../core/services';
 import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({
@@ -10,7 +11,8 @@ import { IndexedDbService } from './indexed-db.service';
 export class ProjectDbService {
   constructor(
     private logger: NGXLogger,
-    private indexedDbService: IndexedDbService
+    private indexedDbService: IndexedDbService,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   /**
@@ -24,13 +26,32 @@ export class ProjectDbService {
       // Filter out invalid projects
       return projects.filter((project) => {
         if (!isValidProject(project)) {
-          this.logger.warn('Invalid project found in database:', project);
+          this.errorHandler.handleError(
+            new Error('Invalid project found in database'),
+            {
+              operation: 'loadProjects',
+              details: 'project validation failed',
+              projectId: project?.id,
+              invalidProject: project,
+            },
+            undefined,
+            'medium'
+          );
           return false;
         }
         return true;
       });
     } catch (error) {
-      this.logger.error('Failed to load projects:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadProjects',
+          details: 'Failed to load projects from IndexedDB',
+          tableName: 'projects',
+        },
+        'Unable to load your projects. Please try refreshing the page.',
+        'critical'
+      );
       return [];
     }
   }
@@ -40,7 +61,16 @@ export class ProjectDbService {
    */
   async loadProject(key: number): Promise<Project | null> {
     if (!key || key <= 0) {
-      this.logger.warn('Invalid project key provided:', key);
+      this.errorHandler.handleError(
+        new Error('Invalid project key provided'),
+        {
+          operation: 'loadProject',
+          details: 'invalid key provided',
+          key: key,
+        },
+        undefined,
+        'medium'
+      );
       return null;
     }
 
@@ -53,16 +83,33 @@ export class ProjectDbService {
       }
 
       if (!isValidProject(project)) {
-        this.logger.error(
-          'Invalid project data loaded from database:',
-          project
+        this.errorHandler.handleError(
+          new Error('Invalid project data loaded from database'),
+          {
+            operation: 'loadProject',
+            details: 'Project validation failed',
+            projectId: key,
+            invalidProject: project,
+          },
+          'The project data appears to be corrupted. Please try reloading.',
+          'high'
         );
         return null;
       }
 
       return project;
     } catch (error) {
-      this.logger.error('Failed to load project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadProject',
+          details: 'Failed to load project from database',
+          projectId: key,
+          tableName: 'projects',
+        },
+        'Unable to load the selected project. Please try again.',
+        'high'
+      );
       return null;
     }
   }
@@ -72,7 +119,18 @@ export class ProjectDbService {
    */
   async addProject(project: Project): Promise<number | null> {
     if (!isValidProject(project)) {
-      this.logger.error('Cannot save invalid project:', project);
+      this.errorHandler.handleError(
+        new Error('Cannot save invalid project'),
+        {
+          operation: 'addProject',
+          details: 'Project validation failed',
+          projectName: project?.name,
+          projectId: project?.id,
+          invalidProject: project,
+        },
+        'Unable to save project. Please check your project data.',
+        'high'
+      );
       throw new Error('Invalid project data');
     }
 
@@ -86,7 +144,18 @@ export class ProjectDbService {
 
       return id;
     } catch (error) {
-      this.logger.error('Failed to add project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'addProject',
+          details: 'Failed to save project to database',
+          projectName: project?.name,
+          projectId: project?.id,
+          tableName: 'projects',
+        },
+        'Unable to save your project. Please try again.',
+        'high'
+      );
       return null;
     }
   }
@@ -96,12 +165,34 @@ export class ProjectDbService {
    */
   async updateProject(project: Project): Promise<boolean> {
     if (!hasValidId(project)) {
-      this.logger.error('Cannot update project without valid ID:', project);
+      this.errorHandler.handleError(
+        new Error('Cannot update project without valid ID'),
+        {
+          operation: 'updateProject',
+          details: 'Missing ID for project',
+          projectName: project?.name,
+          projectId: project?.id,
+          invalidProject: project,
+        },
+        'Unable to update project. Invalid project ID.',
+        'high'
+      );
       return false;
     }
 
     if (!isValidProject(project)) {
-      this.logger.error('Cannot update with invalid project data:', project);
+      this.errorHandler.handleError(
+        new Error('Cannot update with invalid project data'),
+        {
+          operation: 'updateProject',
+          details: 'Project validation failed',
+          projectId: project?.id,
+          projectName: project?.name,
+          invalidProject: project,
+        },
+        'Unable to update project. Please check your project data.',
+        'high'
+      );
       return false;
     }
 
@@ -110,7 +201,18 @@ export class ProjectDbService {
       await db.put('projects', project);
       return true;
     } catch (error) {
-      this.logger.error('Failed to update project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'updateProject',
+          details: 'Failed to update project in database',
+          projectId: project?.id,
+          projectName: project?.name,
+          tableName: 'projects',
+        },
+        'Unable to save your changes. Please try again.',
+        'high'
+      );
       return false;
     }
   }
@@ -120,7 +222,18 @@ export class ProjectDbService {
    */
   async deleteProject(project: Project): Promise<boolean> {
     if (!hasValidId(project)) {
-      this.logger.warn('Cannot delete project without valid ID:', project);
+      this.errorHandler.handleError(
+        new Error('Cannot delete project without valid ID'),
+        {
+          operation: 'deleteProject',
+          details: 'Missing ID for project',
+          projectName: project?.name,
+          projectId: project?.id,
+          invalidProject: project,
+        },
+        'Unable to delete project. Invalid project ID.',
+        'medium'
+      );
       return false;
     }
 
@@ -129,7 +242,18 @@ export class ProjectDbService {
       await db.delete('projects', project.id);
       return true;
     } catch (error) {
-      this.logger.error('Failed to delete project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'deleteProject',
+          details: 'Failed to delete project from database',
+          projectId: project?.id,
+          projectName: project?.name,
+          tableName: 'projects',
+        },
+        'Unable to delete the project. Please try again.',
+        'high'
+      );
       return false;
     }
   }

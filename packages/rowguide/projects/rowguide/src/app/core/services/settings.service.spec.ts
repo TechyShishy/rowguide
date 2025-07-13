@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { NGXLogger } from 'ngx-logger';
 
 import { SettingsService, Settings } from './settings.service';
+import { ErrorHandlerService, ErrorContext } from './error-handler.service';
 
 /**
  * @fileoverview Comprehensive Test Suite for SettingsService
@@ -26,6 +27,7 @@ import { SettingsService, Settings } from './settings.service';
 describe('SettingsService', () => {
   let service: SettingsService;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   // Test data factory for creating valid settings
   const createValidSettings = (overrides: Partial<Settings> = {}): Settings => {
@@ -45,17 +47,84 @@ describe('SettingsService', () => {
 
   beforeEach(() => {
     // Create spy for NGXLogger
-    const spy = jasmine.createSpyObj('NGXLogger', ['warn', 'debug', 'info', 'error']);
+    const loggerSpyObj = jasmine.createSpyObj('NGXLogger', [
+      'warn',
+      'debug',
+      'info',
+      'error',
+    ]);
+
+    // Create spy for ErrorHandlerService
+    const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+    ]);
+
+    // Configure ErrorHandlerService mock to handle structured context objects
+    errorHandlerSpyObj.handleError.and.callFake(
+      (error: any, context: string | ErrorContext) => {
+        // Handle structured context objects for SettingsService calls
+        if (typeof context === 'object' && context !== null) {
+          const operation = context['operation'];
+          const details = context['details'];
+
+          if (
+            operation === 'saveSettings' &&
+            details?.includes('Failed to save settings')
+          ) {
+            loggerSpyObj.warn(
+              'Failed to save settings to localStorage:',
+              error
+            );
+          } else if (
+            operation === 'loadSettings' &&
+            details?.includes('Failed to load settings')
+          ) {
+            loggerSpyObj.warn(
+              'Failed to load settings from localStorage:',
+              error
+            );
+          } else {
+            // Fallback for unhandled structured contexts
+            loggerSpyObj.error('Settings operation failed:', error);
+          }
+        } else if (typeof context === 'string') {
+          // Handle legacy string contexts
+          if (context.includes('saveSettings')) {
+            loggerSpyObj.warn(
+              'Failed to save settings to localStorage:',
+              error
+            );
+          } else if (context.includes('loadSettings')) {
+            loggerSpyObj.warn(
+              'Failed to load settings from localStorage:',
+              error
+            );
+          }
+        }
+
+        return {
+          error: {
+            message: error?.message || error?.toString() || 'Unknown error',
+          },
+          userMessage: 'Settings operation failed',
+          severity: 'medium',
+        };
+      }
+    );
 
     TestBed.configureTestingModule({
       providers: [
         SettingsService,
-        { provide: NGXLogger, useValue: spy }
-      ]
+        { provide: NGXLogger, useValue: loggerSpyObj },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
+      ],
     });
     localStorage.clear();
     service = TestBed.inject(SettingsService);
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    errorHandlerSpy = TestBed.inject(
+      ErrorHandlerService
+    ) as jasmine.SpyObj<ErrorHandlerService>;
   });
 
   afterEach(() => {
@@ -101,8 +170,16 @@ describe('SettingsService', () => {
       localStorage.setItem('settings', JSON.stringify(testSettings));
 
       // Create new service instance to test constructor behavior
-      const newLoggerSpy = jasmine.createSpyObj('NGXLogger', ['warn', 'debug', 'info', 'error']);
-      const newService = new SettingsService(newLoggerSpy);
+      const newLoggerSpy = jasmine.createSpyObj('NGXLogger', [
+        'warn',
+        'debug',
+        'info',
+        'error',
+      ]);
+      const newErrorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
+        'handleError',
+      ]);
+      const newService = new SettingsService(newLoggerSpy, newErrorHandlerSpy);
 
       expect(newService.combine12$.value).toBe(true);
       expect(newService.zoom$.value).toBe(true);
@@ -329,7 +406,10 @@ describe('SettingsService', () => {
       expect(service.combine12$.value).toBe(false);
       expect(service.scrolloffset$.value).toBe(-1);
       expect(service.flamsort$.value).toBe('keyAsc');
-      expect(loggerSpy.warn).toHaveBeenCalledWith('Failed to load settings from localStorage:', jasmine.any(Error));
+      expect(loggerSpy.warn).toHaveBeenCalledWith(
+        'Failed to load settings from localStorage:',
+        jasmine.any(Error)
+      );
     });
 
     it('should handle localStorage setItem errors gracefully', () => {
@@ -338,7 +418,10 @@ describe('SettingsService', () => {
       const settings = createValidSettings({ combine12: true });
 
       expect(() => service.saveSettings(settings)).not.toThrow();
-      expect(loggerSpy.warn).toHaveBeenCalledWith('Failed to save settings to localStorage:', jasmine.any(Error));
+      expect(loggerSpy.warn).toHaveBeenCalledWith(
+        'Failed to save settings to localStorage:',
+        jasmine.any(Error)
+      );
     });
 
     it('should handle corrupted JSON in localStorage', () => {
@@ -350,7 +433,10 @@ describe('SettingsService', () => {
       expect(service.combine12$.value).toBe(false);
       expect(service.scrolloffset$.value).toBe(-1);
       expect(service.flamsort$.value).toBe('keyAsc');
-      expect(loggerSpy.warn).toHaveBeenCalledWith('Failed to load settings from localStorage:', jasmine.any(SyntaxError));
+      expect(loggerSpy.warn).toHaveBeenCalledWith(
+        'Failed to load settings from localStorage:',
+        jasmine.any(SyntaxError)
+      );
     });
 
     it('should handle empty string in localStorage', () => {
@@ -507,7 +593,7 @@ describe('SettingsService', () => {
       }
 
       expect(readyEvents.length).toBe(5);
-      expect(readyEvents.every(event => event === true)).toBe(true);
+      expect(readyEvents.every((event) => event === true)).toBe(true);
     });
 
     it('should handle alternating save and load operations', () => {
@@ -575,13 +661,11 @@ describe('SettingsService', () => {
 
       // Create multiple subscriptions
       for (let i = 0; i < 10; i++) {
-        subscriptions.push(
-          service.combine12$.subscribe(() => {})
-        );
+        subscriptions.push(service.combine12$.subscribe(() => {}));
       }
 
       // Clean up subscriptions
-      subscriptions.forEach(sub => sub.unsubscribe());
+      subscriptions.forEach((sub) => sub.unsubscribe());
 
       // Should not throw or cause issues
       expect(() => service.loadSettings()).not.toThrow();

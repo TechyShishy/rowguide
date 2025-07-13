@@ -2,11 +2,22 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+/**
+ * Interface for structured error context objects
+ */
+export interface ErrorContext {
+  operation: string;
+  service?: string;
+  details: string;
+  context?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface AppError {
   id: string;
   message: string;
   code?: string;
-  context?: any;
+  context?: string | ErrorContext;
   timestamp: Date;
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
@@ -41,7 +52,7 @@ export class ErrorHandlerService {
    */
   handleError(
     error: unknown,
-    context?: string,
+    context?: string | ErrorContext,
     userMessage?: string,
     severity: AppError['severity'] = 'medium'
   ): void {
