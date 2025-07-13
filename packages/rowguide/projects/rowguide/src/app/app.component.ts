@@ -36,7 +36,7 @@ export class AppComponent {
     private upgradeService: UpgradeService,
     private cdr: ChangeDetectorRef
   ) {
-    this.projectService.ready.subscribe((ready) => {
+    this.projectService.ready$.subscribe((ready) => {
       this.cdr.detectChanges();
     });
   }

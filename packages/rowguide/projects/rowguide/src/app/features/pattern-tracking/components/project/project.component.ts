@@ -33,6 +33,13 @@ import {
   hasValidId,
 } from '../../../../core/models';
 import { MarkModeService, SettingsService } from '../../../../core/services';
+import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
+import { ProjectActions } from '../../../../core/store/actions/project-actions';
+import {
+  selectCurrentProject,
+  selectZippedRows,
+  selectCurrentPosition,
+} from '../../../../core/store/selectors/project-selectors';
 import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { sanity } from '../../../../shared/utils/sanity';
 import { PeyoteShorthandService } from '../../../file-import/loaders';
@@ -56,9 +63,16 @@ import { StepComponent } from '../step/step.component';
   styleUrl: './project.component.scss',
 })
 export class ProjectComponent implements HierarchicalList {
-  rows$: Observable<Row[]> = of([]);
-  position$: Observable<Position> = of({ row: 0, step: 0 });
-  project$: Observable<Project> = of({ rows: [] } as Project);
+  // Store-based observables replace direct service references with null safety
+  rows$: Observable<Row[]> = this.store.select(selectZippedRows).pipe(
+    map((rows) => rows ?? []),
+    distinctUntilChanged()
+  );
+  position$: Observable<Position> = this.store
+    .select(selectCurrentPosition)
+    .pipe(map((position) => position ?? { row: 0, step: 0 }));
+  // project$ will be set in ngOnInit to handle route-based loading
+  project$!: Observable<Project>;
 
   @ViewChildren(RowComponent) children!: QueryList<RowComponent>;
   children$: BehaviorSubject<QueryList<RowComponent>> = new BehaviorSubject<
@@ -90,7 +104,8 @@ export class ProjectComponent implements HierarchicalList {
     private peyoteShorthandService: PeyoteShorthandService,
     private zipperService: ZipperService,
     private bottomSheet: MatBottomSheet,
-    private markModeService: MarkModeService
+    private markModeService: MarkModeService,
+    private store: ReactiveStateStore
   ) {}
 
   ngOnInit() {
@@ -105,6 +120,7 @@ export class ProjectComponent implements HierarchicalList {
         this.router.navigate(['project', { id: currentId?.id }]);
       }
     });
+
     this.project$ = this.route.paramMap.pipe(
       map((params) => {
         let id = parseInt(params.get('id') ?? '');
@@ -114,7 +130,26 @@ export class ProjectComponent implements HierarchicalList {
         }
         return id;
       }),
-      switchMap((id) => this.projectService.loadProject(id)),
+      distinctUntilChanged(), // Prevent duplicate ID processing
+      switchMap((id) => {
+        // First check if this project is already in the store
+        return this.store.select(selectCurrentProject).pipe(
+          take(1),
+          switchMap((currentProject) => {
+            if (
+              currentProject &&
+              currentProject.id === id &&
+              isValidProject(currentProject)
+            ) {
+              return of(currentProject);
+            } else {
+              return this.projectService
+                .loadProject(id)
+                .then((project) => project || ({ rows: [] } as Project));
+            }
+          })
+        );
+      }),
       map((project) => {
         if (!project || !isValidProject(project)) {
           this.logger.warn(
@@ -125,9 +160,10 @@ export class ProjectComponent implements HierarchicalList {
         return project;
       })
     );
+
     this.rows$ = this.project$.pipe(
-      filter((project) => isValidProject(project)),
-      map((project) => SafeAccess.getProjectRows(project)),
+      filter((project): project is Project => isValidProject(project)),
+      map((project: Project) => SafeAccess.getProjectRows(project)),
       combineLatestWith(this.settingsService.combine12$),
       map(([rows, combine12]) => {
         const newRows = deepCopy(rows);
@@ -144,16 +180,9 @@ export class ProjectComponent implements HierarchicalList {
         return newRows;
       })
     );
-    this.rows$.subscribe((rows) => {
-      this.projectService.zippedRows$.next(rows);
-    });
-    this.position$ = this.project$.pipe(
-      filter((project) => isValidProject(project)),
-      switchMap((project) => of(SafeAccess.getProjectPosition(project))),
-      distinctUntilChanged(
-        (prev, curr) => prev.row === curr.row && prev.step === curr.step
-      )
-    );
+
+    // Position observable is now handled by the store selector
+    // No need to manually subscribe and update zippedRows since store manages state
 
     this.children$
       .pipe(
@@ -184,7 +213,9 @@ export class ProjectComponent implements HierarchicalList {
         )
       )
       .subscribe((step) => {
-        step.row.project.project$.pipe(take(1)).subscribe((project) => {});
+        step.row.project.project$
+          .pipe(take(1))
+          .subscribe((project: Project) => {});
         this.currentStep$.next(step);
       });
   }

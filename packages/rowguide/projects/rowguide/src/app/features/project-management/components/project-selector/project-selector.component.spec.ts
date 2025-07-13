@@ -86,7 +86,7 @@ describe('ProjectSelectorComponent', () => {
 
     projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
     flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
-    projectServiceSpy.ready = new Subject<boolean>();
+    projectServiceSpy.ready$ = new Subject<boolean>();
 
     await firstValueFrom(component.importFile());
 
@@ -115,7 +115,7 @@ describe('ProjectSelectorComponent', () => {
     };
     projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
     flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
-    projectServiceSpy.ready = new Subject<boolean>();
+    projectServiceSpy.ready$ = new Subject<boolean>();
 
     projectServiceSpy.loadPeyote.and.returnValue(Promise.resolve(mockProject));
 
@@ -139,7 +139,7 @@ describe('ProjectSelectorComponent', () => {
     projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
     projectServiceSpy.loadPeyote.and.returnValue(Promise.resolve(mockProject));
     flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
-    projectServiceSpy.ready = new Subject<boolean>();
+    projectServiceSpy.ready$ = new Subject<boolean>();
 
     await firstValueFrom(component.importFile());
 

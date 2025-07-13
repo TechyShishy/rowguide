@@ -60,7 +60,7 @@
             <span *ngIf="flamRow.hexColor" [style.background-color]="flamRow.hexColor" class="hex-color-indicator"></span>
           </td>
         </ng-container>
-        
+
         <tr mat-header-row
           *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor']">
         </tr>
@@ -78,12 +78,12 @@
     <mat-card-content>
       <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector$.value">
-        <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project$.value.rows.length}}</mat-list-item>
+        <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
+        <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector$.value">
-        <mat-list-item>Name: {{projectService.project$.value.name}}</mat-list-item>
-        <mat-list-item>Rows: {{projectService.project$.value.rows.length}}</mat-list-item>
+        <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
+        <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
       </ng-template>
     </mat-list>
   </mat-card-content>
@@ -93,21 +93,11 @@
   <mat-card-content>
     <mat-list>
       <ng-template [ngIf]="!settingsService.ppinspector$.value">
-        <mat-list-item>{{ projectService.project$.value.position?.row ?? 0 }}, {{ projectService.project$.value.position?.step
-          ?? 0
-          }}</mat-list-item>
+        <mat-list-item>{{ (projectService.project$ | async)?.position?.row ?? 0 }}, {{ (projectService.project$ | async)?.position?.step ?? 0 }}</mat-list-item>
       </ng-template>
       <ng-template [ngIf]="settingsService.ppinspector$.value">
-        <mat-list-item>Row: {{
-          (
-          (
-          ( projectService.project$.value.position?.row ?? 0 ) + ( this.settingsService.combine12$.value ? 2 : 1 ) == 2
-          ) ? 1 : (
-          ( projectService.project$.value.position?.row ?? 0 ) + ( this.settingsService.combine12$.value ? 2 : 1 )
-          )
-          )
-          }}</mat-list-item>
-        <mat-list-item>Step: {{ ( projectService.project$.value.position?.step ?? 0 ) + 1 }}</mat-list-item>
+        <mat-list-item>Row: {{ getDisplayRow() }}</mat-list-item>
+        <mat-list-item>Step: {{ getDisplayStep() }}</mat-list-item>
       </ng-template>
     </mat-list>
     <button mat-raised-button color="warn" (click)="resetPosition()">Reset Position</button>

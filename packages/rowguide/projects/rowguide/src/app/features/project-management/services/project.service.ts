@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NGXLogger } from 'ngx-logger';
-import { BehaviorSubject, Subject, take } from 'rxjs';
+import { Observable, take, firstValueFrom } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
 import {
@@ -13,6 +13,14 @@ import {
   SafeAccess,
 } from '../../../core/models';
 import { SettingsService, ErrorHandlerService } from '../../../core/services';
+import { ReactiveStateStore } from '../../../core/store/reactive-state-store';
+import { ProjectActions } from '../../../core/store/actions/project-actions';
+import {
+  selectCurrentProject,
+  selectZippedRows,
+  selectProjectsReady,
+  selectCurrentPosition,
+} from '../../../core/store/selectors/project-selectors';
 import { ProjectDbService } from '../../../data/services';
 import { PeyoteShorthandService } from '../../file-import/loaders';
 import { StepComponent } from '../../pattern-tracking/components/step/step.component';
@@ -22,19 +30,20 @@ import { NullProject } from '../models';
   providedIn: 'root',
 })
 export class ProjectService {
-  project$: BehaviorSubject<Project> = new BehaviorSubject<Project>(
-    new NullProject()
-  );
-  zippedRows$: BehaviorSubject<Row[]> = new BehaviorSubject<Row[]>([]);
-  ready: Subject<boolean> = new Subject<boolean>();
+  // Store-based observables replace BehaviorSubjects
+  project$: Observable<Project> = this.store.select(selectCurrentProject);
+  zippedRows$: Observable<Row[]> = this.store.select(selectZippedRows);
+  ready$: Observable<boolean> = this.store.select(selectProjectsReady);
   currentStep!: StepComponent;
+
   constructor(
     private peyoteShorthandService: PeyoteShorthandService,
     private settingsService: SettingsService,
     private logger: NGXLogger,
     private indexedDBService: ProjectDbService,
     private route: ActivatedRoute,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private store: ReactiveStateStore
   ) {
     this.settingsService.ready.subscribe(() => {
       this.loadCurrentProject();
@@ -97,34 +106,35 @@ export class ProjectService {
       return;
     }
 
-    this.project$
-      .pipe(
-        filter((project) => hasValidId(project)),
-        map((project) => {
-          const position = ModelFactory.createPosition(row, step);
-          return { ...project, position };
-        }),
-        take(1)
-      )
-      .subscribe({
-        next: (project) => {
-          this.project$.next(project);
-          this.indexedDBService.updateProject(project);
+    try {
+      const project = await firstValueFrom(
+        this.project$.pipe(
+          filter((project) => hasValidId(project)),
+          map((project) => {
+            const position = ModelFactory.createPosition(row, step);
+            return { ...project, position };
+          }),
+          take(1)
+        )
+      );
+
+      if (project) {
+        this.store.dispatch(ProjectActions.updateProjectSuccess(project));
+        await this.indexedDBService.updateProject(project);
+      }
+    } catch (error) {
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveCurrentPosition',
+          details: 'Failed to save position coordinates',
+          row: row,
+          step: step,
         },
-        error: (error) => {
-          this.errorHandler.handleError(
-            error,
-            {
-              operation: 'saveCurrentPosition',
-              details: 'Failed to save position coordinates',
-              row: row,
-              step: step,
-            },
-            'Unable to save your current position. Progress may not be saved.',
-            'medium'
-          );
-        },
-      });
+        'Unable to save your current position. Progress may not be saved.',
+        'medium'
+      );
+    }
   }
 
   /**
@@ -223,7 +233,7 @@ export class ProjectService {
       }
 
       project.name = projectName.trim();
-      this.project$.next(project);
+      this.store.dispatch(ProjectActions.createProjectSuccess(project));
 
       const projectId = await this.indexedDBService.addProject(project);
       if (!projectId) {
@@ -231,8 +241,7 @@ export class ProjectService {
       }
 
       project.id = projectId;
-      this.project$.next(project);
-      this.ready.next(true);
+      this.store.dispatch(ProjectActions.updateProjectSuccess(project));
 
       return project;
     } catch (error) {
@@ -266,8 +275,7 @@ export class ProjectService {
         undefined,
         'medium'
       );
-      this.project$.next(new NullProject());
-      this.ready.next(true);
+      this.store.dispatch(ProjectActions.clearCurrentProject());
       return null;
     }
 
@@ -285,8 +293,7 @@ export class ProjectService {
           'The selected project could not be found. It may have been deleted.',
           'medium'
         );
-        this.project$.next(new NullProject());
-        this.ready.next(true);
+        this.store.dispatch(ProjectActions.clearCurrentProject());
         return null;
       }
 
@@ -302,13 +309,13 @@ export class ProjectService {
           'The project data appears to be corrupted. Please try selecting a different project.',
           'high'
         );
-        this.project$.next(new NullProject());
-        this.ready.next(true);
+        this.store.dispatch(ProjectActions.clearCurrentProject());
         return null;
       }
 
-      this.project$.next(project);
-      this.ready.next(true);
+      // First store the project data in entities, then set it as current
+      this.store.dispatch(ProjectActions.updateProjectSuccess(project));
+      this.store.dispatch(ProjectActions.setCurrentProject(project.id!));
       return project;
     } catch (error) {
       this.errorHandler.handleError(
@@ -321,8 +328,7 @@ export class ProjectService {
         'Unable to load the selected project. Please try again or select a different project.',
         'high'
       );
-      this.project$.next(new NullProject());
-      this.ready.next(true);
+      this.store.dispatch(ProjectActions.clearCurrentProject());
       return null;
     }
   }

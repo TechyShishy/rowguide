@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { filter, map, take } from 'rxjs/operators';
 
 import { ProjectDbService } from '../../data/services';
 import { ProjectService } from '../../features/project-management/services';
@@ -9,6 +9,9 @@ import { FLAM } from '../models/flam';
 import { Row } from '../models/row';
 import { Step } from '../models/step';
 import { SettingsService } from './settings.service';
+import { ReactiveStateStore } from '../store/reactive-state-store';
+import { ProjectActions } from '../store/actions/project-actions';
+import { selectCurrentProject } from '../store/selectors/project-selectors';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +23,8 @@ export class FlamService {
     private logger: NGXLogger,
     private projectService: ProjectService,
     private projectDbService: ProjectDbService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private store: ReactiveStateStore
   ) {
     this.projectService.zippedRows$
       .pipe(
@@ -108,7 +112,7 @@ export class FlamService {
   }
 
   // Extract color mappings from FLAM and save to project
-  saveColorMappingsToProject(): void {
+  async saveColorMappingsToProject(): Promise<void> {
     const currentFlam = this.flam$.value;
     const colorMapping: { [key: string]: string } = {};
 
@@ -119,35 +123,51 @@ export class FlamService {
       }
     });
 
-    // Update the project with color mappings
-    const currentProject = this.projectService.project$.value;
-    if (currentProject) {
-      currentProject.colorMapping = colorMapping;
-      this.projectService.project$.next(currentProject);
-      // Save to database
-      this.projectDbService.updateProject(currentProject);
-      this.logger.debug('Saved color mappings to project:', colorMapping);
+    // Update the project with color mappings using async/await
+    try {
+      const currentProject = await firstValueFrom(
+        this.store.select(selectCurrentProject)
+      );
+
+      if (currentProject) {
+        const updatedProject = { ...currentProject, colorMapping };
+        this.store.dispatch(
+          ProjectActions.updateProjectSuccess(updatedProject)
+        );
+        // Save to database
+        await this.projectDbService.updateProject(updatedProject);
+        this.logger.debug('Saved color mappings to project:', colorMapping);
+      }
+    } catch (error) {
+      this.logger.error('Failed to save color mappings:', error);
     }
   }
 
   // Load color mappings from project into FLAM
-  loadColorMappingsFromProject(): void {
-    const currentProject = this.projectService.project$.value;
-    if (currentProject?.colorMapping) {
-      const currentFlam = this.flam$.value;
-
-      // Apply saved color mappings to current FLAM
-      Object.keys(currentProject.colorMapping).forEach((key) => {
-        if (currentFlam[key]) {
-          currentFlam[key].color = currentProject.colorMapping![key];
-        }
-      });
-
-      this.flam$.next(currentFlam);
-      this.logger.debug(
-        'Loaded color mappings from project:',
-        currentProject.colorMapping
+  async loadColorMappingsFromProject(): Promise<void> {
+    try {
+      const currentProject = await firstValueFrom(
+        this.store.select(selectCurrentProject)
       );
+
+      if (currentProject?.colorMapping) {
+        const currentFlam = this.flam$.value;
+
+        // Apply saved color mappings to current FLAM
+        Object.keys(currentProject.colorMapping).forEach((key) => {
+          if (currentFlam[key]) {
+            currentFlam[key].color = currentProject.colorMapping![key];
+          }
+        });
+
+        this.flam$.next(currentFlam);
+        this.logger.debug(
+          'Loaded color mappings from project:',
+          currentProject.colorMapping
+        );
+      }
+    } catch (error) {
+      this.logger.error('Failed to load color mappings:', error);
     }
   }
 }

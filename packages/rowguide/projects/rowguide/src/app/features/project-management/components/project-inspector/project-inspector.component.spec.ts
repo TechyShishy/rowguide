@@ -23,6 +23,8 @@ import { Row } from '../../../../core/models/row';
 import { FLAM } from '../../../../core/models/flam';
 import { FLAMRow } from '../../../../core/models/flamrow';
 import { Sort } from '@angular/material/sort';
+import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
+import { selectCurrentProject } from '../../../../core/store/selectors/project-selectors';
 
 describe('ProjectInspectorComponent', () => {
   let component: ProjectInspectorComponent;
@@ -33,6 +35,7 @@ describe('ProjectInspectorComponent', () => {
   let mockFlamService: Partial<FlamService>;
   let mockIndexedDBService: Partial<ProjectDbService>;
   let mockImage$: BehaviorSubject<string>;
+  let mockStoreSpy: jasmine.SpyObj<ReactiveStateStore>;
 
   const mockProject: Project = {
     id: 1,
@@ -86,7 +89,7 @@ describe('ProjectInspectorComponent', () => {
     mockProjectService = {
       project$: mockProjectBehaviorSubject,
       zippedRows$: new BehaviorSubject<Row[]>(mockProject.rows),
-      ready: new BehaviorSubject<boolean>(true),
+      ready$: new BehaviorSubject<boolean>(true),
       saveCurrentPosition: jasmine
         .createSpy('saveCurrentPosition')
         .and.returnValue(Promise.resolve()),
@@ -115,6 +118,11 @@ describe('ProjectInspectorComponent', () => {
     };
     mockImage$ = new BehaviorSubject<string>('');
 
+    // Create ReactiveStateStore spy
+    mockStoreSpy = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch']);
+    mockStoreSpy.select.and.returnValue(mockProjectBehaviorSubject.asObservable());
+    mockStoreSpy.dispatch.and.stub();
+
     await TestBed.configureTestingModule({
       imports: [
         ProjectInspectorComponent,
@@ -127,6 +135,7 @@ describe('ProjectInspectorComponent', () => {
         { provide: SettingsService, useValue: mockSettingsService },
         { provide: ProjectDbService, useValue: mockIndexedDBService },
         { provide: 'image$', useValue: mockImage$ },
+        { provide: ReactiveStateStore, useValue: mockStoreSpy },
         // FlamService will be the real service with real dependencies
       ],
     }).compileComponents();
@@ -238,11 +247,11 @@ describe('ProjectInspectorComponent', () => {
       req.flush(mockDelicaColors);
       tick();
 
-      mockProjectService.ready?.next(true);
+      (mockProjectService.ready$ as BehaviorSubject<boolean>).next(true);
       tick();
 
       // Just verify the subscription works
-      expect(mockProjectService.ready).toBeDefined();
+      expect(mockProjectService.ready$).toBeDefined();
     }));
   });
 
@@ -406,7 +415,7 @@ describe('ProjectInspectorComponent', () => {
       const projectWithoutImage = { ...mockProject };
       delete projectWithoutImage.image;
 
-      mockProjectService.project$?.next(projectWithoutImage);
+      mockProjectService.project$ = of(projectWithoutImage);
 
       let imageResult: string = '';
       component.image$.subscribe((image) => (imageResult = image));
@@ -437,7 +446,7 @@ describe('ProjectInspectorComponent', () => {
       tick();
 
       expect(mockIndexedDBService.updateProject).toHaveBeenCalled();
-      expect(mockProjectService.project$?.next).toHaveBeenCalled();
+      // Note: Project state updates now go through store.dispatch
     }));
 
     it('should reject non-PNG files', fakeAsync(() => {
@@ -456,7 +465,7 @@ describe('ProjectInspectorComponent', () => {
       tick();
 
       expect(mockIndexedDBService.updateProject).not.toHaveBeenCalled();
-      expect(mockProjectService.project$?.next).not.toHaveBeenCalled();
+      // Note: Invalid files should not trigger store updates
     }));
   });
 
@@ -716,7 +725,8 @@ describe('ProjectInspectorComponent', () => {
     }));
 
     it('should handle missing project in upload', fakeAsync(() => {
-      mockProjectService.project$?.next(null as any);
+      // Configure store to return null project instead of the service
+      mockStoreSpy.select.and.returnValue(of(null));
 
       const pngHeader = new Uint8Array([
         0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,

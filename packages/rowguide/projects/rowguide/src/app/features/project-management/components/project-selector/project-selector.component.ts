@@ -25,6 +25,8 @@ import { map, switchMap, tap } from 'rxjs/operators';
 
 import { Project } from '../../../../core/models/project';
 import { FlamService, NotificationService } from '../../../../core/services';
+import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
+import { ProjectActions } from '../../../../core/store/actions/project-actions';
 import { ProjectDbService } from '../../../../data/services';
 import { BeadtoolPdfService } from '../../../file-import/loaders';
 import { ProjectService } from '../../services';
@@ -67,7 +69,8 @@ export class ProjectSelectorComponent {
     private beadtoolPdfService: BeadtoolPdfService,
     private router: Router,
     private notificationService: NotificationService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private store: ReactiveStateStore
   ) {}
   importFile(): Observable<Project> {
     return from(this.file.arrayBuffer()).pipe(
@@ -106,9 +109,8 @@ export class ProjectSelectorComponent {
 
     return project$.pipe(
       tap((project) => {
-        this.projectService.project$.next(project);
+        this.store.dispatch(ProjectActions.updateProjectSuccess(project));
         this.indexedDBService.updateProject(project);
-        this.projectService.ready.next(true);
         this.router.navigate(['project', { id: project.id }]);
       })
     );

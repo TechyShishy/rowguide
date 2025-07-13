@@ -14,7 +14,7 @@
       <button mat-icon-button (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
-      Project: {{projectService.project$.value.name}}
+      Project: {{(projectService.project$ | async)?.name || 'No Project'}}
     </mat-toolbar>
     <div class="router-outlet"><router-outlet /></div>
   </mat-sidenav-content>

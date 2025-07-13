@@ -1,5 +1,5 @@
-import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, BehaviorSubject } from 'rxjs';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { firstValueFrom, BehaviorSubject, Subject, of } from 'rxjs';
 import { NGXLogger } from 'ngx-logger';
 
 import { FlamService } from './flam.service';
@@ -7,6 +7,7 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../../features/project-management/services/project.service';
 import { ProjectDbService } from '../../data/services/project-db.service';
 import { SettingsService } from './settings.service';
+import { ReactiveStateStore } from '../store/reactive-state-store';
 import { Step } from '../models/step';
 import { Row } from '../models/row';
 import { FLAM } from '../models/flam';
@@ -34,6 +35,7 @@ describe('FlamService', () => {
   let projectDbService: jasmine.SpyObj<ProjectDbService>;
   let settingsService: jasmine.SpyObj<SettingsService>;
   let logger: jasmine.SpyObj<NGXLogger>;
+  let store: jasmine.SpyObj<ReactiveStateStore>;
 
   // Test data factory for creating consistent row structures
   const createTestRows = (): Row[] => [
@@ -106,8 +108,9 @@ describe('FlamService', () => {
       'ProjectService',
       ['updateProject'],
       {
-        zippedRows$: new BehaviorSubject<Row[]>([]),
-        project$: new BehaviorSubject<Project | null>(null),
+        zippedRows$: of([]),
+        project$: of(null),
+        ready$: of(true),
       }
     );
 
@@ -124,6 +127,14 @@ describe('FlamService', () => {
       'error',
     ]);
 
+    // Create a mock store with the necessary methods
+    const storeServiceSpy = jasmine.createSpyObj('ReactiveStateStore', [
+      'select',
+      'dispatch'
+    ]);
+    // Set up default store spy behavior
+    storeServiceSpy.select.and.returnValue(of(createMockProject()));
+
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
       providers: [
@@ -132,6 +143,7 @@ describe('FlamService', () => {
         { provide: ProjectDbService, useValue: projectDbServiceSpy },
         { provide: SettingsService, useValue: settingsServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
+        { provide: ReactiveStateStore, useValue: storeServiceSpy },
         provideRouter(routes),
       ],
     });
@@ -147,9 +159,11 @@ describe('FlamService', () => {
       SettingsService
     ) as jasmine.SpyObj<SettingsService>;
     logger = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    store = TestBed.inject(ReactiveStateStore) as jasmine.SpyObj<ReactiveStateStore>;
 
-    // Add spy to project$.next for testing color mapping saves
-    spyOn(projectService.project$, 'next').and.callThrough();
+    // Set up store mocks to return observables
+    store.select.and.returnValue(of(null));
+    store.dispatch.and.returnValue();
   });
 
   describe('Service Initialization', () => {
@@ -340,16 +354,19 @@ describe('FlamService', () => {
   });
 
   describe('Color Mapping Management', () => {
-    it('should save color mappings to project', () => {
+    it('should save color mappings to project', async () => {
       const testFlam = createTestFLAM();
       const mockProject = createMockProject();
 
       service.flam$.next(testFlam);
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project for selectCurrentProject
+      store.select.and.returnValue(of(mockProject));
+      store.dispatch.and.stub();
 
-      expect(projectService.project$.next).toHaveBeenCalled();
+      await service.saveColorMappingsToProject();
+
+      expect(store.dispatch).toHaveBeenCalled();
       expect(projectDbService.updateProject).toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
         'Saved color mappings to project:',
@@ -357,24 +374,28 @@ describe('FlamService', () => {
       );
 
       // Verify the color mapping extraction
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'Step A': 'DB0001', // Miyuki Delica code
         'Step C': 'Red Bead Mix', // Free-form color name
       });
     });
 
-    it('should handle saving when no project is loaded', () => {
+    it('should handle saving when no project is loaded', async () => {
       service.flam$.next(createTestFLAM());
-      (projectService.project$ as BehaviorSubject<Project | null>).next(null);
 
-      expect(() => service.saveColorMappingsToProject()).not.toThrow();
+      // Update store spy to return null for project selector
+      store.select.and.returnValue(of(null));
+
+      await expectAsync(
+        service.saveColorMappingsToProject()
+      ).not.toBeRejected();
       expect(projectDbService.updateProject).not.toHaveBeenCalled();
     });
 
-    it('should handle saving when FLAM has no colors', () => {
+    it('should handle saving when FLAM has no colors', async () => {
       const flamWithoutColors: FLAM = {
         'Step A': {
           key: 'Step A',
@@ -386,16 +407,19 @@ describe('FlamService', () => {
       const mockProject = createMockProject();
 
       service.flam$.next(flamWithoutColors);
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project for selectCurrentProject
+      store.select.and.returnValue(of(mockProject));
+      store.dispatch.and.stub();
+
+      await service.saveColorMappingsToProject();
 
       // Should still save the project but with empty color mapping
-      expect(projectService.project$.next).toHaveBeenCalled();
+      expect(store.dispatch).toHaveBeenCalled();
       expect(projectDbService.updateProject).toHaveBeenCalled();
     });
 
-    it('should load color mappings from project', () => {
+    it('should load color mappings from project', async () => {
       const initialFlam: FLAM = {
         'Step A': {
           key: 'Step A',
@@ -414,9 +438,11 @@ describe('FlamService', () => {
       const mockProject = createMockProject(colorMapping);
 
       service.flam$.next(initialFlam);
-      projectService.project$.next(mockProject);
 
-      service.loadColorMappingsFromProject();
+      // Set up store spy to return mock project with color mappings
+      store.select.and.returnValue(of(mockProject));
+
+      await service.loadColorMappingsFromProject();
 
       expect(service.flam$.value['Step A'].color).toBe('DB0001');
       expect(service.flam$.value['Step B'].color).toBe('Custom Blue Mix');
@@ -426,7 +452,7 @@ describe('FlamService', () => {
       );
     });
 
-    it('should load free-form color mappings from project', () => {
+    it('should load free-form color mappings from project', async () => {
       const initialFlam: FLAM = {
         'Natural Red': {
           key: 'Natural Red',
@@ -455,9 +481,11 @@ describe('FlamService', () => {
       const mockProject = createMockProject(colorMapping);
 
       service.flam$.next(initialFlam);
-      projectService.project$.next(mockProject);
 
-      service.loadColorMappingsFromProject();
+      // Set up store spy to return mock project with color mappings
+      store.select.and.returnValue(of(mockProject));
+
+      await service.loadColorMappingsFromProject();
 
       expect(service.flam$.value['Natural Red'].color).toBe(
         'Deep burgundy with copper undertones'
@@ -479,7 +507,9 @@ describe('FlamService', () => {
       const mockProject = createMockProject(); // No color mappings
 
       service.flam$.next(initialFlam);
-      projectService.project$.next(mockProject);
+
+      // Set up store spy to return mock project with no color mappings
+      store.select.and.returnValue(of(mockProject));
 
       expect(() => service.loadColorMappingsFromProject()).not.toThrow();
       // FLAM should remain unchanged
@@ -488,12 +518,14 @@ describe('FlamService', () => {
 
     it('should handle loading when no project is loaded', () => {
       service.flam$.next(createTestFLAM());
-      (projectService.project$ as BehaviorSubject<Project | null>).next(null);
+
+      // Update store spy to return null for project selector
+      store.select.and.returnValue(of(null));
 
       expect(() => service.loadColorMappingsFromProject()).not.toThrow();
     });
 
-    it('should handle partial color mapping matches', () => {
+    it('should handle partial color mapping matches', async () => {
       const initialFlam: FLAM = {
         'Step A': {
           key: 'Step A',
@@ -512,15 +544,17 @@ describe('FlamService', () => {
       const mockProject = createMockProject(colorMapping);
 
       service.flam$.next(initialFlam);
-      projectService.project$.next(mockProject);
 
-      service.loadColorMappingsFromProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
+
+      await service.loadColorMappingsFromProject();
 
       expect(service.flam$.value['Step A'].color).toBe('DB0001');
       expect(service.flam$.value['Step B'].color).toBeUndefined();
     });
 
-    it('should handle both Miyuki Delica and hex color codes correctly', () => {
+    it('should handle both Miyuki Delica and hex color codes correctly', async () => {
       const flamWithMixedColors: FLAM = {
         'Delica Bead': {
           key: 'Delica Bead',
@@ -540,20 +574,22 @@ describe('FlamService', () => {
       const mockProject = createMockProject();
 
       service.flam$.next(flamWithMixedColors);
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
+
+      await service.saveColorMappingsToProject();
 
       // Should only save the Miyuki Delica color code, not hex
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'Delica Bead': 'DB0001',
       });
     });
 
-    it('should handle free-form color descriptions', () => {
+    it('should handle free-form color descriptions', async () => {
       const flamWithFreeFormColors: FLAM = {
         'Custom Red': {
           key: 'Custom Red',
@@ -580,21 +616,23 @@ describe('FlamService', () => {
 
       service.flam$.next(flamWithFreeFormColors);
       const mockProject = createMockProject();
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
 
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      await service.saveColorMappingsToProject();
+
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'Custom Red': 'Deep Cherry Red with Metallic Finish',
         'Hex Color': '#3A5FCD',
         'Mixed Format': 'DB0042 (Transparent Blue)',
       });
     });
 
-    it('should handle empty and whitespace color values', () => {
+    it('should handle empty and whitespace color values', async () => {
       const flamWithEmptyColors: FLAM = {
         'Empty Color': {
           key: 'Empty Color',
@@ -621,22 +659,24 @@ describe('FlamService', () => {
 
       service.flam$.next(flamWithEmptyColors);
       const mockProject = createMockProject();
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
 
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      await service.saveColorMappingsToProject();
+
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
       // Service saves truthy color values - whitespace strings are truthy but empty strings are not
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'Whitespace Color': '   ', // Whitespace is truthy, so it gets saved
         'Valid Color': 'Actual Color',
         // Empty string is falsy and gets filtered out
       });
     });
 
-    it('should handle Unicode and special characters in color descriptions', () => {
+    it('should handle Unicode and special characters in color descriptions', async () => {
       const flamWithUnicodeColors: FLAM = {
         'Emoji Color': {
           key: 'Emoji Color',
@@ -663,21 +703,23 @@ describe('FlamService', () => {
 
       service.flam$.next(flamWithUnicodeColors);
       const mockProject = createMockProject();
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
 
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      await service.saveColorMappingsToProject();
+
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'Emoji Color': '🔴 Fire Red 🔥',
         'Unicode Color': '紅色珠子 (Red Bead)',
         'Special Chars': 'Café™ Brown® #123',
       });
     });
 
-    it('should validate Miyuki Delica color code format', () => {
+    it('should validate Miyuki Delica color code format', async () => {
       const flamWithValidDelicaCodes: FLAM = {
         'DB Series': {
           key: 'DB Series',
@@ -704,14 +746,16 @@ describe('FlamService', () => {
 
       service.flam$.next(flamWithValidDelicaCodes);
       const mockProject = createMockProject();
-      projectService.project$.next(mockProject);
 
-      service.saveColorMappingsToProject();
+      // Set up store spy to return mock project
+      store.select.and.returnValue(of(mockProject));
 
-      const savedProject = (
-        projectService.project$.next as jasmine.Spy
+      await service.saveColorMappingsToProject();
+
+      const dispatchedAction = (
+        store.dispatch as jasmine.Spy
       ).calls.mostRecent().args[0];
-      expect(savedProject.colorMapping).toEqual({
+      expect(dispatchedAction.payload.project.colorMapping).toEqual({
         'DB Series': 'DB0001',
         'DB Higher': 'DB1234',
         'DB Max': 'DB9999',
@@ -720,38 +764,116 @@ describe('FlamService', () => {
   });
 
   describe('Integration and Reactive Behavior', () => {
-    it('should respond to zippedRows$ changes', () => {
+    it('should respond to zippedRows$ changes', fakeAsync(() => {
       const rows = createTestRows();
-      spyOn(service, 'generateFLAM').and.callThrough();
-      spyOn(service, 'loadColorMappingsFromProject');
 
-      // Emit rows to trigger the subscription
-      projectService.zippedRows$.next(rows);
+      // Use a Subject to control when the emission happens
+      const rowsSubject = new Subject<Row[]>();
 
-      expect(service.generateFLAM).toHaveBeenCalledWith(rows);
-      expect(service.loadColorMappingsFromProject).toHaveBeenCalled();
-    });
+      // Create a new projectService spy with the controlled observable
+      const newProjectServiceSpy = jasmine.createSpyObj(
+        'ProjectService',
+        ['updateProject'],
+        {
+          zippedRows$: rowsSubject.asObservable(),
+          project$: of(null),
+          ready$: of(true),
+        }
+      );
 
-    it('should not process empty rows from zippedRows$', () => {
-      spyOn(service, 'generateFLAM');
+      // Create a new service instance to trigger constructor subscription
+      const newService = new FlamService(
+        logger,
+        newProjectServiceSpy,
+        projectDbService,
+        settingsService,
+        store
+      );
 
-      // Emit empty array - should be filtered out
-      projectService.zippedRows$.next([]);
+      // Set up spies AFTER service creation
+      const generateFLAMSpy = spyOn(
+        newService,
+        'generateFLAM'
+      ).and.callThrough();
+      const loadColorMappingsSpy = spyOn(
+        newService,
+        'loadColorMappingsFromProject'
+      );
 
-      expect(service.generateFLAM).not.toHaveBeenCalled();
-    });
+      // NOW emit the rows after spies are set up
+      rowsSubject.next(rows);
 
-    it('should maintain FLAM state across multiple updates', () => {
+      // Tick to process the subscription
+      tick();
+
+      expect(generateFLAMSpy).toHaveBeenCalledWith(rows);
+      expect(loadColorMappingsSpy).toHaveBeenCalled();
+    }));
+
+    it('should not process empty rows from zippedRows$', fakeAsync(() => {
+      // Create a new projectService spy with empty rows
+      const newProjectServiceSpy = jasmine.createSpyObj(
+        'ProjectService',
+        ['updateProject'],
+        {
+          zippedRows$: of([]),
+          project$: of(null),
+          ready$: of(true),
+        }
+      );
+
+      // Create a new service instance
+      const newService = new FlamService(
+        logger,
+        newProjectServiceSpy,
+        projectDbService,
+        settingsService,
+        store
+      );
+      spyOn(newService, 'generateFLAM');
+
+      // Tick to process the subscription
+      tick();
+
+      expect(newService.generateFLAM).not.toHaveBeenCalled();
+    }));
+
+    it('should maintain FLAM state across multiple updates', fakeAsync(() => {
       const rows1 = [{ id: 1, steps: [{ id: 1, count: 1, description: 'A' }] }];
       const rows2 = [{ id: 1, steps: [{ id: 1, count: 2, description: 'B' }] }];
 
-      projectService.zippedRows$.next(rows1);
-      expect(service.flam$.value['A']).toBeDefined();
+      // Set up a BehaviorSubject we can control
+      const rowsSubject = new BehaviorSubject<Row[]>(rows1);
 
-      projectService.zippedRows$.next(rows2);
-      expect(service.flam$.value['B']).toBeDefined();
-      expect(service.flam$.value['A']).toBeUndefined(); // Should be replaced
-    });
+      // Create a new projectService spy with the controlled observable
+      const newProjectServiceSpy = jasmine.createSpyObj(
+        'ProjectService',
+        ['updateProject'],
+        {
+          zippedRows$: rowsSubject.asObservable(),
+          project$: of(null),
+          ready$: of(true),
+        }
+      );
+
+      // Create new service instance with controlled observable
+      const newService = new FlamService(
+        logger,
+        newProjectServiceSpy,
+        projectDbService,
+        settingsService,
+        store
+      );
+
+      tick(); // Process first emission
+      expect(newService.flam$.value['A']).toBeDefined();
+
+      // Emit new rows
+      rowsSubject.next(rows2);
+      tick(); // Process second emission
+      expect(newService.flam$.value['B']).toBeDefined();
+      expect(newService.flam$.value['A']).toBeUndefined(); // Should be replaced
+    }));
   });
 
   describe('Edge Cases and Error Handling', () => {
