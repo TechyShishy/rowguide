@@ -1,24 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { NGXLogger } from 'ngx-logger';
-import { firstValueFrom, of, BehaviorSubject } from 'rxjs';
-import { map, skip, filter } from 'rxjs/operators';
 
 import { SettingsService, Settings } from './settings.service';
 import { ErrorHandlerService, ErrorContext } from './error-handler.service';
-import { ReactiveStateStore } from '../store/reactive-state-store';
-import { SettingsActions } from '../store/actions/settings-actions';
-import {
-  selectCombine12,
-  selectLRDesignators,
-  selectFlamMarkers,
-  selectPPInspector,
-  selectZoom,
-  selectScrollOffset,
-  selectMultiAdvance,
-  selectFlamSort,
-  selectProjectSort,
-  selectSettingsReady
-} from '../store/selectors/settings-selectors';
 
 /**
  * @fileoverview Comprehensive Test Suite for SettingsService
@@ -44,7 +28,6 @@ describe('SettingsService', () => {
   let service: SettingsService;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
-  let storeSpy: jasmine.SpyObj<ReactiveStateStore>;
 
   // Test data factory for creating valid settings
   const createValidSettings = (overrides: Partial<Settings> = {}): Settings => {
@@ -60,12 +43,6 @@ describe('SettingsService', () => {
       projectsort: 'dateAsc',
       ...overrides,
     };
-  };
-
-  // Helper function to test observable values
-  const expectObservableValue = async <T>(observable: any, expectedValue: T) => {
-    const value = await firstValueFrom(observable);
-    expect(value).toBe(expectedValue);
   };
 
   beforeEach(() => {
@@ -135,96 +112,19 @@ describe('SettingsService', () => {
       }
     );
 
-    // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
-    const storeSpyObj = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch']);
-
-    // Create a BehaviorSubject to hold the mock state
-    const mockStateSubject = new BehaviorSubject({
-      combine12: false,
-      lrdesignators: false,
-      flammarkers: false,
-      ppinspector: false,
-      zoom: false,
-      scrolloffset: -1,
-      multiadvance: 3,
-      flamsort: 'keyAsc',
-      projectsort: 'dateAsc',
-      ready: false  // Start with ready: false to avoid unwanted initial emissions
-    });
-
-    // Mock store dispatch to update BehaviorSubject state
-    storeSpyObj.dispatch.and.callFake((action: any) => {
-      const currentState = mockStateSubject.value;
-
-      if (action.type === '[Settings] Load Settings Success') {
-        // Update state with loaded values and set ready: true (matches real reducer behavior)
-        const newState = { ...currentState, ...action.payload.settings, ready: true };
-        mockStateSubject.next(newState);
-      } else if (action.type === '[Settings] Set Settings') {
-        // Update state with set values and set ready: true
-        const newState = { ...currentState, ...action.payload.settings, ready: true };
-        mockStateSubject.next(newState);
-      } else if (action.type === '[Settings] Set Settings Ready') {
-        // Update ready state - payload contains { ready: boolean }
-        const newState = { ...currentState, ready: action.payload.ready };
-        mockStateSubject.next(newState);
-      } else if (action.type === '[Settings] Load Settings Failure') {
-        // On failure, set ready: false
-        const newState = { ...currentState, ready: false };
-        mockStateSubject.next(newState);
-      }
-    });
-
-    // Mock store selectors to return from BehaviorSubject with selector applied
-    storeSpyObj.select.and.callFake((selector: any) => {
-      return mockStateSubject.pipe(
-        map(state => {
-          // Apply selector function to current state
-          if (selector === selectCombine12) return state.combine12;
-          if (selector === selectLRDesignators) return state.lrdesignators;
-          if (selector === selectFlamMarkers) return state.flammarkers;
-          if (selector === selectPPInspector) return state.ppinspector;
-          if (selector === selectZoom) return state.zoom;
-          if (selector === selectScrollOffset) return state.scrolloffset;
-          if (selector === selectMultiAdvance) return state.multiadvance;
-          if (selector === selectFlamSort) return state.flamsort;
-          if (selector === selectProjectSort) return state.projectsort;
-          if (selector === selectSettingsReady) return state.ready;
-          return null;
-        })
-      );
-    });
-
     TestBed.configureTestingModule({
       providers: [
         SettingsService,
         { provide: NGXLogger, useValue: loggerSpyObj },
         { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
-        { provide: ReactiveStateStore, useValue: storeSpyObj },
       ],
     });
     localStorage.clear();
-
-    // Reset mock state for each test
-    mockStateSubject.next({
-      combine12: false,
-      lrdesignators: false,
-      flammarkers: false,
-      ppinspector: false,
-      zoom: false,
-      scrolloffset: -1,
-      multiadvance: 3,
-      flamsort: 'keyAsc',
-      projectsort: 'dateAsc',
-      ready: false  // Reset to false for each test
-    });
-
     service = TestBed.inject(SettingsService);
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
     errorHandlerSpy = TestBed.inject(
       ErrorHandlerService
     ) as jasmine.SpyObj<ErrorHandlerService>;
-    storeSpy = TestBed.inject(ReactiveStateStore) as jasmine.SpyObj<ReactiveStateStore>;
   });
 
   afterEach(() => {
@@ -249,19 +149,19 @@ describe('SettingsService', () => {
       expect(service.ready).toBeDefined();
     });
 
-    it('should initialize with default values when no localStorage data exists', async () => {
-      await expectObservableValue(service.combine12$, false);
-      await expectObservableValue(service.lrdesignators$, false);
-      await expectObservableValue(service.flammarkers$, false);
-      await expectObservableValue(service.ppinspector$, false);
-      await expectObservableValue(service.zoom$, false);
-      await expectObservableValue(service.scrolloffset$, -1);
-      await expectObservableValue(service.multiadvance$, 3);
-      await expectObservableValue(service.flamsort$, 'keyAsc');
-      await expectObservableValue(service.projectsort$, 'dateAsc');
+    it('should initialize with default values when no localStorage data exists', () => {
+      expect(service.combine12$.value).toBe(false);
+      expect(service.lrdesignators$.value).toBe(false);
+      expect(service.flammarkers$.value).toBe(false);
+      expect(service.ppinspector$.value).toBe(false);
+      expect(service.zoom$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
+      expect(service.multiadvance$.value).toBe(3);
+      expect(service.flamsort$.value).toBe('keyAsc');
+      expect(service.projectsort$.value).toBe('dateAsc');
     });
 
-    it('should automatically load settings during construction', async () => {
+    it('should automatically load settings during construction', () => {
       const testSettings = createValidSettings({
         combine12: true,
         zoom: true,
@@ -279,21 +179,11 @@ describe('SettingsService', () => {
       const newErrorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
         'handleError',
       ]);
-      const newStoreSpy = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch']);
+      const newService = new SettingsService(newLoggerSpy, newErrorHandlerSpy);
 
-      // Mock the store to return the test values
-      newStoreSpy.select.and.callFake((selector: any) => {
-        if (selector === selectCombine12) return of(true);
-        if (selector === selectZoom) return of(true);
-        if (selector === selectScrollOffset) return of(10);
-        return of(null);
-      });
-
-      const newService = new SettingsService(newLoggerSpy, newErrorHandlerSpy, newStoreSpy);
-
-      await expectObservableValue(newService.combine12$, true);
-      await expectObservableValue(newService.zoom$, true);
-      await expectObservableValue(newService.scrolloffset$, 10);
+      expect(newService.combine12$.value).toBe(true);
+      expect(newService.zoom$.value).toBe(true);
+      expect(newService.scrolloffset$.value).toBe(10);
     });
   });
 
@@ -325,15 +215,12 @@ describe('SettingsService', () => {
 
       service.loadSettings();
 
-      // Verify that loadSettingsSuccess was dispatched with the correct settings
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        SettingsActions.loadSettingsSuccess(settings)
-      );
-
-      // Verify that setSettingsReady was called
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        SettingsActions.setSettingsReady(true)
-      );
+      expect(service.combine12$.value).toBe(true);
+      expect(service.lrdesignators$.value).toBe(true);
+      expect(service.flammarkers$.value).toBe(true);
+      expect(service.ppinspector$.value).toBe(true);
+      expect(service.zoom$.value).toBe(true);
+      expect(service.scrolloffset$.value).toBe(0);
     });
 
     it('should handle saving settings with all boolean flags enabled', () => {
@@ -402,7 +289,7 @@ describe('SettingsService', () => {
   });
 
   describe('Reactive State Management', () => {
-    it('should dispatch loadSettingsSuccess when loading settings', () => {
+    it('should update BehaviorSubjects when loading settings', () => {
       const settings = createValidSettings({
         combine12: true,
         scrolloffset: 15,
@@ -412,9 +299,9 @@ describe('SettingsService', () => {
 
       service.loadSettings();
 
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        SettingsActions.loadSettingsSuccess(settings)
-      );
+      expect(service.combine12$.value).toBe(true);
+      expect(service.scrolloffset$.value).toBe(15);
+      expect(service.flamsort$.value).toBe('nameDesc');
     });
 
     it('should emit values to subscribers when settings change', (done) => {
@@ -460,7 +347,7 @@ describe('SettingsService', () => {
 
   describe('Ready Event Handling', () => {
     it('should emit ready event after saving settings', (done) => {
-      service.ready.pipe(skip(1)).subscribe((isReady) => {
+      service.ready.subscribe((isReady) => {
         expect(isReady).toBe(true);
         done();
       });
@@ -478,7 +365,7 @@ describe('SettingsService', () => {
     it('should emit ready event for each save operation', () => {
       const readyEvents: boolean[] = [];
 
-      service.ready.pipe(skip(1)).subscribe((isReady) => {
+      service.ready.subscribe((isReady) => {
         readyEvents.push(isReady);
       });
 
@@ -490,29 +377,20 @@ describe('SettingsService', () => {
       expect(readyEvents).toEqual([true, true, true]);
     });
 
-    it('should emit ready event when loading settings successfully', (done) => {
-      let readyEmissionCount = 0;
-      const readyValues: boolean[] = [];
+    it('should not emit ready event when only loading settings', (done) => {
+      let readyEmitted = false;
 
-      // Track all ready emissions
-      service.ready.subscribe((ready) => {
-        readyEmissionCount++;
-        readyValues.push(ready);
+      service.ready.subscribe(() => {
+        readyEmitted = true;
       });
 
-      // After subscription, we should have initial emission from constructor loadSettings
-      // Constructor calls loadSettings() on empty localStorage, which goes to else branch and sets ready: true
-
-      // Now set valid settings and load them - this SHOULD trigger ready emission (per reducer behavior)
       const settings = createValidSettings({ combine12: true });
       localStorage.setItem('settings', JSON.stringify(settings));
       service.loadSettings();
 
-      // Use setTimeout to let any async behavior complete
+      // Use setTimeout to ensure ready event would have been emitted if it was going to be
       setTimeout(() => {
-        // Should have: initial (true) + loadSettingsSuccess (true) = 2 emissions
-        expect(readyEmissionCount).toBe(2);
-        expect(readyValues).toEqual([true, true]); // Constructor + loadSettingsSuccess
+        expect(readyEmitted).toBe(false);
         done();
       }, 10);
     });
@@ -524,14 +402,14 @@ describe('SettingsService', () => {
 
       expect(() => service.loadSettings()).not.toThrow();
 
-      // Should dispatch loadSettingsFailure to the store
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          type: SettingsActions.loadSettingsFailure('').type,
-          payload: jasmine.any(Object)
-        })
+      // Should maintain default values
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
+      expect(service.flamsort$.value).toBe('keyAsc');
+      expect(loggerSpy.warn).toHaveBeenCalledWith(
+        'Failed to load settings from localStorage:',
+        jasmine.any(Error)
       );
-      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
     });
 
     it('should handle localStorage setItem errors gracefully', () => {
@@ -551,50 +429,38 @@ describe('SettingsService', () => {
 
       expect(() => service.loadSettings()).not.toThrow();
 
-      // Should dispatch loadSettingsFailure when JSON parsing fails
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          type: SettingsActions.loadSettingsFailure('').type
-        })
+      // Should maintain default values when JSON parsing fails
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
+      expect(service.flamsort$.value).toBe('keyAsc');
+      expect(loggerSpy.warn).toHaveBeenCalledWith(
+        'Failed to load settings from localStorage:',
+        jasmine.any(SyntaxError)
       );
-      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
     });
 
     it('should handle empty string in localStorage', () => {
-      // Reset spy to clear any previous calls from beforeEach and service constructor
-      storeSpy.dispatch.calls.reset();
-
       localStorage.setItem('settings', '');
 
       service.loadSettings();
 
-      // Empty string is falsy, so it goes to the else branch (no settings found)
-      // and should trigger setSettingsReady(true), NOT loadSettingsFailure
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        SettingsActions.setSettingsReady(true)
-      );
-
-      // Should NOT have been called with loadSettingsFailure
-      expect(storeSpy.dispatch).not.toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          type: SettingsActions.loadSettingsFailure('').type
-        })
-      );
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
     });
 
-    it('should handle null values in localStorage', async () => {
+    it('should handle null values in localStorage', () => {
       localStorage.setItem('settings', 'null');
 
       expect(() => service.loadSettings()).not.toThrow();
 
       // Should maintain default values when parsed object is null
-      await expectObservableValue(service.combine12$, false);
-      await expectObservableValue(service.scrolloffset$, -1);
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
     });
   });
 
   describe('Edge Cases and Data Validation', () => {
-    it('should handle partial settings objects with missing properties', async () => {
+    it('should handle partial settings objects with missing properties', () => {
       const partialSettings = {
         combine12: true,
         scrolloffset: 10,
@@ -602,20 +468,16 @@ describe('SettingsService', () => {
       };
       localStorage.setItem('settings', JSON.stringify(partialSettings));
 
-      console.log('localStorage after setting:', localStorage.getItem('settings'));
-
       service.loadSettings();
 
-      console.log('After calling loadSettings, checking observables...');
-
-      await expectObservableValue(service.combine12$, true);
-      await expectObservableValue(service.scrolloffset$, 10);
+      expect(service.combine12$.value).toBe(true);
+      expect(service.scrolloffset$.value).toBe(10);
       // Should use defaults for missing properties
-      await expectObservableValue(service.lrdesignators$, false);
-      await expectObservableValue(service.flamsort$, 'keyAsc');
+      expect(service.lrdesignators$.value).toBe(false);
+      expect(service.flamsort$.value).toBe('keyAsc');
     });
 
-    it('should handle settings with undefined values', async () => {
+    it('should handle settings with undefined values', () => {
       const settingsWithUndefined = {
         combine12: undefined,
         lrdesignators: true,
@@ -627,14 +489,14 @@ describe('SettingsService', () => {
       service.loadSettings();
 
       // Should use defaults for undefined values
-      await expectObservableValue(service.combine12$, false);
-      await expectObservableValue(service.scrolloffset$, -1);
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
       // Should use provided values where available
-      await expectObservableValue(service.lrdesignators$, true);
-      await expectObservableValue(service.multiadvance$, 5);
+      expect(service.lrdesignators$.value).toBe(true);
+      expect(service.multiadvance$.value).toBe(5);
     });
 
-    it('should handle settings with null values', async () => {
+    it('should handle settings with null values', () => {
       const settingsWithNull = {
         combine12: null,
         lrdesignators: true,
@@ -646,14 +508,14 @@ describe('SettingsService', () => {
       service.loadSettings();
 
       // Should use defaults for null values
-      await expectObservableValue(service.combine12$, false);
-      await expectObservableValue(service.scrolloffset$, -1);
+      expect(service.combine12$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
       // Should use provided values where available
-      await expectObservableValue(service.lrdesignators$, true);
-      await expectObservableValue(service.flamsort$, 'keyDesc');
+      expect(service.lrdesignators$.value).toBe(true);
+      expect(service.flamsort$.value).toBe('keyDesc');
     });
 
-    it('should handle settings with invalid data types', async () => {
+    it('should handle settings with invalid data types', () => {
       const invalidSettings = {
         combine12: 'not-a-boolean',
         lrdesignators: true,
@@ -666,14 +528,14 @@ describe('SettingsService', () => {
       service.loadSettings();
 
       // Should use defaults for invalid types, nullish coalescing handles this
-      await expectObservableValue(service.combine12$, 'not-a-boolean' as any); // Passes through
-      await expectObservableValue(service.lrdesignators$, true);
-      await expectObservableValue(service.scrolloffset$, 'not-a-number' as any); // Passes through
-      await expectObservableValue(service.multiadvance$, 7);
-      await expectObservableValue(service.flamsort$, 123 as any); // Passes through
+      expect(service.combine12$.value).toBe('not-a-boolean' as any); // Passes through
+      expect(service.lrdesignators$.value).toBe(true);
+      expect(service.scrolloffset$.value).toBe('not-a-number' as any); // Passes through
+      expect(service.multiadvance$.value).toBe(7);
+      expect(service.flamsort$.value).toBe(123 as any); // Passes through
     });
 
-    it('should handle boundary values for numerical settings', async () => {
+    it('should handle boundary values for numerical settings', () => {
       const boundarySettings = createValidSettings({
         scrolloffset: -100,
         multiadvance: 0,
@@ -682,11 +544,11 @@ describe('SettingsService', () => {
 
       service.loadSettings();
 
-      await expectObservableValue(service.scrolloffset$, -100);
-      await expectObservableValue(service.multiadvance$, 0);
+      expect(service.scrolloffset$.value).toBe(-100);
+      expect(service.multiadvance$.value).toBe(0);
     });
 
-    it('should handle extreme numerical values', async () => {
+    it('should handle extreme numerical values', () => {
       const extremeSettings = createValidSettings({
         scrolloffset: Number.MAX_SAFE_INTEGER,
         multiadvance: Number.MIN_SAFE_INTEGER,
@@ -695,21 +557,21 @@ describe('SettingsService', () => {
 
       service.loadSettings();
 
-      await expectObservableValue(service.scrolloffset$, Number.MAX_SAFE_INTEGER);
-      await expectObservableValue(service.multiadvance$, Number.MIN_SAFE_INTEGER);
+      expect(service.scrolloffset$.value).toBe(Number.MAX_SAFE_INTEGER);
+      expect(service.multiadvance$.value).toBe(Number.MIN_SAFE_INTEGER);
     });
 
-    it('should handle empty object in localStorage', async () => {
+    it('should handle empty object in localStorage', () => {
       localStorage.setItem('settings', '{}');
 
       service.loadSettings();
 
       // Should use all default values
-      await expectObservableValue(service.combine12$, false);
-      await expectObservableValue(service.lrdesignators$, false);
-      await expectObservableValue(service.scrolloffset$, -1);
-      await expectObservableValue(service.multiadvance$, 3);
-      await expectObservableValue(service.flamsort$, 'keyAsc');
+      expect(service.combine12$.value).toBe(false);
+      expect(service.lrdesignators$.value).toBe(false);
+      expect(service.scrolloffset$.value).toBe(-1);
+      expect(service.multiadvance$.value).toBe(3);
+      expect(service.flamsort$.value).toBe('keyAsc');
     });
   });
 
@@ -717,7 +579,7 @@ describe('SettingsService', () => {
     it('should handle rapid sequential save operations', () => {
       const readyEvents: boolean[] = [];
 
-      service.ready.pipe(skip(1)).subscribe((isReady) => {
+      service.ready.subscribe((isReady) => {
         readyEvents.push(isReady);
       });
 
@@ -744,17 +606,22 @@ describe('SettingsService', () => {
       // Initial value
       expect(combine12Values).toEqual([false]);
 
-      // Save - this dispatches setSettings which updates the state immediately
+      // Save then load - save doesn't update reactive state, only load does
       service.saveSettings(createValidSettings({ combine12: true }));
+      service.loadSettings(); // This should update the reactive state
+
+      // Verify the state was updated
       expect(combine12Values).toEqual([false, true]);
 
-      // Save different value - this also updates state immediately
+      // Save different value then load
       service.saveSettings(createValidSettings({ combine12: false }));
+      service.loadSettings(); // This should update to false
+
       expect(combine12Values).toEqual([false, true, false]);
     });
 
-    it('should maintain state consistency across service lifecycle', async () => {
-      // Save initial settings - this should update state immediately via setSettings action
+    it('should maintain state consistency across service lifecycle', () => {
+      // Save initial settings
       const initialSettings = createValidSettings({
         combine12: true,
         scrolloffset: 25,
@@ -762,17 +629,17 @@ describe('SettingsService', () => {
       });
       service.saveSettings(initialSettings);
 
-      // Verify state is updated after saveSettings (which dispatches setSettings)
-      await expectObservableValue(service.combine12$, true);
-      await expectObservableValue(service.scrolloffset$, 25);
-      await expectObservableValue(service.flamsort$, 'nameAsc');
+      // Verify state
+      expect(service.combine12$.value).toBe(false); // saveSettings doesn't update BehaviorSubjects
+      expect(service.scrolloffset$.value).toBe(-1);
+      expect(service.flamsort$.value).toBe('keyAsc');
 
-      // Loading settings should maintain the same state since localStorage has the same values
+      // Load settings to update state
       service.loadSettings();
 
-      await expectObservableValue(service.combine12$, true);
-      await expectObservableValue(service.scrolloffset$, 25);
-      await expectObservableValue(service.flamsort$, 'nameAsc');
+      expect(service.combine12$.value).toBe(true);
+      expect(service.scrolloffset$.value).toBe(25);
+      expect(service.flamsort$.value).toBe('nameAsc');
     });
   });
 

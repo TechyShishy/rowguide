@@ -74,6 +74,9 @@ export class ProjectComponent implements HierarchicalList {
   // project$ will be set in ngOnInit to handle route-based loading
   project$!: Observable<Project>;
 
+  // Settings observables for template use
+  multiadvance$ = this.settingsService.multiadvance$;
+
   @ViewChildren(RowComponent) children!: QueryList<RowComponent>;
   children$: BehaviorSubject<QueryList<RowComponent>> = new BehaviorSubject<
     QueryList<RowComponent>
@@ -308,6 +311,17 @@ export class ProjectComponent implements HierarchicalList {
         break;
       }
     }
+  }
+  
+  // Wrapper methods for template use with observables
+  async onRetreatMultipleSteps() {
+    const x = await firstValueFrom(this.multiadvance$);
+    return this.onRetreatXSteps(x);
+  }
+  
+  async onAdvanceMultipleSteps() {
+    const x = await firstValueFrom(this.multiadvance$);
+    return this.onAdvanceXSteps(x);
   }
   @HostListener('keydown.ArrowRight', ['$event'])
   async onRightArrow() {

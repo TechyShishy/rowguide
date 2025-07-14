@@ -23,6 +23,8 @@ import { NGXLogger } from 'ngx-logger';
 import { AppState, createInitialState } from './app-state.interface';
 import { ProjectAction } from './actions/project-actions';
 import { projectReducer } from './reducers/project-reducer';
+import { SettingsAction } from './actions/settings-actions';
+import { settingsReducer } from './reducers/settings-reducer';
 
 /**
  * Action interface for all state actions
@@ -240,6 +242,7 @@ export class ReactiveStateStore {
     return {
       ...state,
       projects: projectReducer(state.projects, action as ProjectAction),
+      settings: settingsReducer(state.settings, action as SettingsAction),
       // Add other domain reducers here as they're implemented
       ui: state.ui, // TODO: Implement UI reducer
       system: state.system, // TODO: Implement system reducer

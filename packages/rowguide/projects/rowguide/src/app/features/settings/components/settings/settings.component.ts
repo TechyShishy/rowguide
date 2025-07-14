@@ -10,12 +10,26 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { NGXLogger } from 'ngx-logger';
+import { firstValueFrom } from 'rxjs';
 
 import {
   FlamService,
   Settings,
   SettingsService,
 } from '../../../../core/services';
+import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
+import { SettingsActions } from '../../../../core/store/actions/settings-actions';
+import { 
+  selectCombine12,
+  selectLRDesignators,
+  selectFlamMarkers,
+  selectPPInspector,
+  selectZoom,
+  selectScrollOffset,
+  selectMultiAdvance,
+  selectFlamSort,
+  selectProjectSort
+} from '../../../../core/store/selectors/settings-selectors';
 import { ProjectService } from '../../../project-management/services';
 
 @Component({
@@ -55,19 +69,19 @@ export class SettingsComponent {
     private settingsService: SettingsService,
     private projectService: ProjectService,
     private logger: NGXLogger,
-    private flamService: FlamService
+    private flamService: FlamService,
+    private store: ReactiveStateStore
   ) {
-    this.combine12Control.setValue(this.settingsService.combine12$.value);
-    this.lrdesignatorsControl.setValue(
-      this.settingsService.lrdesignators$.value
-    );
-    this.flammarkersControl.setValue(this.settingsService.flammarkers$.value);
-    this.ppinspectorControl.setValue(this.settingsService.ppinspector$.value);
-    this.zoomControl.setValue(this.settingsService.zoom$.value);
-    this.scrolloffsetControl.setValue(this.settingsService.scrolloffset$.value);
-    this.multiadvanceControl.setValue(this.settingsService.multiadvance$.value);
+    // Initialize form controls with current store values
+    this.initializeFormControls();
 
-    this.settings.valueChanges.subscribe((value) => {
+    this.settings.valueChanges.subscribe(async (value) => {
+      // Get current flamsort and projectsort from store since they're not in the form
+      const currentFlamsort = await firstValueFrom(this.store.select(selectFlamSort));
+      const currentProjectsort = await firstValueFrom(this.store.select(selectProjectSort));
+      
+      // Only use SettingsService to save to localStorage and dispatch to store
+      // The service will handle store updates, so we don't need to dispatch twice
       this.settingsService.saveSettings(<Settings>{
         combine12: value.combine12,
         lrdesignators: value.lrdesignators,
@@ -76,14 +90,28 @@ export class SettingsComponent {
         zoom: value.zoom,
         scrolloffset: value.scrolloffset,
         multiadvance: value.multiadvance,
+        flamsort: currentFlamsort, // Preserve current value
+        projectsort: currentProjectsort, // Preserve current value
       });
-      this.settingsService.combine12$.next(value.combine12 ?? false);
-      this.settingsService.lrdesignators$.next(value.lrdesignators ?? false);
-      this.settingsService.flammarkers$.next(value.flammarkers ?? false);
-      this.settingsService.ppinspector$.next(value.ppinspector ?? false);
-      this.settingsService.zoom$.next(value.zoom ?? false);
-      this.settingsService.scrolloffset$.next(value.scrolloffset ?? -1);
-      this.settingsService.multiadvance$.next(value.multiadvance ?? 3);
     });
+  }
+
+  private async initializeFormControls() {
+    // Get current values from store and initialize form controls
+    const combine12 = await firstValueFrom(this.store.select(selectCombine12));
+    const lrdesignators = await firstValueFrom(this.store.select(selectLRDesignators));
+    const flammarkers = await firstValueFrom(this.store.select(selectFlamMarkers));
+    const ppinspector = await firstValueFrom(this.store.select(selectPPInspector));
+    const zoom = await firstValueFrom(this.store.select(selectZoom));
+    const scrolloffset = await firstValueFrom(this.store.select(selectScrollOffset));
+    const multiadvance = await firstValueFrom(this.store.select(selectMultiAdvance));
+
+    this.combine12Control.setValue(combine12);
+    this.lrdesignatorsControl.setValue(lrdesignators);
+    this.flammarkersControl.setValue(flammarkers);
+    this.ppinspectorControl.setValue(ppinspector);
+    this.zoomControl.setValue(zoom);
+    this.scrolloffsetControl.setValue(scrolloffset);
+    this.multiadvanceControl.setValue(multiadvance);
   }
 }

@@ -16,6 +16,7 @@ export interface AppState {
   readonly projects: ProjectState;
   readonly ui: UiState;
   readonly system: SystemState;
+  readonly settings: SettingsState;
 }
 
 /**
@@ -51,6 +52,22 @@ export interface SystemState {
   readonly storageQuota: StorageQuota | null;
   readonly performanceMetrics: PerformanceMetrics;
   readonly featureFlags: FeatureFlags;
+}
+
+/**
+ * Settings state for application configuration
+ */
+export interface SettingsState {
+  readonly combine12: boolean;
+  readonly lrdesignators: boolean;
+  readonly flammarkers: boolean;
+  readonly ppinspector: boolean;
+  readonly zoom: boolean;
+  readonly scrolloffset: number;
+  readonly multiadvance: number;
+  readonly flamsort: string;
+  readonly projectsort: string;
+  readonly ready: boolean;
 }
 
 /**
@@ -140,5 +157,17 @@ export const createInitialState = (): AppState => ({
       exportFeatures: true,
       betaFeatures: false,
     },
+  },
+  settings: {
+    combine12: false,
+    lrdesignators: false,
+    flammarkers: false,
+    ppinspector: false,
+    zoom: false,
+    scrolloffset: -1,
+    multiadvance: 3,
+    flamsort: 'keyAsc',
+    projectsort: 'dateAsc',
+    ready: false,
   },
 });

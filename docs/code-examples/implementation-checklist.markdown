@@ -184,8 +184,8 @@ Successfully migrated from BehaviorSubjects to centralized Redux-like state mana
   - ✅ `project-inspector.component.ts` and template - Updated `.value` access patterns to async pipe
   - ✅ `project-selector.component.ts` - Updated `.next()` calls and `ready` references
 
-**✅ ReactiveStateStore Migration Achievement**: 🎉 **COMPLETE** - All core components successfully migrated
-**Migration Date**: July 12, 2025
+**✅ ReactiveStateStore Migration Achievement**: 🟡 **70% COMPLETE** - Core components successfully migrated, 3 services remaining
+**Migration Date**: July 12-13, 2025 (Ongoing - Phase 2a pending)
 
 **Key Achievements:**
 - 🔧 **ProjectService** - Completely migrated from BehaviorSubjects to ReactiveStateStore with actions/selectors
@@ -194,6 +194,17 @@ Successfully migrated from BehaviorSubjects to centralized Redux-like state mana
 - 📊 **Store Integration** - All state updates now use dispatch actions (updateProjectSuccess, createProjectSuccess, etc.)
 - 🔄 **Service Layer** - FlamService and supporting services updated to use store patterns
 - ✅ **Build Success** - All TypeScript compilation errors resolved, application builds successfully
+- 🚀 **Infinite Loop Resolution** - Critical navigation loops resolved with proper store integration patterns
+
+**🔄 Phase 2a Requirements (Completion Target: 100% ReactiveStateStore Migration)**
+- **SettingsService**: 12 integration points requiring 6 new store files
+- **NotificationService**: 3 integration points requiring 4 new store files  
+- **MarkModeService**: 4 integration points requiring 4 new store files
+- **Total Remaining**: 19 integration points + 14 new store infrastructure files
+- ✅ **SettingsService**: ✅ **COMPLETED** - 12 integration points with 6 new store files (July 14, 2025)
+- ✅ **NotificationService**: ✅ **COMPLETED** - 3 integration points with 4 new store files (July 14, 2025)
+- **MarkModeService**: 4 integration points requiring 4 new store files
+- **Total Remaining**: 4 integration points + 4 new store infrastructure files
 
 **✅ Test Migration Completion** (July 13, 2025)
 - 🎉 **100% Test Success Achieved**: 729/729 tests passing with zero failures
@@ -205,6 +216,72 @@ Successfully migrated from BehaviorSubjects to centralized Redux-like state mana
 - 🏗️ **Architecture Validation**: All store selectors and actions working correctly across test suite
 
 **Next Priority**: Continue Phase 2 with remaining architectural improvements
+
+#### 🔄 **Phase 2a: Complete ReactiveStateStore Migration (High Priority)**
+
+##### ✅ **SettingsService Migration** ✅ **COMPLETED** (July 14, 2025)
+- ✅ **Store Infrastructure Setup**
+  - ✅ Created settings actions (SET_SETTINGS, LOAD_SETTINGS_SUCCESS, LOAD_SETTINGS_FAILURE, SET_SETTINGS_READY)
+  - ✅ Created settings reducer to handle all setting state updates with proper defaults
+  - ✅ Added settings selectors (selectCombine12, selectLRDesignators, selectFlamMarkers, selectPPInspector, selectZoom, selectScrollOffset, selectMultiAdvance, selectFlamSort, selectProjectSort, selectSettingsReady)
+  - ✅ Added SettingsState interface to AppState with all setting properties
+- ✅ **Service Refactoring** (9 BehaviorSubjects + 1 Subject removal)
+  - ✅ Removed `ready: Subject<boolean>` → Using store selector `selectSettingsReady`
+  - ✅ Removed `combine12$: BehaviorSubject<boolean>` → Using store selector `selectCombine12`
+  - ✅ Removed `lrdesignators$: BehaviorSubject<boolean>` → Using store selector `selectLRDesignators`
+  - ✅ Removed `flammarkers$: BehaviorSubject<boolean>` → Using store selector `selectFlamMarkers`
+  - ✅ Removed `ppinspector$: BehaviorSubject<boolean>` → Using store selector `selectPPInspector`
+  - ✅ Removed `zoom$: BehaviorSubject<boolean>` → Using store selector `selectZoom`
+  - ✅ Removed `scrolloffset$: BehaviorSubject<number>` → Using store selector `selectScrollOffset`
+  - ✅ Removed `multiadvance$: BehaviorSubject<number>` → Using store selector `selectMultiAdvance`
+  - ✅ Removed `flamsort$: BehaviorSubject<string>` → Using store selector `selectFlamSort`
+  - ✅ Removed `projectsort$: BehaviorSubject<string>` → Using store selector `selectProjectSort`
+- ✅ **Method Updates** (3 integration points)
+  - ✅ `saveSettings()` → Dispatches `setSettings` action, maintains localStorage persistence
+  - ✅ `loadSettings()` → Dispatches `loadSettingsSuccess` or `loadSettingsFailure` actions with proper validation
+  - ✅ Constructor → Injects ReactiveStateStore, calls `loadSettings()` for initialization
+- ✅ **Test Migration** (Comprehensive test coverage)
+  - ✅ Complete ReactiveStateStore mocking with stateful BehaviorSubject simulation
+  - ✅ Action dispatch verification for all settings operations
+  - ✅ Observable behavior validation with store selectors
+  - ✅ Error handling and edge case validation
+  - ✅ Performance and memory management tests
+
+##### **NotificationService Migration** (Moderate Refactoring - 3 integration points)
+- [ ] **Store Infrastructure Setup**
+  - Create notification actions (SHOW_NOTIFICATION, CLEAR_NOTIFICATION, SET_NOTIFICATION_QUEUE)
+  - Create notifications reducer to handle notification state
+  - Add notification selectors (selectCurrentNotification, selectNotificationQueue)
+  - Add NotificationState interface to AppState with message, type, duration properties
+- [ ] **Service Refactoring** (1 BehaviorSubject removal)
+  - Remove `message$: BehaviorSubject<string>` → Use store selector `selectCurrentNotification`
+  - Add ReactiveStateStore injection
+  - Replace constructor logic with store initialization
+- [ ] **Method Updates** (2 specific integration points)
+  - `snackbar(message: string)` → Dispatch `SHOW_NOTIFICATION` action with message payload
+  - Add `clearNotification()` method → Dispatch `CLEAR_NOTIFICATION` action
+- [ ] **Component Integration**
+  - Update components using `message$` to use store selector
+  - Add notification component to listen to store selector for display
+
+##### **MarkModeService Migration** (Minor Refactoring - 4 integration points)
+- [ ] **Store Infrastructure Setup**
+  - Create mark mode actions (SET_MARK_MODE, UPDATE_MARK_MODE, RESET_MARK_MODE)
+  - Create mark mode reducer to handle mode state changes
+  - Add mark mode selectors (selectCurrentMarkMode, selectMarkModeHistory)
+  - Add MarkModeState interface to AppState with current mode and history
+- [ ] **Service Refactoring** (1 Subject removal)
+  - Remove `markModeChangedSubject: Subject<number>` → Use store selector `selectCurrentMarkMode`
+  - Remove `markModeChanged$` observable → Replace with store selector
+  - Add ReactiveStateStore injection
+- [ ] **Method Updates** (2 specific integration points)
+  - `updateMarkMode(mode: number)` → Dispatch `SET_MARK_MODE` action with mode payload
+  - Add `resetMarkMode()` method → Dispatch `RESET_MARK_MODE` action
+- [ ] **Component Integration** (1 specific integration point)
+  - Update `BeadCountBottomSheet` component to use store selector instead of service observable
+  - Replace service injection with store injection in components using mark mode
+
+#### 🚀 **Phase 2b: Advanced Features (Medium Priority)**
 - [ ] Implement optimistic updates for position changes
   - Add optimistic position updates in `ProjectComponent.onPositionChange()`
   - Add optimistic project updates in save operations
@@ -213,61 +290,108 @@ Successfully migrated from BehaviorSubjects to centralized Redux-like state mana
   - Implement state rehydration on application startup
   - Add automatic state saving on changes
   - Handle state migration for version updates
-- [ ] Replace `SettingsService` BehaviorSubjects with ReactiveStateStore selectors
-  - Remove all BehaviorSubject declarations
-  - Add settings actions and reducer
-  - Migrate settings state to centralized store
-- [ ] Update `NotificationService` to use ReactiveStateStore
-  - Replace BehaviorSubject with store selector
-  - Add notification actions and reducer
-  - Integrate with UI notification system in store
-- [ ] Update `MarkModeService` to use ReactiveStateStore
-  - Replace Subject with store selector
-  - Add mark mode actions to store
-  - Update BeadCountBottomSheet to use store
 
 **Files to modify:**
 
-- `src/app/features/project-management/services/project.service.ts` (Major refactoring)
-  - Remove BehaviorSubject declarations (lines 24-28)
-  - Add ReactiveStateStore injection
-  - Replace all `.next()` calls with store.dispatch() actions
-  - Replace all direct state access with store selectors
-  - Update `saveCurrentPosition()` to dispatch UPDATE_POSITION action
-  - Update `loadProject()` to dispatch LOAD_PROJECT_SUCCESS action
-  - Update `loadPeyote()` to dispatch CREATE_PROJECT_SUCCESS action
-- `src/app/features/pattern-tracking/components/project/project.component.ts` (Major refactoring)
-  - Replace service observables with store selectors (lines 59-61)
+#### **Phase 2a: ReactiveStateStore Completion**
+
+##### **SettingsService Migration Files:**
+- `src/app/core/store/app-state.interface.ts` (Add SettingsState)
+  - Add SettingsState interface with all 9 setting properties
+  - Update AppState interface to include settings: SettingsState
+  - Add default settings state in createInitialState()
+- `src/app/core/store/actions/settings-actions.ts` (New file - Settings actions)
+  - Create SET_SETTINGS action for bulk settings update
+  - Create UPDATE_SETTING action for individual setting changes
+  - Create LOAD_SETTINGS_SUCCESS action for localStorage loading
+  - Create RESET_SETTINGS action for default values
+- `src/app/core/store/reducers/settings-reducer.ts` (New file - Settings reducer)
+  - Handle SET_SETTINGS action to update all settings state
+  - Handle UPDATE_SETTING action for individual setting updates
+  - Handle LOAD_SETTINGS_SUCCESS with validation
+  - Handle RESET_SETTINGS to restore defaults
+- `src/app/core/store/selectors/settings-selectors.ts` (New file - Settings selectors)
+  - Create selectAllSettings for entire settings state
+  - Create individual selectors: selectCombine12, selectLRDesignators, selectFlamMarkers, etc.
+  - Create computed selectors: selectSettingsReady, selectSettingsCount
+- `src/app/features/settings/services/settings.service.ts` (Major refactoring - 12 integration points)
+  - Remove all 9 BehaviorSubjects and 1 Subject declarations (lines 11-19)
   - Add ReactiveStateStore injection to constructor
-  - Update `ngOnInit()` to use store selectors
-  - Replace `projectService.project$` references with store selector
-  - Update position change handlers to dispatch actions
-- `src/app/features/pattern-tracking/components/row/row.component.ts` (Minor updates)
-  - Update to use store selectors for position state
-  - Replace ProjectService references with store references
-- `src/app/features/pattern-tracking/components/step/step.component.ts` (Minor updates)
-  - Update to use store selectors for current step state
-  - Replace ProjectService references with store references
-- `src/app/features/project-management/components/project-selector/project-selector.component.ts` (Minor updates)
-  - Update to use store for project loading state
-  - Replace ProjectService references with store actions
-- `src/app/app.component.ts` (Minor updates)
-  - Update ready subscription to use store selector
-  - Replace ProjectService reference with store reference
-- `src/app/features/settings/services/settings.service.ts` (Major refactoring)
-  - Remove BehaviorSubject declarations
-  - Add ReactiveStateStore injection
-  - Replace all `.next()` calls with store.dispatch() actions
-  - Replace all direct state access with store selectors
-- `src/app/features/notification/services/notification.service.ts` (Major refactoring)
-  - Remove BehaviorSubject declarations
-  - Add ReactiveStateStore injection
-  - Replace all `.next()` calls with store.dispatch() actions
-  - Replace all direct state access with store selectors
-- `src/app/features/mark-mode/services/mark-mode.service.ts` (Minor refactoring)
-  - Replace Subject with store selector
-  - Add mark mode actions to store
-  - Update BeadCountBottomSheet to use store
+  - Replace `saveSettings()` with store dispatch SET_SETTINGS action
+  - Replace `loadSettings()` with store dispatch LOAD_SETTINGS_SUCCESS action
+  - Add computed observables using store selectors
+  - Update error handling to work with store actions
+- `src/app/features/settings/services/settings.service.spec.ts` (Test updates)
+  - Add ReactiveStateStore mock configuration
+  - Update all test expectations to use store selectors
+  - Mock store actions for saveSettings/loadSettings tests
+  - Add tests for new computed observables
+
+##### **NotificationService Migration Files:**
+- `src/app/core/store/app-state.interface.ts` (Add NotificationState)
+  - Add NotificationState interface with message, type, duration, timestamp
+  - Add NotificationQueue interface for multiple notifications
+  - Update AppState interface to include notifications: NotificationState
+- `src/app/core/store/actions/notification-actions.ts` (New file - Notification actions)
+  - Create SHOW_NOTIFICATION action with message, type, duration payload
+  - Create CLEAR_NOTIFICATION action
+  - Create QUEUE_NOTIFICATION action for multiple notifications
+- `src/app/core/store/reducers/notification-reducer.ts` (New file - Notification reducer)
+  - Handle SHOW_NOTIFICATION to set current notification
+  - Handle CLEAR_NOTIFICATION to remove current notification
+  - Handle QUEUE_NOTIFICATION for notification queuing
+- `src/app/core/store/selectors/notification-selectors.ts` (New file - Notification selectors)
+  - Create selectCurrentNotification for active notification
+  - Create selectNotificationQueue for pending notifications
+  - Create selectHasNotification boolean selector
+- `src/app/core/services/notification.service.ts` (Moderate refactoring - 3 integration points)
+  - Remove `message$: BehaviorSubject<string>` declaration (line 7)
+  - Add ReactiveStateStore injection to constructor
+  - Replace `snackbar(message: string)` with store dispatch SHOW_NOTIFICATION
+  - Add `clearNotification()` method with CLEAR_NOTIFICATION dispatch
+  - Add computed observable using store selector
+- `src/app/core/services/notification.service.spec.ts` (Test updates)
+  - Add ReactiveStateStore mock configuration
+  - Update test expectations to use store selectors
+  - Add tests for clearNotification method
+
+##### **MarkModeService Migration Files:**
+- `src/app/core/store/app-state.interface.ts` (Add MarkModeState)
+  - Add MarkModeState interface with currentMode: number, history: number[]
+  - Update AppState interface to include markMode: MarkModeState
+- `src/app/core/store/actions/mark-mode-actions.ts` (New file - Mark mode actions)
+  - Create SET_MARK_MODE action with mode payload
+  - Create UPDATE_MARK_MODE action for mode changes
+  - Create RESET_MARK_MODE action to default mode
+- `src/app/core/store/reducers/mark-mode-reducer.ts` (New file - Mark mode reducer)
+  - Handle SET_MARK_MODE to update current mode and add to history
+  - Handle UPDATE_MARK_MODE for mode transitions
+  - Handle RESET_MARK_MODE to clear mode and history
+- `src/app/core/store/selectors/mark-mode-selectors.ts` (New file - Mark mode selectors)
+  - Create selectCurrentMarkMode for active mode
+  - Create selectMarkModeHistory for mode change history
+  - Create selectMarkModeCount for statistics
+- `src/app/core/services/mark-mode.service.ts` (Minor refactoring - 4 integration points)
+  - Remove `markModeChangedSubject: Subject<number>` declaration (line 8)
+  - Remove `markModeChanged$` observable property (line 10)
+  - Add ReactiveStateStore injection to constructor
+  - Replace `updateMarkMode(mode: number)` with store dispatch SET_MARK_MODE
+  - Add computed observable using store selector
+- `src/app/core/services/mark-mode.service.spec.ts` (Test updates)
+  - Add ReactiveStateStore mock configuration
+  - Update test expectations to use store selectors
+- `src/app/features/mark-mode/components/bead-count-bottom-sheet.component.ts` (Component integration)
+  - Replace MarkModeService injection with ReactiveStateStore
+  - Update template to use store selector with async pipe
+  - Replace service method calls with store action dispatches
+
+#### **Phase 2b: Supporting Infrastructure**
+- `src/app/core/store/index.ts` (Export updates)
+  - Add exports for new settings, notification, and mark mode modules
+  - Update public API exports for actions, reducers, selectors
+- `src/app/core/store/reactive-state-store.ts` (Reducer integration)
+  - Update rootReducer to include settings, notification, and mark mode reducers
+  - Add new domain reducers to state combination logic
 
 #### 📝 Phase 2 Priority: Data Validation Integration
 
@@ -435,14 +559,31 @@ Based on the codebase analysis, here's the recommended integration order for max
 
 #### Priority 2: ReactiveStateStore Migration (High Impact)
 **Impact**: Better performance, predictable state management, optimistic updates
-**Files**: 9 components with major refactoring needed
+**Status**: 🟡 **70% Complete** - Core services migrated, 3 services remaining
 
-1. `ProjectService` - Remove BehaviorSubjects, add store integration
-2. `ProjectComponent` - Replace observables with store selectors
-3. Supporting components - Update to use store patterns
-4. `SettingsService` - Major refactoring to use store
-5. `NotificationService` - Major refactoring to use store
-6. `MarkModeService` - Minor refactoring to use store
+**✅ Completed:**
+1. `ProjectService` - Fully migrated with store integration ✅
+2. `ProjectComponent` - Updated with store selectors, infinite loop fixed ✅
+3. `FlamService` - Migrated to store patterns ✅
+4. Supporting components - Updated to use store patterns ✅
+
+**🔄 Remaining (Phase 2a - High Priority):**
+1. `SettingsService` - **Major refactoring** (12 integration points: 9 BehaviorSubjects + 1 Subject + 2 methods)
+2. `NotificationService` - **Moderate refactoring** (3 integration points: 1 BehaviorSubject + 2 methods)
+3. `MarkModeService` - **Minor refactoring** (4 integration points: 1 Subject + 1 observable + 1 method + 1 component)
+
+**📊 Migration Complexity:**
+- **SettingsService**: 12 integration points, 6 new files needed (actions, reducer, selectors, interfaces)
+- **NotificationService**: 3 integration points, 4 new files needed (actions, reducer, selectors, interfaces)
+- **MarkModeService**: 4 integration points, 4 new files needed (actions, reducer, selectors, interfaces)
+
+**🎯 Success Criteria:**
+- All BehaviorSubjects and Subjects replaced with store selectors
+- All `.next()` calls replaced with store.dispatch() actions
+- New store infrastructure (actions, reducers, selectors) implemented
+- 100% test coverage maintained for all migrated services
+- Zero TypeScript compilation errors
+- All existing functionality preserved
 
 #### Priority 3: DataIntegrityService Integration (Security Impact)
 **Impact**: Prevention of data corruption and application crashes

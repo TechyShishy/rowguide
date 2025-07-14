@@ -31,7 +31,9 @@ import { Project } from '../../../../core/models/project';
 import { FlamService, SettingsService } from '../../../../core/services';
 import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
 import { ProjectActions } from '../../../../core/store/actions/project-actions';
+import { SettingsActions } from '../../../../core/store/actions/settings-actions';
 import { selectCurrentProject } from '../../../../core/store/selectors/project-selectors';
+import { selectFlamSort } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
 
@@ -175,18 +177,20 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
         this.cdr.markForCheck();
       });
 
-    this.sort.sortChange.subscribe((sortState: Sort) => {
-      if (
-        sortState.active +
-          sortState.direction[0].toUpperCase() +
-          sortState.direction.slice(1) !==
-        this.settingsService.flamsort$.value
-      ) {
-        this.settingsService.flamsort$.next(
-          sortState.active +
-            sortState.direction[0].toUpperCase() +
-            sortState.direction.slice(1)
-        );
+    this.sort.sortChange.subscribe(async (sortState: Sort) => {
+      const currentFlamsort = await firstValueFrom(this.store.select(selectFlamSort));
+      
+      // Handle case where direction might be empty string
+      if (!sortState.direction) {
+        return; // Don't update if no direction is set
+      }
+      
+      const newFlamsort = sortState.active +
+        sortState.direction[0].toUpperCase() +
+        sortState.direction.slice(1);
+      
+      if (newFlamsort !== currentFlamsort) {
+        this.store.dispatch(SettingsActions.updateSetting('flamsort', newFlamsort));
       }
     });
 

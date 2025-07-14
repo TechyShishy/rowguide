@@ -1,14 +1,14 @@
 <mat-card class="flam">
   <mat-card-title>FLAM</mat-card-title>
   <mat-card-content>
-    <ng-template [ngIf]="!settingsService.ppinspector$.value">
+    <ng-template [ngIf]="!(settingsService.ppinspector$ | async)">
       <mat-list>
         <mat-list-item *ngFor="let flamRow of ObjectValues(( flamService.flam$ | async ) ?? {})">
           {{flamRow.key}} - {{flamRow.firstAppearance[0]}} - {{flamRow.lastAppearance[0]}}
         </mat-list-item>
       </mat-list>
     </ng-template>
-    <ng-template [ngIf]="settingsService.ppinspector$.value">
+    <ng-template [ngIf]="settingsService.ppinspector$ | async">
       <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByKey">
         <ng-container matColumnDef="key">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
@@ -77,11 +77,11 @@
     <mat-card-title>Project Summary</mat-card-title>
     <mat-card-content>
       <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector$.value">
+      <ng-template [ngIf]="!(settingsService.ppinspector$ | async)">
         <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
         <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector$.value">
+      <ng-template [ngIf]="settingsService.ppinspector$ | async">
         <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
         <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
       </ng-template>
@@ -92,10 +92,10 @@
   <mat-card-title>Saved Position</mat-card-title>
   <mat-card-content>
     <mat-list>
-      <ng-template [ngIf]="!settingsService.ppinspector$.value">
+      <ng-template [ngIf]="!(settingsService.ppinspector$ | async)">
         <mat-list-item>{{ (projectService.project$ | async)?.position?.row ?? 0 }}, {{ (projectService.project$ | async)?.position?.step ?? 0 }}</mat-list-item>
       </ng-template>
-      <ng-template [ngIf]="settingsService.ppinspector$.value">
+      <ng-template [ngIf]="settingsService.ppinspector$ | async">
         <mat-list-item>Row: {{ getDisplayRow() }}</mat-list-item>
         <mat-list-item>Step: {{ getDisplayStep() }}</mat-list-item>
       </ng-template>

@@ -1,9 +1,9 @@
 <mat-expansion-panel>
   <mat-expansion-panel-header>
     <mat-panel-title>
-      {{settingsService.combine12$.value && row.id === 1 ? 'Rows 1 & 2' : 'Row ' + row.id}}
+      {{(settingsService.combine12$ | async) && row.id === 1 ? 'Rows 1 & 2' : 'Row ' + row.id}}
     </mat-panel-title>
-    <mat-panel-description *ngIf="settingsService.lrdesignators$.value">
+    <mat-panel-description *ngIf="settingsService.lrdesignators$ | async">
       {{row.id % 2 ? 'L' : 'R' }}
     </mat-panel-description>
   </mat-expansion-panel-header>

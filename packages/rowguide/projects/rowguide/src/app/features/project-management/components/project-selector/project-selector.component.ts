@@ -24,14 +24,15 @@ import {
 import { map, switchMap, tap } from 'rxjs/operators';
 
 import { Project } from '../../../../core/models/project';
-import { FlamService, NotificationService } from '../../../../core/services';
+import { FlamService, NotificationService, SettingsService } from '../../../../core/services';
 import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
 import { ProjectActions } from '../../../../core/store/actions/project-actions';
+import { SettingsActions } from '../../../../core/store/actions/settings-actions';
+import { selectProjectSort } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { BeadtoolPdfService } from '../../../file-import/loaders';
 import { ProjectService } from '../../services';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
-import { SettingsService } from '../../../../core/services';
 import { MatSelectModule } from '@angular/material/select';
 
 @Component({
@@ -59,7 +60,7 @@ export class ProjectSelectorComponent {
   projects$: Observable<Project[]> = new Observable<Project[]>();
   showSpinner: boolean = false;
   private destroy$ = new Subject<void>();
-  sortOrder$: BehaviorSubject<string> = new BehaviorSubject<string>('dateAsc');
+  sortOrder$: Observable<string> = this.store.select(selectProjectSort);
 
   constructor(
     private logger: NGXLogger,
@@ -192,7 +193,6 @@ export class ProjectSelectorComponent {
   }
 
   ngAfterViewInit() {
-    this.sortOrder$ = this.settingsService.projectsort$;
     this.projects$ = from(this.indexedDBService.loadProjects()).pipe(
       combineLatestWith(this.sortOrder$),
       map(([projects, sortOrder]) => {
@@ -224,5 +224,9 @@ export class ProjectSelectorComponent {
         });
       })
     );
+  }
+
+  onSortOrderChange(value: string) {
+    this.store.dispatch(SettingsActions.updateSetting('projectsort', value));
   }
 }
