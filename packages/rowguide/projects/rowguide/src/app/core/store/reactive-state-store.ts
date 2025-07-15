@@ -25,6 +25,8 @@ import { ProjectAction } from './actions/project-actions';
 import { projectReducer } from './reducers/project-reducer';
 import { SettingsAction } from './actions/settings-actions';
 import { settingsReducer } from './reducers/settings-reducer';
+import { NotificationAction } from './actions/notification-actions';
+import { notificationReducer } from './reducers/notification-reducer';
 
 /**
  * Action interface for all state actions
@@ -243,6 +245,7 @@ export class ReactiveStateStore {
       ...state,
       projects: projectReducer(state.projects, action as ProjectAction),
       settings: settingsReducer(state.settings, action as SettingsAction),
+      notifications: notificationReducer(state.notifications, action as NotificationAction),
       // Add other domain reducers here as they're implemented
       ui: state.ui, // TODO: Implement UI reducer
       system: state.system, // TODO: Implement system reducer

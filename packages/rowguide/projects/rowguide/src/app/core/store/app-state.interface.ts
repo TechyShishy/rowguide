@@ -8,6 +8,7 @@
 import { Project } from '../models/project';
 import { Position } from '../models/position';
 import { Row } from '../models/row';
+import { NotificationState } from './reducers/notification-reducer';
 
 /**
  * Root application state
@@ -17,6 +18,7 @@ export interface AppState {
   readonly ui: UiState;
   readonly system: SystemState;
   readonly settings: SettingsState;
+  readonly notifications: NotificationState;
 }
 
 /**
@@ -169,5 +171,10 @@ export const createInitialState = (): AppState => ({
     flamsort: 'keyAsc',
     projectsort: 'dateAsc',
     ready: false,
+  },
+  notifications: {
+    current: null,
+    queue: [],
+    lastId: 0,
   },
 });
