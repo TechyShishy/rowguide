@@ -7,10 +7,12 @@ import {
   AppError,
   ErrorNotification,
 } from './error-handler.service';
+import { DataIntegrityService } from './data-integrity.service';
 
 describe('ErrorHandlerService', () => {
   let service: ErrorHandlerService;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let dataIntegritySpy: jasmine.SpyObj<DataIntegrityService>;
 
   beforeEach(() => {
     const loggerSpyObj = jasmine.createSpyObj('NGXLogger', [
@@ -19,15 +21,31 @@ describe('ErrorHandlerService', () => {
       'info',
     ]);
 
+    const dataIntegritySpyObj = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProjectName',
+      'getRecentEvents',
+    ]);
+
+    // Set up DataIntegrityService mock defaults
+    dataIntegritySpyObj.validateProjectName.and.returnValue({
+      isValid: true,
+      cleanValue: 'test-input',
+      originalValue: 'test-input',
+      issues: [],
+    });
+    dataIntegritySpyObj.getRecentEvents.and.returnValue([]);
+
     TestBed.configureTestingModule({
       providers: [
         ErrorHandlerService,
         { provide: NGXLogger, useValue: loggerSpyObj },
+        { provide: DataIntegrityService, useValue: dataIntegritySpyObj },
       ],
     });
 
     service = TestBed.inject(ErrorHandlerService);
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    dataIntegritySpy = TestBed.inject(DataIntegrityService) as jasmine.SpyObj<DataIntegrityService>;
   });
 
   it('should be created', () => {

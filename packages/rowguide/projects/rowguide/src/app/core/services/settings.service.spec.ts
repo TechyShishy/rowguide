@@ -602,11 +602,7 @@ describe('SettingsService', () => {
       };
       localStorage.setItem('settings', JSON.stringify(partialSettings));
 
-      console.log('localStorage after setting:', localStorage.getItem('settings'));
-
       service.loadSettings();
-
-      console.log('After calling loadSettings, checking observables...');
 
       await expectObservableValue(service.combine12$, true);
       await expectObservableValue(service.scrolloffset$, 10);

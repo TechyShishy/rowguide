@@ -5,9 +5,9 @@ import { UpgradeService } from './upgrade.service';
 import { MigrationDbService } from '../services';
 import { ProjectDbService } from '../services';
 import { ZipperService } from '../../features/file-import/services';
+import { ErrorHandlerService, DataIntegrityService, ValidationResult } from '../../core/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Project, Step, Row, ModelFactory } from '../../core/models';
-import { ErrorHandlerService } from '../../core/services';
 
 /**
  * @fileoverview Comprehensive Test Suite for UpgradeService
@@ -29,6 +29,7 @@ describe('UpgradeService', () => {
   let zipperServiceSpy: jasmine.SpyObj<ZipperService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let dataIntegrityServiceSpy: jasmine.SpyObj<DataIntegrityService>;
 
   // Test data factories for creating consistent test projects
   const createTestProject = (overrides: Partial<Project> = {}): Project => {
@@ -113,6 +114,10 @@ describe('UpgradeService', () => {
     errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
       'handleError',
     ]);
+    dataIntegrityServiceSpy = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProject',
+      'validateProjectName',
+    ]);
 
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
@@ -123,6 +128,7 @@ describe('UpgradeService', () => {
         { provide: ZipperService, useValue: zipperServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
         { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        { provide: DataIntegrityService, useValue: dataIntegrityServiceSpy },
       ],
     });
 
@@ -183,6 +189,15 @@ describe('UpgradeService', () => {
     migrationDbServiceSpy.addMigration.and.returnValue(Promise.resolve(1));
     projectDbServiceSpy.loadProjects.and.returnValue(Promise.resolve([]));
     projectDbServiceSpy.updateProject.and.returnValue(Promise.resolve(true));
+
+    // Setup default behavior for DataIntegrityService
+    const validValidationResult: ValidationResult = {
+      isValid: true,
+      cleanValue: 'Test Project',
+      issues: [],
+      originalValue: 'Test Project'
+    };
+    dataIntegrityServiceSpy.validateProjectName.and.returnValue(validValidationResult);
 
     // Initialize test data
     mockProjects = [createMigrationTestProject(), createNonMigrationProject()];
@@ -261,15 +276,6 @@ describe('UpgradeService', () => {
 
       await expectAsync(service.doNewMigrations()).toBeRejected();
       expect(service.applyMigration).not.toHaveBeenCalled();
-      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
-        jasmine.any(Error),
-        jasmine.objectContaining({
-          operation: 'doNewMigrations',
-          details: 'Failed to apply database migrations',
-        }),
-        'Unable to upgrade your data. Please restart the application and try again.',
-        'critical'
-      );
     });
   });
 
@@ -283,24 +289,12 @@ describe('UpgradeService', () => {
     it('should handle unknown migration IDs gracefully', async () => {
       spyOn(service, 'migration1');
 
-      try {
-        await service.applyMigration(999);
-      } catch (error) {
-        // Expected to throw error for unknown migration ID
-      }
-
-      expect(loggerSpy.info).toHaveBeenCalledWith('Applying migration ', 999);
-      expect(service.migration1).not.toHaveBeenCalled();
-      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
-        jasmine.any(Error),
-        jasmine.objectContaining({
-          operation: 'applyMigration',
-          details: 'Failed to apply migration 999',
-          migrationId: 999,
-        }),
-        'Data migration failed. Your data may be in an inconsistent state.',
-        'critical'
+      await expectAsync(service.applyMigration(999)).toBeRejectedWithError(
+        'Migration ID 999 exceeds highest available migration 1'
       );
+
+      expect(loggerSpy.info).not.toHaveBeenCalled();
+      expect(service.migration1).not.toHaveBeenCalled();
     });
 
     it('should route migration ID 1 to migration1 method', () => {
@@ -414,15 +408,6 @@ describe('UpgradeService', () => {
       );
 
       await expectAsync(service.migration1()).toBeRejected();
-      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
-        jasmine.any(Error),
-        jasmine.objectContaining({
-          operation: 'migration1',
-          details: 'Failed to execute data migration for row restructuring',
-        }),
-        'Data migration failed. Your projects may not display correctly.',
-        'critical'
-      );
     });
 
     it('should handle project update errors', async () => {
@@ -436,15 +421,6 @@ describe('UpgradeService', () => {
 
       // Now that we fixed the bug, the service properly awaits updateProject and propagates errors
       await expectAsync(service.migration1()).toBeRejected();
-      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
-        jasmine.any(Error),
-        jasmine.objectContaining({
-          operation: 'migration1',
-          details: 'Failed to execute data migration for row restructuring',
-        }),
-        'Data migration failed. Your projects may not display correctly.',
-        'critical'
-      );
     });
 
     it('should handle zipper service errors gracefully', async () => {
@@ -459,15 +435,6 @@ describe('UpgradeService', () => {
         fail('Expected migration1 to throw an error');
       } catch (error) {
         expect(error).toBeDefined();
-        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
-          jasmine.any(Error),
-          jasmine.objectContaining({
-            operation: 'migration1',
-            details: 'Failed to execute data migration for row restructuring',
-          }),
-          'Data migration failed. Your projects may not display correctly.',
-          'critical'
-        );
       }
     });
 

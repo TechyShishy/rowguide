@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 
 import { Step, ModelFactory } from '../../../core/models';
-import { ErrorHandlerService } from '../../../core/services';
+import { ErrorHandlerService, DataIntegrityService } from '../../../core/services';
 
 @Injectable({
   providedIn: 'root',
@@ -10,11 +10,19 @@ import { ErrorHandlerService } from '../../../core/services';
 export class ZipperService {
   constructor(
     private logger: NGXLogger,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private dataIntegrityService: DataIntegrityService
   ) {}
 
   expandSteps(steps: Step[]): Step[] {
     try {
+      // Integration Point 1: Validate step data before expansion
+      const validationResult = this.validateStepData(steps, 'expandSteps');
+      if (!validationResult.isValid) {
+        this.logger.warn('ZipperService: Invalid step data for expansion', validationResult.issues);
+        return []; // Return empty array for invalid data
+      }
+
       if (!steps || !Array.isArray(steps)) {
         throw new Error('Invalid steps array provided');
       }
@@ -57,6 +65,13 @@ export class ZipperService {
 
   compressSteps(steps: Step[]): Step[] {
     try {
+      // Integration Point 2: Add data integrity checks for step transformations
+      const validationResult = this.validateStepTransformations(steps, 'compressSteps');
+      if (!validationResult.isValid) {
+        this.logger.warn('ZipperService: Invalid step data for compression', validationResult.issues);
+        return []; // Return empty array for invalid data
+      }
+
       if (!steps || !Array.isArray(steps)) {
         throw new Error('Invalid steps array provided');
       }
@@ -179,5 +194,119 @@ export class ZipperService {
       );
       return [];
     }
+  }
+
+  /**
+   * Validate step data before expansion - Integration Point 1
+   */
+  private validateStepData(steps: Step[], operation: string): {
+    isValid: boolean;
+    issues: string[];
+  } {
+    const issues: string[] = [];
+
+    if (!steps) {
+      issues.push('Steps array is null or undefined');
+      return { isValid: false, issues };
+    }
+
+    if (!Array.isArray(steps)) {
+      issues.push('Steps must be an array');
+      return { isValid: false, issues };
+    }
+
+    // Check for reasonable array size to prevent memory issues
+    if (steps.length > 10000) {
+      issues.push('Steps array too large (max 10,000 steps)');
+    }
+
+    // Validate individual steps
+    steps.forEach((step, index) => {
+      if (!step) {
+        issues.push(`Step at index ${index} is null or undefined`);
+        return;
+      }
+
+      if (typeof step.id !== 'number' || step.id < 0) {
+        issues.push(`Step at index ${index} has invalid id: ${step.id}`);
+      }
+
+      if (typeof step.count !== 'number' || step.count < 0 || !isFinite(step.count)) {
+        issues.push(`Step at index ${index} has invalid count: ${step.count}`);
+      }
+
+      if (!step.description || typeof step.description !== 'string') {
+        issues.push(`Step at index ${index} has invalid description: ${step.description}`);
+      } else {
+        // Use DataIntegrityService to validate step descriptions
+        const descValidation = this.dataIntegrityService.validateProjectName(step.description);
+        if (!descValidation.isValid) {
+          this.logger.debug(`ZipperService: Step description sanitized at index ${index}`, {
+            original: step.description,
+            clean: descValidation.cleanValue,
+            issues: descValidation.issues,
+          });
+        }
+      }
+
+      // Check for reasonable count limits to prevent infinite loops
+      if (step.count > 1000 && operation === 'expandSteps') {
+        issues.push(`Step at index ${index} has excessive count for expansion: ${step.count}`);
+      }
+    });
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+    };
+  }
+
+  /**
+   * Validate step transformations for data integrity - Integration Point 2
+   */
+  private validateStepTransformations(steps: Step[], operation: string): {
+    isValid: boolean;
+    issues: string[];
+  } {
+    const issues: string[] = [];
+
+    // First run basic step validation
+    const basicValidation = this.validateStepData(steps, operation);
+    if (!basicValidation.isValid) {
+      issues.push(...basicValidation.issues);
+    }
+
+    // Additional transformation-specific validation
+    if (steps && Array.isArray(steps)) {
+      // Check for potential overflow in count accumulation
+      const totalCount = steps.reduce((sum, step) => {
+        return sum + (typeof step.count === 'number' ? step.count : 0);
+      }, 0);
+
+      if (totalCount > 100000) {
+        issues.push('Total step count too large for transformation (max 100,000)');
+      }
+
+      // Validate step sequence integrity
+      const descriptions = steps.map(step => step.description).filter(desc => desc);
+      const uniqueDescriptions = new Set(descriptions);
+
+      if (descriptions.length > 0 && uniqueDescriptions.size === 0) {
+        issues.push('No valid step descriptions found');
+      }
+
+      // Log transformation validation results
+      this.logger.debug(`ZipperService: ${operation} validation completed`, {
+        stepsCount: steps.length,
+        totalCount,
+        uniqueDescriptions: uniqueDescriptions.size,
+        issuesFound: issues.length,
+      });
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+    };
   }
 }

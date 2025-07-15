@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 
 import { Project, isValidProject, hasValidId } from '../../core/models';
-import { ErrorHandlerService } from '../../core/services';
+import { ErrorHandlerService, DataIntegrityService } from '../../core/services';
 import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({
@@ -12,7 +12,8 @@ export class ProjectDbService {
   constructor(
     private logger: NGXLogger,
     private indexedDbService: IndexedDbService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private dataIntegrity: DataIntegrityService
   ) {}
 
   /**
@@ -23,8 +24,29 @@ export class ProjectDbService {
       const db = await this.indexedDbService.openDB();
       const projects = await db.getAll('projects');
 
-      // Filter out invalid projects
+      // Filter out invalid projects and validate with DataIntegrityService
       return projects.filter((project) => {
+        // Validate project name with DataIntegrityService
+        if (project?.name) {
+          const nameValidationResult = this.dataIntegrity.validateProjectName(project.name);
+          if (!nameValidationResult.isValid) {
+            this.errorHandler.handleError(
+              new Error(`Project name validation failed: ${nameValidationResult.issues.join(', ')}`),
+              {
+                operation: 'loadProjects',
+                details: 'DataIntegrityService validation failed for project name',
+                projectId: project?.id,
+                projectName: project.name,
+                validationIssues: nameValidationResult.issues,
+                invalidProject: project,
+              },
+              undefined,
+              'medium'
+            );
+            return false;
+          }
+        }
+
         if (!isValidProject(project)) {
           this.errorHandler.handleError(
             new Error('Invalid project found in database'),
@@ -82,6 +104,27 @@ export class ProjectDbService {
         return null;
       }
 
+      // Validate loaded project data with DataIntegrityService
+      if (project?.name) {
+        const nameValidationResult = this.dataIntegrity.validateProjectName(project.name);
+        if (!nameValidationResult.isValid) {
+          this.errorHandler.handleError(
+            new Error(`Loaded project name validation failed: ${nameValidationResult.issues.join(', ')}`),
+            {
+              operation: 'loadProject',
+              details: 'DataIntegrityService validation failed for loaded project name',
+              projectId: key,
+              projectName: project.name,
+              validationIssues: nameValidationResult.issues,
+              invalidProject: project,
+            },
+            'The project data appears to be corrupted. Please try reloading.',
+            'high'
+          );
+          return null;
+        }
+      }
+
       if (!isValidProject(project)) {
         this.errorHandler.handleError(
           new Error('Invalid project data loaded from database'),
@@ -118,6 +161,27 @@ export class ProjectDbService {
    * Adds a new project to the database
    */
   async addProject(project: Project): Promise<number | null> {
+    // Validate project name with DataIntegrityService
+    if (project?.name) {
+      const nameValidationResult = this.dataIntegrity.validateProjectName(project.name);
+      if (!nameValidationResult.isValid) {
+        this.errorHandler.handleError(
+          new Error(`Project name validation failed: ${nameValidationResult.issues.join(', ')}`),
+          {
+            operation: 'addProject',
+            details: 'DataIntegrityService name validation failed',
+            projectName: project.name,
+            projectId: project?.id,
+            validationIssues: nameValidationResult.issues,
+            invalidProject: project,
+          },
+          'Unable to save project. Please check your project name.',
+          'high'
+        );
+        throw new Error('Invalid project name');
+      }
+    }
+
     if (!isValidProject(project)) {
       this.errorHandler.handleError(
         new Error('Cannot save invalid project'),
@@ -178,6 +242,27 @@ export class ProjectDbService {
         'high'
       );
       return false;
+    }
+
+    // Validate project name with DataIntegrityService
+    if (project?.name) {
+      const nameValidationResult = this.dataIntegrity.validateProjectName(project.name);
+      if (!nameValidationResult.isValid) {
+        this.errorHandler.handleError(
+          new Error(`Project name validation failed: ${nameValidationResult.issues.join(', ')}`),
+          {
+            operation: 'updateProject',
+            details: 'DataIntegrityService name validation failed',
+            projectName: project.name,
+            projectId: project?.id,
+            validationIssues: nameValidationResult.issues,
+            invalidProject: project,
+          },
+          'Unable to update project. Please check your project name.',
+          'high'
+        );
+        return false;
+      }
     }
 
     if (!isValidProject(project)) {

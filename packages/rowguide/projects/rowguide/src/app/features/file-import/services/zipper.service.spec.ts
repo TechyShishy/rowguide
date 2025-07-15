@@ -7,7 +7,8 @@ import { Step, ModelFactory } from '../../../core/models';
 import {
   ErrorHandlerService,
   ErrorContext,
-} from '../../../core/services/error-handler.service';
+  DataIntegrityService,
+} from '../../../core/services';
 
 /**
  * @fileoverview Comprehensive Test Suite for ZipperService
@@ -30,6 +31,7 @@ describe('ZipperService', () => {
   let service: ZipperService;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let dataIntegritySpy: jasmine.SpyObj<DataIntegrityService>;
 
   // Test data factories
   const createTestStep = (id: number, count: number, description: string): Step => {
@@ -47,6 +49,19 @@ describe('ZipperService', () => {
     const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', [
       'handleError',
     ]);
+
+    const dataIntegritySpyObj = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProjectName',
+      'getRecentEvents',
+    ]);
+
+    // Set up DataIntegrityService mock defaults
+    dataIntegritySpyObj.validateProjectName.and.returnValue({
+      isValid: true,
+      cleanValue: 'test-step',
+      originalValue: 'test-step',
+      issues: [],
+    });
 
     // Configure ErrorHandlerService mock for ZipperService with structured context handling
     errorHandlerSpyObj.handleError.and.callFake(
@@ -85,6 +100,7 @@ describe('ZipperService', () => {
       providers: [
         { provide: NGXLogger, useValue: loggerSpyObj },
         { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
+        { provide: DataIntegrityService, useValue: dataIntegritySpyObj },
       ],
     });
 
@@ -93,6 +109,9 @@ describe('ZipperService', () => {
     errorHandlerSpy = TestBed.inject(
       ErrorHandlerService
     ) as jasmine.SpyObj<ErrorHandlerService>;
+    dataIntegritySpy = TestBed.inject(
+      DataIntegrityService
+    ) as jasmine.SpyObj<DataIntegrityService>;
   });
 
   describe('Service Initialization', () => {

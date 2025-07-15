@@ -17,7 +17,8 @@ export class MigrationDbService {
   async loadMigrations(): Promise<boolean[]> {
     try {
       const db = await this.indexedDbService.openDB();
-      return db.getAll('migrations');
+      const migrations = await db.getAll('migrations');
+      return migrations;
     } catch (error) {
       this.errorHandler.handleError(
         error,
@@ -36,7 +37,8 @@ export class MigrationDbService {
   async loadMigration(key: number): Promise<boolean | undefined> {
     try {
       const db = await this.indexedDbService.openDB();
-      return db.get('migrations', key);
+      const migration = await db.get('migrations', key);
+      return migration;
     } catch (error) {
       this.errorHandler.handleError(
         error,
@@ -46,10 +48,10 @@ export class MigrationDbService {
           migrationKey: key,
           tableName: 'migrations',
         },
-        'Unable to check migration status. Data migrations may not work correctly.',
-        'high'
+        'Unable to retrieve migration status. Migration tracking may be inconsistent.',
+        'medium'
       );
-      throw error; // Re-throw to prevent unsafe migration decisions
+      throw error; // Re-throw to indicate failure
     }
   }
 

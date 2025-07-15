@@ -230,6 +230,89 @@ export class DataIntegrityService {
   }
 
   /**
+   * Validate position data to prevent crashes and data corruption
+   */
+  validatePositionData(row: number, step: number): ValidationResult {
+    const issues: string[] = [];
+    let cleanRow = row;
+    let cleanStep = step;
+
+    if (!this.config.enableInputValidation) {
+      return {
+        isValid: true,
+        cleanValue: `${row},${step}`,
+        issues: [],
+        originalValue: `${row},${step}`,
+      };
+    }
+
+    try {
+      // Basic type and range validation
+      if (typeof row !== 'number' || typeof step !== 'number') {
+        issues.push('Position coordinates must be numbers');
+        cleanRow = Number(row) || 0;
+        cleanStep = Number(step) || 0;
+      }
+
+      if (!Number.isInteger(row) || !Number.isInteger(step)) {
+        issues.push('Position coordinates must be integers');
+        cleanRow = Math.floor(cleanRow);
+        cleanStep = Math.floor(cleanStep);
+      }
+
+      if (cleanRow < 0 || cleanStep < 0) {
+        issues.push('Position coordinates cannot be negative');
+        cleanRow = Math.max(0, cleanRow);
+        cleanStep = Math.max(0, cleanStep);
+      }
+
+      // Prevent extremely large values that might indicate data corruption
+      const maxReasonableValue = 10000;
+      if (cleanRow > maxReasonableValue || cleanStep > maxReasonableValue) {
+        issues.push(`Position coordinates exceed reasonable limits (max ${maxReasonableValue})`);
+        cleanRow = Math.min(cleanRow, maxReasonableValue);
+        cleanStep = Math.min(cleanStep, maxReasonableValue);
+      }
+
+      // Check for NaN or infinite values
+      if (!isFinite(cleanRow) || !isFinite(cleanStep)) {
+        issues.push('Position coordinates must be finite numbers');
+        cleanRow = isFinite(cleanRow) ? cleanRow : 0;
+        cleanStep = isFinite(cleanStep) ? cleanStep : 0;
+      }
+
+      if (issues.length > 0) {
+        this.logEvent(
+          DataIntegrityEventType.INVALID_INPUT_BLOCKED,
+          'Position data validation issues found',
+          {
+            originalRow: row,
+            originalStep: step,
+            cleanRow,
+            cleanStep,
+            issueCount: issues.length,
+          }
+        );
+      }
+
+      return {
+        isValid: issues.length === 0,
+        cleanValue: `${cleanRow},${cleanStep}`,
+        issues,
+        originalValue: `${row},${step}`,
+      };
+    } catch (error) {
+      this.logger.error('Position data validation failed:', error);
+      return {
+        isValid: false,
+        cleanValue: '0,0', // Safe fallback
+        issues: ['Validation error - using safe fallback'],
+        originalValue: `${row},${step}`,
+      };
+    }
+  }
+
+  /**
    * Get recent integrity events for debugging
    */
   getRecentEvents(limit: number = 20): readonly DataIntegrityEvent[] {

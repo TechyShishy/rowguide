@@ -8,6 +8,7 @@ import {
   ErrorHandlerService,
   ErrorContext,
 } from '../../core/services/error-handler.service';
+import { DataIntegrityService, ValidationResult } from '../../core/services/data-integrity.service';
 import {
   Project,
   ModelFactory,
@@ -39,6 +40,7 @@ describe('ProjectDbService', () => {
   let indexedDbServiceSpy: jasmine.SpyObj<IndexedDbService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let dataIntegritySpy: jasmine.SpyObj<DataIntegrityService>;
   let mockDb: jasmine.SpyObj<any>;
 
   // Test data factory
@@ -85,6 +87,17 @@ describe('ProjectDbService', () => {
     errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
       'handleError',
     ]);
+    dataIntegritySpy = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProjectName'
+    ]);
+
+    // Setup DataIntegrityService mock - default to valid
+    dataIntegritySpy.validateProjectName.and.returnValue({
+      isValid: true,
+      cleanValue: 'Test Project',
+      issues: [],
+      originalValue: 'Test Project'
+    } as ValidationResult);
 
     // Configure ErrorHandlerService mock to work with structured context objects
     errorHandlerSpy.handleError.and.callFake(
@@ -204,6 +217,7 @@ describe('ProjectDbService', () => {
         { provide: IndexedDbService, useValue: indexedDbServiceSpy },
         { provide: NGXLogger, useValue: loggerSpy },
         { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        { provide: DataIntegrityService, useValue: dataIntegritySpy },
       ],
     });
 
@@ -215,6 +229,9 @@ describe('ProjectDbService', () => {
     errorHandlerSpy = TestBed.inject(
       ErrorHandlerService
     ) as jasmine.SpyObj<ErrorHandlerService>;
+    dataIntegritySpy = TestBed.inject(
+      DataIntegrityService
+    ) as jasmine.SpyObj<DataIntegrityService>;
 
     // Default mock setup
     indexedDbServiceSpy.openDB.and.returnValue(Promise.resolve(mockDb));
@@ -228,6 +245,8 @@ describe('ProjectDbService', () => {
     it('should have required dependencies injected', () => {
       expect(indexedDbServiceSpy).toBeTruthy();
       expect(loggerSpy).toBeTruthy();
+      expect(errorHandlerSpy).toBeTruthy();
+      expect(dataIntegritySpy).toBeTruthy();
     });
   });
 

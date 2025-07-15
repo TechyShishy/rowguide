@@ -179,16 +179,16 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
 
     this.sort.sortChange.subscribe(async (sortState: Sort) => {
       const currentFlamsort = await firstValueFrom(this.store.select(selectFlamSort));
-      
+
       // Handle case where direction might be empty string
       if (!sortState.direction) {
         return; // Don't update if no direction is set
       }
-      
+
       const newFlamsort = sortState.active +
         sortState.direction[0].toUpperCase() +
         sortState.direction.slice(1);
-      
+
       if (newFlamsort !== currentFlamsort) {
         this.store.dispatch(SettingsActions.updateSetting('flamsort', newFlamsort));
       }

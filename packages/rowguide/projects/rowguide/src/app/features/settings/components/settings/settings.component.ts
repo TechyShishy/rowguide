@@ -19,7 +19,7 @@ import {
 } from '../../../../core/services';
 import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
 import { SettingsActions } from '../../../../core/store/actions/settings-actions';
-import { 
+import {
   selectCombine12,
   selectLRDesignators,
   selectFlamMarkers,
@@ -79,7 +79,7 @@ export class SettingsComponent {
       // Get current flamsort and projectsort from store since they're not in the form
       const currentFlamsort = await firstValueFrom(this.store.select(selectFlamSort));
       const currentProjectsort = await firstValueFrom(this.store.select(selectProjectSort));
-      
+
       // Only use SettingsService to save to localStorage and dispatch to store
       // The service will handle store updates, so we don't need to dispatch twice
       this.settingsService.saveSettings(<Settings>{

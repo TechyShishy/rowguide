@@ -337,18 +337,18 @@ describe('ProjectInspectorComponent', () => {
       const subscription = component.sort.sortChange.subscribe(async (sortState: Sort) => {
         // Mock the current flamsort value as a string
         const currentFlamsort = 'keyAsc';
-        
+
         // Handle case where direction might be empty string
         if (!sortState.direction) {
           return; // Don't update if no direction is set
         }
-        
+
         const newFlamsort = sortState.active +
           sortState.direction[0].toUpperCase() +
           sortState.direction.slice(1);
-        
+
         if (newFlamsort !== currentFlamsort) {
-          mockStoreSpy.dispatch({ 
+          mockStoreSpy.dispatch({
             type: '[Settings] Update Setting',
             payload: { key: 'flamsort', value: newFlamsort }
           });
@@ -356,9 +356,9 @@ describe('ProjectInspectorComponent', () => {
       });
 
       // Simulate sort change
-      const mockSortEvent: Sort = { 
-        active: 'count', 
-        direction: 'desc' as 'asc' | 'desc' | '' 
+      const mockSortEvent: Sort = {
+        active: 'count',
+        direction: 'desc' as 'asc' | 'desc' | ''
       };
       component.sort.sortChange.emit(mockSortEvent);
       tick(); // Let async operations complete

@@ -12,7 +12,7 @@ import {
   ModelFactory,
   SafeAccess,
 } from '../../../core/models';
-import { SettingsService, ErrorHandlerService } from '../../../core/services';
+import { SettingsService, ErrorHandlerService, DataIntegrityService } from '../../../core/services';
 import { ReactiveStateStore } from '../../../core/store/reactive-state-store';
 import { ProjectActions } from '../../../core/store/actions/project-actions';
 import {
@@ -43,7 +43,8 @@ export class ProjectService {
     private indexedDBService: ProjectDbService,
     private route: ActivatedRoute,
     private errorHandler: ErrorHandlerService,
-    private store: ReactiveStateStore
+    private store: ReactiveStateStore,
+    private dataIntegrityService: DataIntegrityService
   ) {
     this.settingsService.ready.subscribe(() => {
       this.loadCurrentProject();
@@ -53,25 +54,58 @@ export class ProjectService {
    * Saves the current project ID to localStorage
    */
   async saveCurrentProject(id: number): Promise<void> {
-    if (id <= 0) {
+    // Validate project ID using comprehensive checks
+    if (!Number.isInteger(id) || id <= 0) {
+      const error = new Error(`Invalid project ID for storage: ${id}`);
       this.errorHandler.handleError(
-        new Error('Attempted to save invalid project ID'),
+        error,
         {
           operation: 'saveCurrentProject',
-          details: 'Invalid project ID provided',
-          projectId: id,
+          details: 'Project ID validation failed - must be positive integer',
+          invalidId: id,
+          expectedType: 'positive integer',
+          validationContext: 'Project ID storage validation',
         },
-        undefined,
+        'Unable to save project reference. Invalid project identifier.',
         'medium'
       );
-      return;
+      throw error;
+    }
+
+    // Additional validation for reasonable ID range
+    const maxReasonableId = 1000000; // Prevent extremely large IDs that might indicate corruption
+    if (id > maxReasonableId) {
+      const error = new Error(`Project ID exceeds reasonable limits: ${id}`);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveCurrentProject',
+          details: 'Project ID exceeds safety limits',
+          projectId: id,
+          maxAllowed: maxReasonableId,
+          validationContext: 'Project ID boundary validation',
+        },
+        'Project ID is unusually large. Please verify the project selection.',
+        'medium'
+      );
+      throw error;
     }
 
     try {
-      localStorage.setItem(
-        'currentProject',
-        JSON.stringify(<CurrentProject>{ id })
-      );
+      const projectData = JSON.stringify(<CurrentProject>{ id });
+
+      // Validate JSON serialization result
+      if (!projectData || projectData === '{}' || projectData === 'null') {
+        throw new Error('Failed to serialize project data for storage');
+      }
+
+      localStorage.setItem('currentProject', projectData);
+
+      // Verify storage success by reading back
+      const verification = localStorage.getItem('currentProject');
+      if (!verification || verification !== projectData) {
+        throw new Error('Failed to verify localStorage write operation');
+      }
     } catch (error) {
       this.errorHandler.handleError(
         error,
@@ -80,10 +114,12 @@ export class ProjectService {
           details: `Failed to save project ID: ${id} to localStorage`,
           projectId: id,
           storageType: 'localStorage',
+          validationContext: 'LocalStorage data persistence validation',
         },
         'Unable to remember your current project. Settings may not persist.',
         'medium'
       );
+      throw error;
     }
   }
 
@@ -91,19 +127,34 @@ export class ProjectService {
    * Saves the current position for the active project
    */
   async saveCurrentPosition(row: number, step: number): Promise<void> {
-    if (row < 0 || step < 0) {
+    // Validate position data using DataIntegrityService - Integration Point 5
+    const positionValidation = this.dataIntegrityService.validatePositionData(row, step);
+
+    if (!positionValidation.isValid) {
+      const error = new Error(`Invalid position coordinates: ${positionValidation.issues.join(', ')}`);
       this.errorHandler.handleError(
-        new Error('Attempted to save invalid position'),
+        error,
         {
           operation: 'saveCurrentPosition',
-          details: 'Invalid position coordinates provided',
-          row: row,
-          step: step,
+          details: 'DataIntegrityService position validation failed',
+          invalidData: { row, step },
+          validationIssues: positionValidation.issues,
+          cleanValue: positionValidation.cleanValue,
+          validationContext: 'DataIntegrityService position validation',
         },
-        undefined,
+        'Unable to save position. Please ensure row and step values are valid.',
         'medium'
       );
-      return;
+      throw error;
+    }
+
+    // Log validation results if any issues were automatically corrected
+    if (positionValidation.issues.length > 0) {
+      this.logger.debug('ProjectService: Position data corrected by DataIntegrityService', {
+        original: { row, step },
+        corrected: positionValidation.cleanValue,
+        issues: positionValidation.issues,
+      });
     }
 
     try {
@@ -121,19 +172,34 @@ export class ProjectService {
       if (project) {
         this.store.dispatch(ProjectActions.updateProjectSuccess(project));
         await this.indexedDBService.updateProject(project);
+      } else {
+        const error = new Error('No valid project available to save position');
+        this.errorHandler.handleError(
+          error,
+          {
+            operation: 'saveCurrentPosition',
+            details: 'No active project found when saving position',
+            attemptedPosition: { row, step },
+            validationContext: 'Project state validation',
+          },
+          'No project is currently loaded. Please select a project first.',
+          'medium'
+        );
+        throw error;
       }
     } catch (error) {
       this.errorHandler.handleError(
         error,
         {
           operation: 'saveCurrentPosition',
-          details: 'Failed to save position coordinates',
-          row: row,
-          step: step,
+          details: 'Failed to save position coordinates to database',
+          position: { row, step },
+          databaseOperation: 'updateProject',
         },
         'Unable to save your current position. Progress may not be saved.',
         'medium'
       );
+      throw error;
     }
   }
 
@@ -147,19 +213,81 @@ export class ProjectService {
         return null;
       }
 
-      const parsed = JSON.parse(data) as CurrentProject;
-      if (!parsed.id || parsed.id <= 0) {
+      // Validate JSON data before parsing
+      if (!this.dataIntegrityService.validateJsonData(data).isValid) {
         this.errorHandler.handleError(
-          new Error('Invalid project ID found in localStorage'),
+          new Error('Invalid JSON data in localStorage'),
           {
             operation: 'loadCurrentProjectId',
-            details: 'Invalid project ID found in localStorage',
-            invalidId: parsed?.id,
+            details: 'localStorage contains malformed JSON data',
+            invalidData: data,
             storageType: 'localStorage',
+            validationContext: 'JSON integrity validation',
           },
-          undefined,
+          'Stored project data is corrupted. You may need to select a project manually.',
           'medium'
         );
+        // Clear corrupted data
+        localStorage.removeItem('currentProject');
+        return null;
+      }
+
+      const parseResult = this.dataIntegrityService.validateJsonData(data);
+      const parsed = parseResult.parsed as CurrentProject;
+
+      // Validate parsed data structure
+      if (!parsed || typeof parsed !== 'object') {
+        this.errorHandler.handleError(
+          new Error('Invalid project data structure in localStorage'),
+          {
+            operation: 'loadCurrentProjectId',
+            details: 'Parsed data is not a valid object',
+            invalidStructure: parsed,
+            storageType: 'localStorage',
+            validationContext: 'Data structure validation',
+          },
+          'Stored project data has invalid structure. You may need to select a project manually.',
+          'medium'
+        );
+        localStorage.removeItem('currentProject');
+        return null;
+      }
+
+      // Validate project ID
+      if (!Number.isInteger(parsed.id) || parsed.id <= 0) {
+        this.errorHandler.handleError(
+          new Error(`Invalid project ID found in localStorage: ${parsed.id}`),
+          {
+            operation: 'loadCurrentProjectId',
+            details: 'Project ID validation failed - must be positive integer',
+            invalidId: parsed.id,
+            expectedType: 'positive integer',
+            storageType: 'localStorage',
+            validationContext: 'Project ID validation',
+          },
+          'Stored project ID is invalid. You may need to select a project manually.',
+          'medium'
+        );
+        localStorage.removeItem('currentProject');
+        return null;
+      }
+
+      // Additional boundary validation
+      const maxReasonableId = 1000000;
+      if (parsed.id > maxReasonableId) {
+        this.errorHandler.handleError(
+          new Error(`Project ID exceeds reasonable limits: ${parsed.id}`),
+          {
+            operation: 'loadCurrentProjectId',
+            details: 'Project ID exceeds safety boundaries',
+            projectId: parsed.id,
+            maxAllowed: maxReasonableId,
+            validationContext: 'Project ID boundary validation',
+          },
+          'Stored project ID is unusually large. You may need to select a project manually.',
+          'medium'
+        );
+        localStorage.removeItem('currentProject');
         return null;
       }
 
@@ -169,12 +297,19 @@ export class ProjectService {
         error,
         {
           operation: 'loadCurrentProjectId',
-          details: 'Failed to load project ID from localStorage',
+          details: 'Failed to load and validate project ID from localStorage',
           storageType: 'localStorage',
+          validationContext: 'LocalStorage data retrieval and validation',
         },
         'Unable to restore your last project. You may need to select a project manually.',
         'medium'
       );
+      // Clean up potentially corrupted data
+      try {
+        localStorage.removeItem('currentProject');
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
       return null;
     }
   }
@@ -208,17 +343,57 @@ export class ProjectService {
    * Loads a project from peyote shorthand format
    */
   async loadPeyote(projectName: string, data: string): Promise<Project> {
+    // Validate required inputs
     if (!projectName?.trim() || !data?.trim()) {
       const error = new Error('Project name and data are required');
       this.errorHandler.handleError(
         error,
         {
           operation: 'loadPeyote',
-          details: 'Missing required project data',
+          details: 'Missing required project data for peyote import',
           projectName: projectName,
           dataLength: data?.length || 0,
+          validationContext: 'Input validation for peyote pattern import',
         },
         'Please provide both a project name and pattern data.',
+        'high'
+      );
+      throw error;
+    }
+
+    // Validate project name using DataIntegrityService
+    const trimmedName = projectName.trim();
+    if (!this.dataIntegrityService.validateProjectName(trimmedName)) {
+      const error = new Error(`Invalid project name: ${trimmedName}`);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadPeyote',
+          details: 'Project name validation failed during peyote import',
+          invalidProjectName: trimmedName,
+          validationService: 'DataIntegrityService',
+          validationContext: 'Project name safety validation',
+        },
+        'Project name contains invalid characters. Please use only letters, numbers, spaces, and common punctuation.',
+        'high'
+      );
+      throw error;
+    }
+
+    // Validate data length for reasonable pattern size
+    const maxDataLength = 1000000; // 1MB limit for pattern data
+    if (data.length > maxDataLength) {
+      const error = new Error(`Pattern data too large: ${data.length} characters`);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadPeyote',
+          details: 'Pattern data exceeds size limits',
+          dataLength: data.length,
+          maxAllowed: maxDataLength,
+          validationContext: 'Pattern data size validation',
+        },
+        'Pattern data is too large. Please check the pattern format.',
         'high'
       );
       throw error;
@@ -232,7 +407,7 @@ export class ProjectService {
         throw new Error('Invalid project data from peyote shorthand');
       }
 
-      project.name = projectName.trim();
+      project.name = trimmedName;
       this.store.dispatch(ProjectActions.createProjectSuccess(project));
 
       const projectId = await this.indexedDBService.addProject(project);
@@ -250,8 +425,10 @@ export class ProjectService {
         {
           operation: 'loadPeyote',
           details: 'Failed to parse and save peyote project',
-          projectName: projectName,
+          projectName: trimmedName,
           dataLength: data?.length || 0,
+          parsingService: 'PeyoteShorthandService',
+          validationContext: 'Peyote pattern parsing and database save',
         },
         'Unable to import the pattern. Please check the pattern data format.',
         'high'

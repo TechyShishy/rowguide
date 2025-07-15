@@ -2,20 +2,36 @@ import { TestBed } from '@angular/core/testing';
 
 import { C2ccrochetShorthandService } from './c2ccrochet-shorthand.service';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { ErrorHandlerService } from '../../../core/services';
+import { ErrorHandlerService, DataIntegrityService } from '../../../core/services';
 
 describe('C2ccrochetShorthandService', () => {
   let service: C2ccrochetShorthandService;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let dataIntegritySpy: jasmine.SpyObj<DataIntegrityService>;
 
   beforeEach(() => {
     errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', [
       'handleError',
     ]);
+    dataIntegritySpy = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProjectName',
+      'getRecentEvents',
+    ]);
+
+    // Set up DataIntegrityService mock defaults
+    dataIntegritySpy.validateProjectName.and.returnValue({
+      isValid: true,
+      cleanValue: 'test-input',
+      originalValue: 'test-input',
+      issues: [],
+    });
 
     TestBed.configureTestingModule({
       imports: [LoggerTestingModule],
-      providers: [{ provide: ErrorHandlerService, useValue: errorHandlerSpy }],
+      providers: [
+        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        { provide: DataIntegrityService, useValue: dataIntegritySpy },
+      ],
     });
     service = TestBed.inject(C2ccrochetShorthandService);
   });

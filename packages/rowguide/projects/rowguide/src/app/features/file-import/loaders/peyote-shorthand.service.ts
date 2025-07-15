@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 
 import { Project, Row, Step } from '../../../core/models';
-import { NotificationService, SettingsService } from '../../../core/services';
+import { NotificationService, SettingsService, DataIntegrityService } from '../../../core/services';
 import { ZipperService } from '../services';
 
 @Injectable({
@@ -13,24 +13,32 @@ export class PeyoteShorthandService {
     private logger: NGXLogger,
     private settingsService: SettingsService,
     private notificationService: NotificationService,
-    private zipperService: ZipperService
+    private zipperService: ZipperService,
+    private dataIntegrityService: DataIntegrityService
   ) {}
 
   toProject(projectString: string, delimiter: string = ', '): Project {
-    this.logger.debug('Loading project from string', projectString);
+    // Integration Point 1: Add input validation and sanitization
+    const validatedInput = this.validateAndSanitizeInput(projectString, delimiter);
+    if (!validatedInput.isValid) {
+      this.logger.warn('PeyoteShorthandService: Invalid input data', validatedInput.issues);
+      return { rows: [] }; // Return empty project for invalid input
+    }
+
+    this.logger.debug('Loading project from string', validatedInput.sanitizedProjectString);
     const project: Project = { rows: [] };
 
-    if (!projectString.trim()) {
+    if (!validatedInput.sanitizedProjectString.trim()) {
       return project;
     }
 
     let lineNum = 1;
     const projectRowSteps: number[] = [];
-    projectString.split('\n').forEach((line) => {
+    validatedInput.sanitizedProjectString.split('\n').forEach((line: string) => {
       this.logger.trace('Line:', line);
       if (line.match(/^Row 1&2/)) {
         const [row1, row1Steps, row2, row2Steps]: [Row, number, Row, number] =
-          this.createFirstRow(line, lineNum, delimiter);
+          this.createFirstRow(line, lineNum, validatedInput.sanitizedDelimiter);
         if (row1.steps.length > 0) {
           projectRowSteps.push(row1Steps);
           project.rows.push(row1);
@@ -43,7 +51,7 @@ export class PeyoteShorthandService {
         }
       } else {
         const { row, rowTotalSteps }: { row: Row; rowTotalSteps: number } =
-          this.createRow(line, lineNum, delimiter);
+          this.createRow(line, lineNum, validatedInput.sanitizedDelimiter);
 
         if (row.steps.length > 0) {
           projectRowSteps.push(rowTotalSteps);
@@ -181,9 +189,111 @@ export class PeyoteShorthandService {
     const count = parseInt(stepMatch[1]);
     const description = stepMatch[2];
 
+    // Add trace logging for test compatibility
     this.logger.trace('Count:', count);
     this.logger.trace('Description:', description);
 
-    return { count, description, id: stepNum };
+    return { id: stepNum, count, description } as Step;
+  }
+
+  /**
+   * Validate and sanitize input data - Integration Point 1
+   */
+  private validateAndSanitizeInput(projectString: string, delimiter: string): {
+    isValid: boolean;
+    issues: string[];
+    sanitizedProjectString: string;
+    sanitizedDelimiter: string;
+  } {
+    const issues: string[] = [];
+
+    // Validate and sanitize project string
+    if (!projectString || typeof projectString !== 'string') {
+      issues.push('Project string must be a valid string');
+      return {
+        isValid: false,
+        issues,
+        sanitizedProjectString: '',
+        sanitizedDelimiter: delimiter || ', ',
+      };
+    }
+
+    // Use DataIntegrityService for project name validation as content sanitization
+    const projectValidation =
+      this.dataIntegrityService.validateProjectName(projectString);
+
+    // For pattern data, we want to be less restrictive than project names
+    // but still clean potentially dangerous content
+    let sanitizedProjectString = projectString
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+      .replace(/\u0000/g, '') // Remove null characters
+      .trim();
+
+    // Validate delimiter
+    let sanitizedDelimiter = delimiter || ', ';
+    if (typeof delimiter !== 'string') {
+      issues.push('Delimiter must be a string, using default');
+      sanitizedDelimiter = ', ';
+    } else {
+      // Sanitize delimiter
+      sanitizedDelimiter = delimiter
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .replace(/\u0000/g, '');
+
+      if (!sanitizedDelimiter) {
+        issues.push('Delimiter became empty after sanitization, using default');
+        sanitizedDelimiter = ', ';
+      }
+    }
+
+    // Integration Point 2: Add data integrity checks for pattern parsing
+    const patternValidation = this.validatePatternData(sanitizedProjectString);
+    if (!patternValidation.isValid) {
+      issues.push(...patternValidation.issues);
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+      sanitizedProjectString,
+      sanitizedDelimiter,
+    };
+  }
+
+  /**
+   * Validate pattern data integrity - Integration Point 2
+   */
+  private validatePatternData(projectString: string): {
+    isValid: boolean;
+    issues: string[];
+  } {
+    const issues: string[] = [];
+
+    // Check for basic pattern structure
+    if (projectString.length === 0) {
+      return { isValid: true, issues: [] }; // Empty string is valid
+    }
+
+    // Check for reasonable size limits to prevent memory issues
+    if (projectString.length > 1000000) { // 1MB limit
+      issues.push('Pattern data too large (max 1MB)');
+    }
+
+    // Check for potential malicious patterns
+    if (projectString.includes('<script>') || projectString.includes('javascript:')) {
+      issues.push('Pattern data contains potentially dangerous content');
+    }
+
+    // Validate basic pattern structure - should contain row patterns
+    const hasValidRowPattern = /Row\s+\d+/.test(projectString);
+    if (projectString.trim().length > 0 && !hasValidRowPattern) {
+      this.logger.debug('PeyoteShorthandService: Pattern data does not contain expected row patterns');
+      // This is a warning, not an error - some patterns might be valid without row numbers
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+    };
   }
 }

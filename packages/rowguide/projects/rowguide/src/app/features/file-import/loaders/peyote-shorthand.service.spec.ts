@@ -2,7 +2,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NGXLogger } from 'ngx-logger';
 import { PeyoteShorthandService } from './peyote-shorthand.service';
 import { Project, Row, Step } from '../../../core/models';
-import { NotificationService } from '../../../core/services';
+import { NotificationService, DataIntegrityService } from '../../../core/services';
 import { SettingsService } from '../../../core/services';
 import { ZipperService } from '../services';
 import { BehaviorSubject } from 'rxjs';
@@ -11,6 +11,7 @@ describe('PeyoteShorthandService', () => {
   let service: PeyoteShorthandService;
   let notificationServiceSpy: jasmine.SpyObj<NotificationService>;
   let zipperServiceSpy: jasmine.SpyObj<ZipperService>;
+  let dataIntegritySpy: jasmine.SpyObj<DataIntegrityService>;
   let settingsServiceStub: Partial<SettingsService>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let combine12Subject: BehaviorSubject<boolean>;
@@ -24,8 +25,20 @@ describe('PeyoteShorthandService', () => {
       'expandSteps',
       'compressSteps',
     ]);
+    dataIntegritySpy = jasmine.createSpyObj('DataIntegrityService', [
+      'validateProjectName',
+      'getRecentEvents',
+    ]);
     combine12Subject = new BehaviorSubject<boolean>(false);
     settingsServiceStub = { combine12$: combine12Subject };
+
+    // Set up DataIntegrityService mock defaults
+    dataIntegritySpy.validateProjectName.and.returnValue({
+      isValid: true,
+      cleanValue: 'test-input',
+      originalValue: 'test-input',
+      issues: [],
+    });
 
     TestBed.configureTestingModule({
       providers: [
@@ -33,6 +46,7 @@ describe('PeyoteShorthandService', () => {
         { provide: NotificationService, useValue: notificationServiceSpy },
         { provide: SettingsService, useValue: settingsServiceStub },
         { provide: ZipperService, useValue: zipperServiceSpy },
+        { provide: DataIntegrityService, useValue: dataIntegritySpy },
       ],
     });
 

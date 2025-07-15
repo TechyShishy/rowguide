@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { DataIntegrityService, DataIntegrityEventType } from './data-integrity.service';
 
 /**
  * Interface for structured error context objects
@@ -45,7 +46,10 @@ export class ErrorHandlerService {
   private errors$ = new BehaviorSubject<AppError[]>([]);
   private notifications$ = new BehaviorSubject<ErrorNotification | null>(null);
 
-  constructor(private logger: NGXLogger) {}
+  constructor(
+    private logger: NGXLogger,
+    private dataIntegrityService: DataIntegrityService
+  ) {}
 
   /**
    * Handle application errors with context and user feedback
@@ -56,12 +60,16 @@ export class ErrorHandlerService {
     userMessage?: string,
     severity: AppError['severity'] = 'medium'
   ): void {
+    // Integration Point 1: Enhanced error validation and categorization
+    const validatedContext = this.validateAndEnhanceContext(context);
+    const categorizedSeverity = this.categorizeError(error, validatedContext, severity);
+
     const appError: AppError = {
       id: this.generateErrorId(),
       message: this.extractErrorMessage(error),
-      context,
+      context: validatedContext,
       timestamp: new Date(),
-      severity,
+      severity: categorizedSeverity,
     };
 
     // Log error with full context
@@ -75,17 +83,17 @@ export class ErrorHandlerService {
     this.addError(appError);
 
     // Show user notification
-    if (userMessage || severity === 'high' || severity === 'critical') {
+    if (userMessage || categorizedSeverity === 'high' || categorizedSeverity === 'critical') {
       this.showNotification({
         message:
           userMessage || 'An unexpected error occurred. Please try again.',
-        action: severity === 'critical' ? 'Reload Page' : 'Dismiss',
-        duration: severity === 'critical' ? 0 : 5000,
+        action: categorizedSeverity === 'critical' ? 'Reload Page' : 'Dismiss',
+        duration: categorizedSeverity === 'critical' ? 0 : 5000,
       });
     }
 
     // Report critical errors immediately
-    if (severity === 'critical') {
+    if (categorizedSeverity === 'critical') {
       this.reportCriticalError(appError);
     }
   }
@@ -181,5 +189,118 @@ export class ErrorHandlerService {
     // Implement external error reporting here
     // Example: Send to Sentry, LogRocket, etc.
     this.logger.error('Critical Error Reported:', error);
+  }
+
+  /**
+   * Integration Point 1: Validate and enhance error context for data integrity
+   */
+  private validateAndEnhanceContext(context?: string | ErrorContext): string | ErrorContext {
+    if (!context) {
+      return 'Unknown operation';
+    }
+
+    // If it's already a structured context, validate and enhance it
+    if (typeof context === 'object') {
+      const validatedContext: ErrorContext = {
+        ...context,
+        operation: context.operation || 'unknown',
+        details: context.details || 'No details provided',
+        service: context.service,
+        context: context.context
+      };
+
+      // Use DataIntegrityService to validate any string data in the context
+      if (context.operation && typeof context.operation === 'string') {
+        const validationResult = this.dataIntegrityService.validateProjectName(context.operation);
+        if (!validationResult.isValid) {
+          validatedContext.operation = validationResult.cleanValue;
+          validatedContext['validationWarning'] = `Operation name sanitized: ${validationResult.issues.join(', ')}`;
+        }
+      }
+
+      return validatedContext;
+    }
+
+    // For string contexts, validate and sanitize
+    const validationResult = this.dataIntegrityService.validateProjectName(context);
+    if (!validationResult.isValid) {
+      return {
+        operation: validationResult.cleanValue,
+        details: 'Context sanitized for data integrity',
+        originalContext: context,
+        validationIssues: validationResult.issues
+      };
+    }
+
+    return context;
+  }
+
+  /**
+   * Integration Point 2: Enhanced error categorization with data integrity insights
+   */
+  private categorizeError(
+    error: unknown,
+    context: string | ErrorContext,
+    originalSeverity: AppError['severity']
+  ): AppError['severity'] {
+    let severity = originalSeverity;
+
+    // Check for data integrity related errors
+    const errorMessage = this.extractErrorMessage(error);
+
+    // Only escalate severity for clear data corruption indicators
+    if (this.isDataIntegrityError(errorMessage, context)) {
+      severity = this.escalateSeverity(severity);
+    }
+
+    // Check for validation failures that might indicate broader issues
+    const recentValidationEvents = this.dataIntegrityService.getRecentEvents(5);
+    const recentFailures = recentValidationEvents.filter(event =>
+      event.type === DataIntegrityEventType.DATA_VALIDATION_FAILED ||
+      event.type === DataIntegrityEventType.INVALID_INPUT_BLOCKED
+    );
+
+    // Only escalate if we have significant recent validation failures AND current error is validation-related
+    if (recentFailures.length >= 5 && this.isDataIntegrityError(errorMessage, context)) {
+      severity = this.escalateSeverity(severity);
+
+      if (typeof context === 'object') {
+        context['dataIntegrityAlert'] = `${recentFailures.length} recent validation failures detected`;
+      }
+    }
+
+    return severity;
+  }
+
+  private isDataIntegrityError(errorMessage: string, context: string | ErrorContext): boolean {
+    const dataIntegrityIndicators = [
+      'invalid json',
+      'malformed data',
+      'corrupted',
+      'parsing error',
+      'data structure',
+      'invalid format',
+      'null or undefined'
+    ];
+
+    const lowerMessage = errorMessage.toLowerCase();
+    const hasDataIndicators = dataIntegrityIndicators.some(indicator =>
+      lowerMessage.includes(indicator)
+    );
+
+    // Only escalate for clear data corruption indicators, not general database errors
+    return hasDataIndicators;
+  }
+
+  private escalateSeverity(currentSeverity: AppError['severity']): AppError['severity'] {
+    const severityLevels: AppError['severity'][] = ['low', 'medium', 'high', 'critical'];
+    const currentIndex = severityLevels.indexOf(currentSeverity);
+
+    // Escalate by one level, but don't exceed critical
+    if (currentIndex < severityLevels.length - 1) {
+      return severityLevels[currentIndex + 1];
+    }
+
+    return currentSeverity;
   }
 }
