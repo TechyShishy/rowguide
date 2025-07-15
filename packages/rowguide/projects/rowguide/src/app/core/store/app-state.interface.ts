@@ -9,6 +9,7 @@ import { Project } from '../models/project';
 import { Position } from '../models/position';
 import { Row } from '../models/row';
 import { NotificationState } from './reducers/notification-reducer';
+import { MarkModeState } from './reducers/mark-mode-reducer';
 
 /**
  * Root application state
@@ -19,6 +20,7 @@ export interface AppState {
   readonly system: SystemState;
   readonly settings: SettingsState;
   readonly notifications: NotificationState;
+  readonly markMode: MarkModeState;
 }
 
 /**
@@ -176,5 +178,12 @@ export const createInitialState = (): AppState => ({
     current: null,
     queue: [],
     lastId: 0,
+  },
+  markMode: {
+    currentMode: 0,
+    previousMode: undefined,
+    history: [],
+    lastUpdated: Date.now(),
+    changeCount: 0,
   },
 });

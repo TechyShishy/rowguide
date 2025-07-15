@@ -27,6 +27,8 @@ import { SettingsAction } from './actions/settings-actions';
 import { settingsReducer } from './reducers/settings-reducer';
 import { NotificationAction } from './actions/notification-actions';
 import { notificationReducer } from './reducers/notification-reducer';
+import { MarkModeAction } from './actions/mark-mode-actions';
+import { markModeReducer } from './reducers/mark-mode-reducer';
 
 /**
  * Action interface for all state actions
@@ -246,6 +248,7 @@ export class ReactiveStateStore {
       projects: projectReducer(state.projects, action as ProjectAction),
       settings: settingsReducer(state.settings, action as SettingsAction),
       notifications: notificationReducer(state.notifications, action as NotificationAction),
+      markMode: markModeReducer(state.markMode, action as MarkModeAction),
       // Add other domain reducers here as they're implemented
       ui: state.ui, // TODO: Implement UI reducer
       system: state.system, // TODO: Implement system reducer
