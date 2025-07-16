@@ -34,6 +34,7 @@ import { BeadtoolPdfService } from '../../../file-import/loaders';
 import { ProjectService } from '../../services';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { MatSelectModule } from '@angular/material/select';
+import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 
 @Component({
   selector: 'app-project-selector',
@@ -49,6 +50,7 @@ import { MatSelectModule } from '@angular/material/select';
     MatExpansionModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    ErrorBoundaryComponent,
   ],
   templateUrl: './project-selector.component.html',
   styleUrl: './project-selector.component.scss',
@@ -228,5 +230,33 @@ export class ProjectSelectorComponent {
 
   onSortOrderChange(value: string) {
     this.store.dispatch(SettingsActions.updateSetting('projectsort', value));
+  }
+
+  /**
+   * Error boundary retry handler - refreshes the projects list
+   */
+  onRetry(): void {
+    // Trigger a refresh of the projects data using the same pattern as ngAfterViewInit
+    this.projects$ = from(this.indexedDBService.loadProjects()).pipe(
+      combineLatestWith(this.sortOrder$),
+      map(([projects, sortOrder]) => {
+        return projects.sort((a, b) => {
+          if (sortOrder === 'nameAsc') {
+            return (a.name ?? '').localeCompare(b.name ?? '');
+          } else if (sortOrder === 'nameDesc') {
+            return (b.name ?? '').localeCompare(a.name ?? '');
+          } else if (sortOrder === 'rowCountAsc') {
+            return (a.rows?.length ?? 0) - (b.rows?.length ?? 0);
+          } else if (sortOrder === 'rowCountDesc') {
+            return (b.rows?.length ?? 0) - (a.rows?.length ?? 0);
+          } else if (sortOrder === 'dateAsc') {
+            return (a.id ?? 0) - (b.id ?? 0);
+          } else if (sortOrder === 'dateDesc') {
+            return (b.id ?? 0) - (a.id ?? 0);
+          }
+          return 0; // Default case
+        });
+      })
+    );
   }
 }

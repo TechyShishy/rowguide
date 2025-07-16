@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -10,6 +10,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { UpgradeService } from './data/migrations/upgrade.service';
 import { ProjectService } from './features/project-management/services/project.service';
 import { NotificationComponent } from './shared/components';
+import { ErrorBoundaryComponent } from './shared/components/error-boundary/error-boundary.component';
 
 @Component({
   selector: 'app-root',
@@ -24,21 +25,20 @@ import { NotificationComponent } from './shared/components';
     RouterOutlet,
     RouterLink,
     NotificationComponent,
+    ErrorBoundaryComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'rowguide';
 
   constructor(
     public projectService: ProjectService,
-    private upgradeService: UpgradeService,
-    private cdr: ChangeDetectorRef
+    private upgradeService: UpgradeService
   ) {
-    this.projectService.ready$.subscribe((ready) => {
-      this.cdr.detectChanges();
-    });
+    // No manual change detection needed - async pipe handles this automatically
   }
   ngOnInit() {
     this.upgradeService.doNewMigrations();

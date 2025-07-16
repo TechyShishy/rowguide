@@ -36,6 +36,7 @@ import { selectCurrentProject } from '../../../../core/store/selectors/project-s
 import { selectFlamSort } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
+import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 
 @Component({
   selector: 'app-project-inspector',
@@ -50,6 +51,7 @@ import { ProjectService } from '../../services';
     MatInputModule,
     FormsModule,
     ngfModule,
+    ErrorBoundaryComponent,
   ],
   templateUrl: './project-inspector.component.html',
   styleUrls: ['./project-inspector.component.scss'],
@@ -344,5 +346,11 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
     // Using synchronous access for display purposes
     // TODO: Consider migrating to reactive approach with combineLatest
     return 1; // Simplified for now
+  }
+
+  onRetry(): void {
+    // Refresh the project inspector data when retrying after an error
+    this.refreshTableData();
+    this.cdr.markForCheck();
   }
 }

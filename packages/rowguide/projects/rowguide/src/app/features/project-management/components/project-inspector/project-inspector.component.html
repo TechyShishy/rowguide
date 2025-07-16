@@ -1,3 +1,4 @@
+<app-error-boundary (retryRequested)="onRetry()">
 <mat-card class="flam">
   <mat-card-title>FLAM</mat-card-title>
   <mat-card-content>
@@ -109,3 +110,4 @@
     <img ngfSelect [(file)]="file" (fileChange)="uploadPicture()" [src]="image$ | async">
   </mat-card-content>
 </mat-card>
+</app-error-boundary>

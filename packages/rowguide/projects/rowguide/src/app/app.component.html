@@ -1,22 +1,28 @@
-<mat-sidenav-container>
-  <mat-sidenav #sidenav>
-    <mat-list>
-      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-selector">Project
-          Selector</a></mat-list-item>
-      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project">Project</a></mat-list-item>
-      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-inspector">Project
-          Inspector</a></mat-list-item>
-      <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/settings">Settings</a></mat-list-item>
-    </mat-list>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <mat-toolbar>
-      <button mat-icon-button (click)="sidenav.toggle()">
-        <mat-icon>menu</mat-icon>
-      </button>
-      Project: {{(projectService.project$ | async)?.name || 'No Project'}}
-    </mat-toolbar>
-    <div class="router-outlet"><router-outlet /></div>
-  </mat-sidenav-content>
+<app-error-boundary>
+  <mat-sidenav-container>
+    <mat-sidenav #sidenav>
+      <mat-list>
+        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-selector">Project
+            Selector</a></mat-list-item>
+        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project">Project</a></mat-list-item>
+        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-inspector">Project
+            Inspector</a></mat-list-item>
+        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/settings">Settings</a></mat-list-item>
+      </mat-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <mat-toolbar>
+        <button mat-icon-button (click)="sidenav.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        Project: {{(projectService.project$ | async)?.name || 'No Project'}}
+      </mat-toolbar>
+      <div class="router-outlet">
+        <app-error-boundary>
+          <router-outlet />
+        </app-error-boundary>
+      </div>
+    </mat-sidenav-content>
   </mat-sidenav-container>
+</app-error-boundary>
 <app-notification></app-notification>

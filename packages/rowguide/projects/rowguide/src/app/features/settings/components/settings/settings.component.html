@@ -1,3 +1,4 @@
+<app-error-boundary (retryRequested)="onRetry()">
 <form [formGroup]="settings">
   <mat-card>
     <mat-slide-toggle formControlName="combine12" color="accent">Combine Rows 1&2</mat-slide-toggle>
@@ -15,3 +16,4 @@
     </mat-slider>
   </mat-card>
 </form>
+</app-error-boundary>

@@ -1,18 +1,20 @@
-<mat-accordion [multi]="true">
-  <app-row *ngFor="let row of ( rows$ | async ); index as i" [index]="i" [row]="row" [steps]="row.steps"
-    [project]="this"></app-row>
-</mat-accordion>
-<div class="advance-button-container">
-  <button mat-raised-button color="primary" type="button" (click)="onRetreatRow()">Retreat Row</button>
-  <button mat-raised-button color="primary" type="button"
-    (click)="onRetreatMultipleSteps()">Retreat {{multiadvance$ | async}}
-    Steps</button>
-  <button mat-raised-button color="primary" type="button" (click)="onRetreatStep()">Retreat Step</button>
-  <button mat-button type="button" (click)="openBeadCountBottomSheet()">{{(currentStep$ | async)?.beadCount$ | async
-    }}</button>
-  <button mat-raised-button color="primary" type="button" (click)="onAdvanceStep()">Advance Step</button>
-  <button mat-raised-button color="primary" type="button"
-    (click)="onAdvanceMultipleSteps()">Advance {{multiadvance$ | async}}
-    Steps</button>
-  <button mat-raised-button color="primary" type="button" (click)="onAdvanceRow()">Advance Row</button>
-</div>
+<app-error-boundary (retryClicked)="onRetry()">
+  <mat-accordion [multi]="true">
+    <app-row *ngFor="let row of ( rows$ | async ); index as i" [index]="i" [row]="row" [steps]="row?.steps || []"
+      [project]="this"></app-row>
+  </mat-accordion>
+  <div class="advance-button-container">
+    <button mat-raised-button color="primary" type="button" (click)="onRetreatRow()">Retreat Row</button>
+    <button mat-raised-button color="primary" type="button"
+      (click)="onRetreatMultipleSteps()">Retreat {{multiadvance$ | async}}
+      Steps</button>
+    <button mat-raised-button color="primary" type="button" (click)="onRetreatStep()">Retreat Step</button>
+    <button mat-button type="button" (click)="openBeadCountBottomSheet()">{{(currentStep$ | async)?.beadCount$ | async
+      }}</button>
+    <button mat-raised-button color="primary" type="button" (click)="onAdvanceStep()">Advance Step</button>
+    <button mat-raised-button color="primary" type="button"
+      (click)="onAdvanceMultipleSteps()">Advance {{multiadvance$ | async}}
+      Steps</button>
+    <button mat-raised-button color="primary" type="button" (click)="onAdvanceRow()">Advance Row</button>
+  </div>
+</app-error-boundary>

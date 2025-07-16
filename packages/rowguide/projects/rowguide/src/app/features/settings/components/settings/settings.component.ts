@@ -31,6 +31,7 @@ import {
   selectProjectSort
 } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectService } from '../../../project-management/services';
+import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 
 @Component({
   selector: 'app-settings',
@@ -41,6 +42,7 @@ import { ProjectService } from '../../../project-management/services';
     MatCardModule,
     MatSliderModule,
     CommonModule,
+    ErrorBoundaryComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -113,5 +115,10 @@ export class SettingsComponent {
     this.zoomControl.setValue(zoom);
     this.scrolloffsetControl.setValue(scrolloffset);
     this.multiadvanceControl.setValue(multiadvance);
+  }
+
+  onRetry(): void {
+    // Re-initialize form controls when retrying after an error
+    this.initializeFormControls();
   }
 }

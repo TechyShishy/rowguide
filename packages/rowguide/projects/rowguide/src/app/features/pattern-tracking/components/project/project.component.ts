@@ -48,6 +48,7 @@ import { ProjectService } from '../../../project-management/services';
 import { BeadCountBottomSheet } from '../bead-count-bottom-sheet/bead-count-bottom-sheet';
 import { RowComponent } from '../row/row.component';
 import { StepComponent } from '../step/step.component';
+import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 
 @Component({
   selector: 'app-project',
@@ -58,6 +59,7 @@ import { StepComponent } from '../step/step.component';
     MatCardModule,
     MatExpansionModule,
     CommonModule,
+    ErrorBoundaryComponent,
   ],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
@@ -312,13 +314,13 @@ export class ProjectComponent implements HierarchicalList {
       }
     }
   }
-  
+
   // Wrapper methods for template use with observables
   async onRetreatMultipleSteps() {
     const x = await firstValueFrom(this.multiadvance$);
     return this.onRetreatXSteps(x);
   }
-  
+
   async onAdvanceMultipleSteps() {
     const x = await firstValueFrom(this.multiadvance$);
     return this.onAdvanceXSteps(x);
@@ -468,6 +470,14 @@ export class ProjectComponent implements HierarchicalList {
   }
 
   resetProject(_forward: boolean) {}
+
+  /**
+   * Error boundary retry handler - reloads the current project data
+   */
+  onRetry(): void {
+    // Simple retry that calls ngOnInit to refresh the component state
+    this.ngOnInit();
+  }
 }
 function deepCopy(value: any): any {
   return JSON.parse(JSON.stringify(value));

@@ -611,11 +611,12 @@ All services successfully migrated to centralized ReactiveStateStore architectur
 
 #### 📝 Phase 2 Priority: Error Boundary Deployment
 
-- [ ] Wrap main route components with ErrorBoundaryComponent
-  - Add ErrorBoundaryComponent wrapper to `ProjectComponent` route
-  - Add ErrorBoundaryComponent wrapper to `ProjectSelectorComponent` route
-  - Add ErrorBoundaryComponent wrapper to `ProjectInspectorComponent` route
-  - Add ErrorBoundaryComponent wrapper to `SettingsComponent` route
+- [x] Wrap main route components with ErrorBoundaryComponent
+  - ✅ Add ErrorBoundaryComponent wrapper to `AppComponent` (application-level coverage)
+  - ✅ Add ErrorBoundaryComponent wrapper to `ProjectComponent` route with retry functionality
+  - ✅ Add ErrorBoundaryComponent wrapper to `ProjectSelectorComponent` route with retry functionality
+  - ✅ Add ErrorBoundaryComponent wrapper to `ProjectInspectorComponent` route with retry functionality
+  - ✅ Add ErrorBoundaryComponent wrapper to `SettingsComponent` route with retry functionality
   - Update routing configuration to include error boundaries
 - [ ] Add error boundaries around file import operations
   - Wrap file upload components with ErrorBoundaryComponent
@@ -639,14 +640,15 @@ All services successfully migrated to centralized ReactiveStateStore architectur
 
 **Files to modify:**
 
-- `src/app/app.component.ts` (Major update)
-  - Add ErrorBoundaryComponent import
-  - Wrap RouterOutlet with ErrorBoundaryComponent
-  - Add global error boundary for unhandled errors
-  - Configure error boundary with appropriate severity levels
-- `src/app/app.component.html` (Template update)
-  - Wrap main content area with `<app-error-boundary>`
-  - Add error boundary around navigation components
+- ✅ `src/app/app.component.ts` (Major update)
+  - ✅ Add ErrorBoundaryComponent import
+  - ✅ Wrap RouterOutlet with ErrorBoundaryComponent
+  - ✅ Add global error boundary for unhandled errors
+  - ✅ Configure error boundary with appropriate severity levels
+- ✅ `src/app/app.component.html` (Template update)
+  - ✅ Wrap main content area with `<app-error-boundary>`
+  - ✅ Add error boundary around navigation components
+  - ✅ Dual-layer protection: application-level + route-specific error boundaries
   - Ensure router outlet is protected by error boundary
 - `src/app/features/pattern-tracking/components/project/project.component.ts` (Minor update)
   - Add error boundary integration
