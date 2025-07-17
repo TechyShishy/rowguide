@@ -490,10 +490,10 @@ permalink: /implementation-checklist/
   - [x] All action files - Document action type documentation, payload structures, and usage examples
   - [x] AppStateInterface - Document state tree documentation with domain relationships and data flow
 
-- [ ] **Utility and Helper Documentation**
-  - [ ] HierarchicalList interface - Document navigation tree structure with comprehensive documentation
-  - [ ] Sanity.ts - Document sanity check utilities and validation purposes
-  - [ ] All index files - Document barrel export documentation explaining module organization and dependencies
+- [x] **Utility and Helper Documentation**
+  - [x] HierarchicalList interface - Document navigation tree structure with comprehensive documentation
+  - [x] Sanity.ts - Document sanity check utilities and validation purposes
+  - [x] All index files - Document barrel export documentation explaining module organization and dependencies
 
 - [ ] **File Import System Documentation**
   - [ ] PdfjslibService - Document PDF.js integration, worker management, and text extraction
