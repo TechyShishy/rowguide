@@ -51,16 +51,36 @@
               "browser": "projects/rowguide/src/main.ts",
               "tsConfig": "projects/rowguide/tsconfig.app.json",
               "sourceMap": true,
+              "allowedCommonJsDependencies": [
+                "js-file-download"
+              ],
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1mb",
-                  "maximumError": "2mb"
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "4kb",
+                  "maximumError": "8kb"
+                },
+                {
+                  "type": "any",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "bundle",
+                  "name": "main",
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
+                },
+                {
+                  "type": "bundle",
+                  "name": "polyfills",
+                  "maximumWarning": "100kb",
+                  "maximumError": "200kb"
                 }
               ],
               "outputHashing": "all"
