@@ -511,6 +511,6 @@ export class ProjectService {
   }
 }
 
-class CurrentProject {
+export class CurrentProject {
   id: number = 0;
 }

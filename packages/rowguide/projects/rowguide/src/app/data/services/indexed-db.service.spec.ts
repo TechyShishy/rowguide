@@ -4,7 +4,7 @@ import { IDBPDatabase } from 'idb';
 import { RowguideDb } from '../schemas/rowguide-db';
 
 /**
- * @fileoverview Comprehensive Test Suite for IndexedDbService
+ * Comprehensive Test Suite for IndexedDbService
  *
  * This test suite validates IndexedDB database initialization, schema creation,
  * upgrade logic, and core functionality for the Rowguide application's data persistence layer.

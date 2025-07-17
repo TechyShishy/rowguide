@@ -1,8 +1,8 @@
 import { StateAction } from '../reactive-state-store';
 
 /**
- * @fileoverview Mark Mode Actions
- * 
+ * Mark Mode Actions
+ *
  * Actions for managing mark mode state in the ReactiveStateStore.
  * Mark mode represents the current marking/highlighting mode for beading patterns.
  */
@@ -47,7 +47,7 @@ export interface ResetMarkModeAction extends StateAction {
 /**
  * Union type for all mark mode actions
  */
-export type MarkModeAction = 
+export type MarkModeAction =
   | SetMarkModeAction
   | UpdateMarkModeAction
   | ResetMarkModeAction;

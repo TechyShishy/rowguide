@@ -1,5 +1,5 @@
 /**
- * @fileoverview Notification Reducer for ReactiveStateStore
+ * Notification Reducer for ReactiveStateStore
  *
  * This reducer manages notification state following Redux patterns.
  * It handles showing, clearing, and queuing notifications for user feedback.
@@ -36,7 +36,7 @@ export const initialNotificationState: NotificationState = {
 
 /**
  * Notification reducer function
- * 
+ *
  * Handles all notification-related state transitions with immutable updates.
  * Follows Redux patterns for predictable state management.
  *

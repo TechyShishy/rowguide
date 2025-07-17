@@ -20,7 +20,7 @@ import { Position } from './position';
 import { FLAM } from './flam';
 
 /**
- * @fileoverview Comprehensive Test Suite for Null Safety System
+ * Comprehensive Test Suite for Null Safety System
  *
  * This test suite validates the complete null safety infrastructure including
  * type guards, safe factories, and safe access methods. These tests ensure that

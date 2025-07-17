@@ -18,27 +18,27 @@ import {
 } from '../../../core/services/error-handler.service';
 
 /**
- * @fileoverview Error boundary component for graceful error display and recovery
- * 
+ * Error boundary component for graceful error display and recovery
+ *
  * This component provides comprehensive error handling capabilities with severity-based
  * styling, user-friendly messaging, and recovery mechanisms. It integrates seamlessly
  * with the ErrorHandlerService to provide consistent error presentation across the
  * application while supporting accessibility and Material Design principles.
- * 
+ *
  * @example
  * ```typescript
  * // Basic usage wrapping content
- * <app-error-boundary 
- *   [showDetails]="true" 
+ * <app-error-boundary
+ *   [showDetails]="true"
  *   [canDismiss]="true"
  *   (retryClicked)="handleRetry()"
  *   (dismissed)="handleDismiss()">
  *   <app-my-component></app-my-component>
  * </app-error-boundary>
- * 
+ *
  * // Programmatic error display
  * &#64;ViewChild(ErrorBoundaryComponent) errorBoundary!: ErrorBoundaryComponent;
- * 
+ *
  * showCustomError(): void {
  *   this.errorBoundary.showError(
  *     'Failed to load project data',
@@ -49,9 +49,8 @@ import {
  *   );
  * }
  * ```
- * 
+ *
  * @since 1.0.0
- * @version 1.0.0
  */
 @Component({
   selector: 'app-error-boundary',
@@ -64,7 +63,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
   /**
    * Controls whether technical error details are shown to users.
    * When enabled, displays collapsible technical details section.
-   * 
+   *
    * @default false
    * @example
    * ```html
@@ -78,7 +77,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
   /**
    * Controls whether users can dismiss non-critical errors.
    * Critical errors cannot be dismissed regardless of this setting.
-   * 
+   *
    * @default true
    * @example
    * ```html
@@ -91,7 +90,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Customizable label for the retry action button.
-   * 
+   *
    * @default 'Try Again'
    * @example
    * ```html
@@ -105,7 +104,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
   /**
    * Emitted when the user clicks the retry button.
    * Parent components should handle this to implement recovery logic.
-   * 
+   *
    * @example
    * ```typescript
    * onRetry(): void {
@@ -118,7 +117,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
   /**
    * Emitted when the user dismisses a dismissible error.
    * Parent components can use this to perform cleanup or logging.
-   * 
+   *
    * @example
    * ```typescript
    * onErrorDismissed(): void {
@@ -151,14 +150,14 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Creates an instance of ErrorBoundaryComponent.
-   * 
+   *
    * Establishes a subscription to the ErrorHandlerService notification stream
    * to automatically display errors that occur anywhere in the application.
    * The subscription is properly cleaned up on component destruction to prevent
    * memory leaks.
-   * 
+   *
    * @param errorHandler - Service for centralized error handling and notifications
-   * 
+   *
    * @example
    * ```typescript
    * // Component automatically subscribes to error notifications
@@ -167,7 +166,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *   // Subscription established automatically
    * }
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   constructor(private errorHandler: ErrorHandlerService) {
@@ -183,11 +182,11 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Performs cleanup when the component is destroyed.
-   * 
+   *
    * Completes the destroy$ subject to unsubscribe from all observables
    * and prevent memory leaks. This is critical for long-lived applications
    * where components are frequently created and destroyed.
-   * 
+   *
    * @example
    * ```typescript
    * // Called automatically by Angular when component is destroyed
@@ -196,7 +195,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *   // All subscriptions automatically cleaned up
    * }
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   ngOnDestroy(): void {
@@ -206,23 +205,23 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Displays an error with comprehensive styling and user options.
-   * 
+   *
    * This method configures the error display with severity-based styling,
    * customizable messaging, and appropriate interaction options. Critical
    * errors automatically disable the dismiss capability to ensure user
    * attention and proper error resolution.
-   * 
+   *
    * @param message - Primary error message displayed to users
    * @param title - Optional error title, auto-generated from severity if not provided
    * @param subtitle - Optional subtitle for additional context
    * @param severity - Error severity affecting styling and dismiss capability
    * @param details - Optional technical details shown when showDetails is enabled
-   * 
+   *
    * @example
    * ```typescript
    * // Basic error display
    * this.showError('Failed to save project');
-   * 
+   *
    * // Comprehensive error with all options
    * this.showError(
    *   'Unable to connect to server',
@@ -231,7 +230,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *   'high',
    *   'HttpError: ERR_NETWORK_CHANGED'
    * );
-   * 
+   *
    * // Critical error (cannot be dismissed)
    * this.showError(
    *   'Database corruption detected',
@@ -241,7 +240,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *   'IndexedDB transaction failed'
    * );
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   showError(
@@ -262,12 +261,12 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Handles retry action and emits retry event for parent components.
-   * 
+   *
    * Clears the current error state and emits the retryClicked event,
    * allowing parent components to implement custom retry logic.
    * This method provides a clean recovery mechanism for temporary
    * failures and user-recoverable errors.
-   * 
+   *
    * @example
    * ```typescript
    * // In parent component
@@ -279,8 +278,8 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *     });
    * }
    * ```
-   * 
-   * @fires retryClicked - Event emitted for parent component handling
+   *
+   * Emits retryClicked - Event emitted for parent component handling
    * @since 1.0.0
    */
   retry(): void {
@@ -290,11 +289,11 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Dismisses the current error and clears notifications.
-   * 
+   *
    * Hides the error display, emits the dismissed event for parent
    * component handling, and clears the notification from the
    * ErrorHandlerService. Only available for non-critical errors.
-   * 
+   *
    * @example
    * ```typescript
    * // In parent component
@@ -303,8 +302,7 @@ export class ErrorBoundaryComponent implements OnDestroy {
    *   this.resetComponentState();
    * }
    * ```
-   * 
-   * @fires dismissed - Event emitted for parent component handling
+   *     * Emits dismissed - Event emitted for parent component handling
    * @since 1.0.0
    */
   dismiss(): void {
@@ -315,21 +313,21 @@ export class ErrorBoundaryComponent implements OnDestroy {
 
   /**
    * Generates appropriate error titles based on severity levels.
-   * 
+   *
    * Provides consistent, user-friendly titles that reflect the
    * severity and urgency of different error types. Used when
    * no custom title is provided to showError().
-   * 
+   *
    * @param severity - Error severity level
    * @returns User-friendly title text appropriate for the severity
-   * 
+   *
    * @example
    * ```typescript
    * // Internal usage in showError()
    * const title = this.getDefaultTitle('critical'); // Returns "Critical Error"
    * const title = this.getDefaultTitle('low');      // Returns "Notice"
    * ```
-   * 
+   *
    * @private
    * @since 1.0.0
    */

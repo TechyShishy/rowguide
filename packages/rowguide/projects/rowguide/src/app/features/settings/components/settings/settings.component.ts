@@ -34,24 +34,24 @@ import { ProjectService } from '../../../project-management/services';
 import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 
 /**
- * @fileoverview Settings component for comprehensive application configuration management
- * 
+ * Settings component for comprehensive application configuration management
+ *
  * This component provides a reactive forms-based interface for managing application
  * settings with real-time persistence and state synchronization. It integrates with
  * the ReactiveStateStore and SettingsService to provide immediate setting updates
  * across the application while maintaining localStorage persistence.
- * 
+ *
  * @example
  * ```typescript
  * // Basic usage in template
  * <app-settings></app-settings>
- * 
+ *
  * // Component automatically:
  * // 1. Loads current settings from store
  * // 2. Provides reactive form controls
  * // 3. Persists changes to localStorage
  * // 4. Updates global application state
- * 
+ *
  * // Settings are immediately available throughout the app:
  * constructor(private store: ReactiveStateStore) {
  *   this.store.select(selectZoom).subscribe(zoomEnabled => {
@@ -59,9 +59,8 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
  *   });
  * }
  * ```
- * 
+ *
  * @since 1.0.0
- * @version 1.0.0
  */
 @Component({
   selector: 'app-settings',
@@ -78,43 +77,43 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
-  /** 
+  /**
    * Controls whether rows 1 and 2 are combined in pattern display.
    * Used with Material slide toggle for visual pattern optimization.
    */
   combine12Control = new FormControl(false);
 
-  /** 
+  /**
    * Controls whether Left/Right designators are shown in pattern display.
    * Helps with directional pattern navigation and clarity.
    */
   lrdesignatorsControl = new FormControl(false);
 
-  /** 
+  /**
    * Controls whether FLAM (First/Last Appearance Map) markers are displayed.
    * Essential for color-coding and pattern analysis visualization.
    */
   flammarkersControl = new FormControl(false);
 
-  /** 
+  /**
    * Controls whether the Pretty Print Inspector tab is enabled.
    * Provides enhanced formatting for pattern data inspection.
    */
   ppinspectorControl = new FormControl(false);
 
-  /** 
+  /**
    * Controls whether the current step is zoomed/highlighted.
    * Improves focus and visibility during pattern tracking.
    */
   zoomControl = new FormControl(false);
 
-  /** 
+  /**
    * Controls scroll offset for pattern navigation.
    * Range: -4 to 1, affects positioning during automatic scrolling.
    */
   scrolloffsetControl = new FormControl(-1);
 
-  /** 
+  /**
    * Controls multi-advance step count for bulk navigation.
    * Range: 1 to 25, determines steps advanced in multi-step operations.
    */
@@ -122,17 +121,17 @@ export class SettingsComponent {
 
   /**
    * Reactive form group containing all user-configurable settings.
-   * 
+   *
    * Provides centralized form state management with automatic validation
    * and change detection. All form controls are bound to their respective
    * Material Design components for consistent user interaction.
-   * 
+   *
    * @example
    * ```typescript
    * // Accessing form values
    * const currentSettings = this.settings.value;
    * console.log('Zoom enabled:', currentSettings.zoom);
-   * 
+   *
    * // Subscribing to changes
    * this.settings.valueChanges.subscribe(changes => {
    *   console.log('Settings changed:', changes);
@@ -151,19 +150,19 @@ export class SettingsComponent {
 
   /**
    * Creates an instance of SettingsComponent.
-   * 
+   *
    * Establishes comprehensive dependency injection for settings management,
    * including reactive forms, state management, and persistence services.
    * Immediately initializes form controls with current store values and
    * sets up reactive value change subscription for real-time persistence.
-   * 
+   *
    * @param formBuilder - Angular service for creating reactive form structures
    * @param settingsService - Service for settings persistence and store integration
    * @param projectService - Service for project management operations
    * @param logger - NGX Logger service for debugging and monitoring
    * @param flamService - Service for FLAM analysis and color mapping
    * @param store - Reactive state store for application state management
-   * 
+   *
    * @example
    * ```typescript
    * // Component automatically initializes with current settings
@@ -172,13 +171,13 @@ export class SettingsComponent {
    *   // Value changes automatically persist
    *   // Real-time state synchronization enabled
    * }
-   * 
+   *
    * // Settings changes are immediately available app-wide:
    * this.store.select(selectZoom).subscribe(enabled => {
    *   // Updates immediately when user toggles zoom setting
    * });
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   constructor(
@@ -194,11 +193,11 @@ export class SettingsComponent {
 
     /**
      * Reactive value change subscription for real-time settings persistence.
-     * 
+     *
      * Automatically saves form changes to localStorage and updates the global
      * application state through SettingsService. Preserves non-form settings
      * (flamsort, projectsort) by retrieving current values from store.
-     * 
+     *
      * @example
      * ```typescript
      * // User toggles zoom setting in UI
@@ -211,8 +210,12 @@ export class SettingsComponent {
      */
     this.settings.valueChanges.subscribe(async (value) => {
       // Get current flamsort and projectsort from store since they're not in the form
-      const currentFlamsort = await firstValueFrom(this.store.select(selectFlamSort));
-      const currentProjectsort = await firstValueFrom(this.store.select(selectProjectSort));
+      const currentFlamsort = await firstValueFrom(
+        this.store.select(selectFlamSort)
+      );
+      const currentProjectsort = await firstValueFrom(
+        this.store.select(selectProjectSort)
+      );
 
       // Only use SettingsService to save to localStorage and dispatch to store
       // The service will handle store updates, so we don't need to dispatch twice
@@ -232,36 +235,45 @@ export class SettingsComponent {
 
   /**
    * Initializes form controls with current values from the reactive state store.
-   * 
+   *
    * Retrieves current setting values using memoized selectors and populates
    * form controls to ensure UI reflects the current application state.
    * This method handles the initial synchronization between persisted
    * settings and the reactive form interface.
-   * 
+   *
    * @private
-   * @async
-   * 
+   *
    * @example
    * ```typescript
    * // Called automatically during component initialization
    * await this.initializeFormControls();
-   * 
+   *
    * // Form controls now reflect current store state:
    * console.log(this.zoomControl.value); // Current zoom setting
    * console.log(this.multiadvanceControl.value); // Current multi-advance count
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   private async initializeFormControls() {
     // Get current values from store and initialize form controls
     const combine12 = await firstValueFrom(this.store.select(selectCombine12));
-    const lrdesignators = await firstValueFrom(this.store.select(selectLRDesignators));
-    const flammarkers = await firstValueFrom(this.store.select(selectFlamMarkers));
-    const ppinspector = await firstValueFrom(this.store.select(selectPPInspector));
+    const lrdesignators = await firstValueFrom(
+      this.store.select(selectLRDesignators)
+    );
+    const flammarkers = await firstValueFrom(
+      this.store.select(selectFlamMarkers)
+    );
+    const ppinspector = await firstValueFrom(
+      this.store.select(selectPPInspector)
+    );
     const zoom = await firstValueFrom(this.store.select(selectZoom));
-    const scrolloffset = await firstValueFrom(this.store.select(selectScrollOffset));
-    const multiadvance = await firstValueFrom(this.store.select(selectMultiAdvance));
+    const scrolloffset = await firstValueFrom(
+      this.store.select(selectScrollOffset)
+    );
+    const multiadvance = await firstValueFrom(
+      this.store.select(selectMultiAdvance)
+    );
 
     this.combine12Control.setValue(combine12);
     this.lrdesignatorsControl.setValue(lrdesignators);
@@ -274,11 +286,11 @@ export class SettingsComponent {
 
   /**
    * Handles error recovery by re-initializing form controls.
-   * 
+   *
    * Called by the ErrorBoundaryComponent when a retry is requested,
    * this method reloads current settings from the store to restore
    * the form to a consistent state after an error condition.
-   * 
+   *
    * @example
    * ```typescript
    * // Called automatically by error boundary on retry
@@ -287,13 +299,13 @@ export class SettingsComponent {
    *   // Any corrupted form state is cleared
    *   // User can continue with valid settings
    * }
-   * 
+   *
    * // In template:
    * <app-error-boundary (retryRequested)="onRetry()">
    *   <!-- settings form -->
    * </app-error-boundary>
    * ```
-   * 
+   *
    * @since 1.0.0
    */
   onRetry(): void {

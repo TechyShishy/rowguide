@@ -11,7 +11,7 @@ import {
 } from '../../../core/services';
 
 /**
- * @fileoverview Comprehensive Test Suite for ZipperService
+ * Comprehensive Test Suite for ZipperService
  *
  * This test suite validates the ZipperService's core functionality for manipulating
  * step arrays in pattern tracking. The service handles step expansion, compression,

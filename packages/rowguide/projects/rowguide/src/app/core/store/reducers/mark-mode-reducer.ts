@@ -9,8 +9,8 @@ import {
 } from '../actions/mark-mode-actions';
 
 /**
- * @fileoverview Mark Mode Reducer
- * 
+ * Mark Mode Reducer
+ *
  * Manages mark mode state in the ReactiveStateStore.
  * Handles setting, updating, and resetting mark mode with history tracking.
  */
@@ -54,7 +54,7 @@ export function markModeReducer(
   switch (action.type) {
     case SET_MARK_MODE: {
       const payload = action.payload as SetMarkModePayload;
-      
+
       return {
         ...state,
         currentMode: payload.mode,
@@ -67,7 +67,7 @@ export function markModeReducer(
 
     case UPDATE_MARK_MODE: {
       const payload = action.payload as UpdateMarkModePayload;
-      
+
       return {
         ...state,
         currentMode: payload.mode,
@@ -80,7 +80,7 @@ export function markModeReducer(
 
     case RESET_MARK_MODE: {
       const payload = action.payload as ResetMarkModePayload;
-      
+
       return {
         ...state,
         currentMode: 0,
@@ -102,11 +102,11 @@ export function markModeReducer(
  */
 function addToHistory(history: number[], mode: number): number[] {
   const newHistory = [...history, mode];
-  
+
   // Keep only the last 10 entries to prevent memory bloat
   if (newHistory.length > 10) {
     return newHistory.slice(-10);
   }
-  
+
   return newHistory;
 }

@@ -17,7 +17,7 @@ import { provideRouter } from '@angular/router';
 import { Project } from '../models/project';
 
 /**
- * @fileoverview Comprehensive Test Suite for FlamService
+ * Comprehensive Test Suite for FlamService
  *
  * This test suite validates the FlamService functionality including:
  * - Service initialization and dependency injection

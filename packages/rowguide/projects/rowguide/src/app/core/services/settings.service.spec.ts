@@ -21,7 +21,7 @@ import {
 } from '../store/selectors/settings-selectors';
 
 /**
- * @fileoverview Comprehensive Test Suite for SettingsService
+ * Comprehensive Test Suite for SettingsService
  *
  * This test suite validates all aspects of the SettingsService functionality,
  * including settings persistence, reactive state management, error handling,

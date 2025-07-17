@@ -1,5 +1,5 @@
 /**
- * @fileoverview Notification Actions for ReactiveStateStore
+ * Notification Actions for ReactiveStateStore
  *
  * This file defines all actions related to notification state management.
  * Notifications are user-facing messages that appear temporarily in the UI
@@ -34,7 +34,7 @@ export interface NotificationPayload {
  */
 export enum NotificationActionTypes {
   SHOW_NOTIFICATION = '[Notification] Show Notification',
-  CLEAR_NOTIFICATION = '[Notification] Clear Notification', 
+  CLEAR_NOTIFICATION = '[Notification] Clear Notification',
   QUEUE_NOTIFICATION = '[Notification] Queue Notification',
   CLEAR_ALL_NOTIFICATIONS = '[Notification] Clear All Notifications',
   AUTO_DISMISS_NOTIFICATION = '[Notification] Auto Dismiss Notification',

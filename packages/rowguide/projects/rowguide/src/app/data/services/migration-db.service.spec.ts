@@ -7,7 +7,7 @@ import { IndexedDbService } from './indexed-db.service';
 import { ErrorHandlerService, ErrorContext } from '../../core/services';
 
 /**
- * @fileoverview Comprehensive Test Suite for MigrationDbService
+ * Comprehensive Test Suite for MigrationDbService
  *
  * This test suite validates all database migration operations for the MigrationDbService,
  * including CRUD operations, error handling, and edge cases for managing database

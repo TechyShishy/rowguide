@@ -5,7 +5,7 @@ import { Position } from './position';
 import { FLAM } from './flam';
 
 /**
- * @fileoverview Type Guards for Null Safety
+ * Type Guards for Null Safety
  *
  * This module provides TypeScript type guards and validation functions to ensure
  * null safety throughout the Rowguide application. These functions help prevent

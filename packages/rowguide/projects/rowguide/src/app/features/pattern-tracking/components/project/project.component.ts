@@ -53,7 +53,7 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
 /**
  * Main project component implementing hierarchical navigation for pattern tracking.
  * Manages project display, step-by-step navigation, and mark mode functionality.
- * 
+ *
  * Core Responsibilities:
  * - **Hierarchical Navigation**: Implements HierarchicalList for tree-like navigation
  * - **Route-Based Project Loading**: Loads projects based on URL parameters with fallbacks
@@ -61,21 +61,21 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
  * - **Keyboard Navigation**: Provides arrow key navigation through pattern steps
  * - **Position Persistence**: Saves current position to localStorage for session continuity
  * - **Error Recovery**: Integrates with error boundary for graceful error handling
- * 
+ *
  * Architecture Features:
  * - Uses OnPush change detection for optimal performance
  * - Reactive state management through ReactiveStateStore integration
  * - Observable-driven UI updates with null safety patterns
  * - Hierarchical component structure (Project → Row → Step)
  * - Integration with settings for display customization
- * 
+ *
  * Navigation Patterns:
  * - Step-by-step navigation with automatic row advancement
  * - Multi-step advancement with configurable step count
  * - Keyboard shortcuts for all navigation actions
  * - Position tracking with persistence across sessions
  * - End-of-pattern handling with automatic reset
- * 
+ *
  * @example
  * ```typescript
  * // Basic component usage in routing
@@ -83,16 +83,16 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
  *   path: 'project/:id',
  *   component: ProjectComponent
  * }
- * 
+ *
  * // Navigation interaction
  * <app-project></app-project>
- * 
+ *
  * // Programmatic navigation
  * this.router.navigate(['project', { id: projectId }]);
- * 
+ *
  * // Mark mode integration
  * <app-project [class.mark-mode]="markMode > 0"></app-project>
- * 
+ *
  * // Error recovery integration
  * <app-error-boundary (retry)="onRetry()">
  *   <app-project></app-project>
@@ -192,9 +192,9 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Host binding for mark mode CSS classes with dynamic class generation.
    * Applies 'mark-mode' and specific 'mark-mode-{number}' classes based on current mode.
-   * 
+   *
    * @returns Space-separated string of CSS classes for mark mode styling
-   * 
+   *
    * @example
    * ```typescript
    * // Mark mode 0 (default): no classes
@@ -263,12 +263,12 @@ export class ProjectComponent implements HierarchicalList {
    * ```typescript
    * // Automatic initialization on component creation
    * // Handles routes like: /project/123 or /project (with fallback)
-   * 
+   *
    * // Mark mode subscription updates CSS classes
    * this.markModeService.markModeChanged$.subscribe(mode => {
    *   this.setMarkMode(mode); // Updates this.markMode and triggers cssClasses
    * });
-   * 
+   *
    * // Project loading with validation
    * this.project$ = this.route.paramMap.pipe(
    *   switchMap(id => this.projectService.loadProject(id))
@@ -390,23 +390,23 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Initializes view children and sets up hierarchical navigation after view initialization.
    * Establishes component tree relationships and configures automatic current step activation.
-   * 
+   *
    * Post-View Initialization:
    * 1. Subscribes to RowComponent children changes for dynamic navigation updates
    * 2. Triggers change detection to ensure proper view rendering
    * 3. Sets up automatic step activation based on current position
    * 4. Handles distinctUntilChanged optimization for step selection
-   * 
+   *
    * @example
    * ```typescript
    * // Automatic view initialization after template rendering
    * // Sets up child component relationships
-   * 
+   *
    * this.children.changes.subscribe(children => {
    *   this.children$.next(children); // Update navigation observable
    *   this.cdr.detectChanges(); // Ensure view consistency
    * });
-   * 
+   *
    * // Automatic step activation based on position
    * this.currentStep$.pipe(
    *   filter(step => step !== null),
@@ -438,26 +438,26 @@ export class ProjectComponent implements HierarchicalList {
    * Opens Material bottom sheet for mark mode cycling and bead count display.
    * Integrates current step bead count with mark mode management interface.
    * Handles mark mode state synchronization between bottom sheet and component.
-   * 
+   *
    * Bottom Sheet Integration:
    * 1. Retrieves current step and bead count data
    * 2. Opens BeadCountBottomSheet with current mark mode and bead count
    * 3. Handles result processing and mark mode updates
    * 4. Synchronizes final mark mode state after dismissal
-   * 
+   *
    * @example
    * ```typescript
    * // User interaction triggering bottom sheet
    * <button (click)="openBeadCountBottomSheet()">
    *   Show Bead Count & Mark Mode
    * </button>
-   * 
+   *
    * // Bottom sheet data structure
    * const data = {
    *   markMode: this.markMode,     // Current mark mode (0-3+)
    *   beadCount: beadCount         // Current step bead count
    * };
-   * 
+   *
    * // Mark mode synchronization after dismissal
    * bottomSheetRef.afterDismissed().subscribe(result => {
    *   const finalMarkMode = bottomSheetRef.instance.data.markMode;
@@ -500,19 +500,19 @@ export class ProjectComponent implements HierarchicalList {
    * and BeadCountBottomSheet interactions.
    *
    * @param mode - The new mark mode number (0 = default, 1-3+ = marking states)
-   * 
+   *
    * @example
    * ```typescript
    * // Called by MarkModeService subscription
    * this.markModeService.markModeChanged$.subscribe(mode => {
    *   this.setMarkMode(mode); // Updates this.markMode
    * });
-   * 
+   *
    * // Triggers CSS class updates through @HostBinding
    * // mode 0: no classes
-   * // mode 1: 'mark-mode mark-mode-1' 
+   * // mode 1: 'mark-mode mark-mode-1'
    * // mode 2: 'mark-mode mark-mode-2'
-   * 
+   *
    * // Used by bottom sheet for mark mode cycling
    * const finalMarkMode = bottomSheetRef.instance.data.markMode;
    * this.setMarkMode(finalMarkMode);
@@ -525,12 +525,12 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Advances to the next row in the pattern sequence.
    * Template method for row-level navigation controls and UI interactions.
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage
    * <button (click)="onAdvanceRow()">Next Row</button>
-   * 
+   *
    * // Programmatic usage
    * this.onAdvanceRow(); // Moves to next row, first step
    * ```
@@ -543,23 +543,23 @@ export class ProjectComponent implements HierarchicalList {
    * Advances to the next step with automatic row progression and end-of-pattern handling.
    * Core navigation method that handles step-by-step advancement with intelligent
    * progression logic including automatic row advancement and project reset.
-   * 
+   *
    * Navigation Logic:
    * 1. Attempts to advance to next step in current row
    * 2. If end of row reached, advances to next row automatically
    * 3. If end of project reached, triggers project reset to beginning
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage for step navigation
    * <button (click)="onAdvanceStep()">Next Step</button>
-   * 
+   *
    * // Keyboard navigation integration
    * @HostListener('keydown.ArrowRight')
    * async onRightArrow() {
    *   await this.onAdvanceStep();
    * }
-   * 
+   *
    * // Navigation flow example:
    * // Row 1, Step 5 → Row 1, Step 6 (normal advance)
    * // Row 1, Step 10 (last) → Row 2, Step 1 (row advance)
@@ -579,25 +579,25 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Advances through multiple steps with configurable count and automatic boundary handling.
    * Enables bulk navigation through pattern sections with intelligent stopping at row boundaries.
-   * 
+   *
    * Bulk Navigation Logic:
    * 1. Iterates through specified number of steps
    * 2. Stops early if end of row is reached
    * 3. Preserves position state for consistent navigation
-   * 
+   *
    * @param x - Number of steps to advance (1-based count)
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage with settings integration
    * <button (click)="onAdvanceXSteps(5)">Advance 5 Steps</button>
-   * 
+   *
    * // Multi-advance with settings
    * async onAdvanceMultipleSteps() {
    *   const count = await firstValueFrom(this.multiadvance$);
    *   await this.onAdvanceXSteps(count); // Uses user-configured step count
    * }
-   * 
+   *
    * // Boundary handling example:
    * // Row 1, Step 8 + advance 5 steps
    * // → Stops at Row 1, Step 10 (if last step in row)
@@ -616,12 +616,12 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Retreats to the previous row in the pattern sequence.
    * Template method for backward row-level navigation controls and UI interactions.
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage
    * <button (click)="onRetreatRow()">Previous Row</button>
-   * 
+   *
    * // Programmatic usage
    * this.onRetreatRow(); // Moves to previous row, first step
    * ```
@@ -634,24 +634,24 @@ export class ProjectComponent implements HierarchicalList {
    * Retreats to the previous step with automatic row regression and start-of-pattern handling.
    * Core backward navigation method that handles step-by-step retreat with intelligent
    * regression logic including automatic row retreat and project boundary handling.
-   * 
+   *
    * Navigation Logic:
    * 1. Attempts to retreat to previous step in current row
    * 2. If start of row reached, retreats to previous row automatically
    * 3. If start of project reached, triggers project reset to end
    * 4. Automatically positions to last step of retreated row
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage for step navigation
    * <button (click)="onRetreatStep()">Previous Step</button>
-   * 
+   *
    * // Keyboard navigation integration
    * @HostListener('keydown.ArrowLeft')
    * async onLeftArrow() {
    *   await this.onRetreatStep();
    * }
-   * 
+   *
    * // Navigation flow example:
    * // Row 2, Step 3 → Row 2, Step 2 (normal retreat)
    * // Row 2, Step 1 → Row 1, Step 10 (row retreat + end position)
@@ -672,25 +672,25 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Retreats through multiple steps with configurable count and automatic boundary handling.
    * Enables bulk backward navigation through pattern sections with intelligent stopping at row boundaries.
-   * 
+   *
    * Bulk Navigation Logic:
    * 1. Iterates through specified number of steps backward
    * 2. Stops early if start of row is reached
    * 3. Preserves position state for consistent navigation
-   * 
+   *
    * @param x - Number of steps to retreat (1-based count)
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage with settings integration
    * <button (click)="onRetreatXSteps(3)">Retreat 3 Steps</button>
-   * 
+   *
    * // Multi-retreat with settings
    * async onRetreatMultipleSteps() {
    *   const count = await firstValueFrom(this.multiadvance$);
    *   await this.onRetreatXSteps(count); // Uses user-configured step count
    * }
-   * 
+   *
    * // Boundary handling example:
    * // Row 2, Step 5 - retreat 3 steps
    * // → Row 2, Step 2 (normal retreat)
@@ -710,16 +710,16 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Template wrapper method for retreating multiple steps using settings configuration.
    * Combines settings-based step count with bulk retreat functionality for user convenience.
-   * 
+   *
    * @returns Promise that resolves when retreat operation completes
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage with user-configured step count
    * <button (click)="onRetreatMultipleSteps()">
    *   Retreat {{ multiadvance$ | async }} Steps
    * </button>
-   * 
+   *
    * // Uses multiadvance setting (default: 3)
    * // User setting: 5 steps → retreats 5 steps
    * // Stops at row boundaries for safety
@@ -733,16 +733,16 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Template wrapper method for advancing multiple steps using settings configuration.
    * Combines settings-based step count with bulk advance functionality for user convenience.
-   * 
+   *
    * @returns Promise that resolves when advance operation completes
-   * 
+   *
    * @example
    * ```typescript
    * // Template usage with user-configured step count
    * <button (click)="onAdvanceMultipleSteps()">
    *   Advance {{ multiadvance$ | async }} Steps
    * </button>
-   * 
+   *
    * // Uses multiadvance setting (default: 3)
    * // User setting: 5 steps → advances 5 steps
    * // Stops at row boundaries for safety
@@ -754,17 +754,14 @@ export class ProjectComponent implements HierarchicalList {
   }
 
   /**
-   * Keyboard navigation handler for right arrow key press.
-   * Provides keyboard-based step advancement with same logic as onAdvanceStep().
+   * Keyboard navigation handler for right arrow key press.   * Provides keyboard-based step advancement with same logic as onAdvanceStep().
    * Includes automatic row progression and end-of-pattern handling.
-   * 
-   * @param event - Optional keyboard event (automatically provided by HostListener)
-   * 
+   *
    * @example
    * ```typescript
    * // Automatic keyboard handling
    * // User presses right arrow → onRightArrow() called
-   * 
+   *
    * // Navigation behavior matches onAdvanceStep():
    * // Row 1, Step 5 → Row 1, Step 6 (normal advance)
    * // Row 1, Step 10 (last) → Row 2, Step 1 (row advance)
@@ -786,14 +783,12 @@ export class ProjectComponent implements HierarchicalList {
    * Keyboard navigation handler for left arrow key press.
    * Provides keyboard-based step retreat with same logic as onRetreatStep().
    * Includes automatic row regression and start-of-pattern handling.
-   * 
-   * @param event - Optional keyboard event (automatically provided by HostListener)
-   * 
+   *
    * @example
    * ```typescript
    * // Automatic keyboard handling
    * // User presses left arrow → onLeftArrow() called
-   * 
+   *
    * // Navigation behavior matches onRetreatStep():
    * // Row 2, Step 3 → Row 2, Step 2 (normal retreat)
    * // Row 2, Step 1 → Row 1, Step 10 (row retreat + end position)
@@ -815,14 +810,12 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Keyboard navigation handler for up arrow key press.
    * Provides keyboard-based row retreat for quick vertical navigation.
-   * 
-   * @param event - Optional keyboard event (automatically provided by HostListener)
-   * 
+   *
    * @example
    * ```typescript
    * // Automatic keyboard handling
    * // User presses up arrow → onUpArrow() called
-   * 
+   *
    * // Navigation behavior:
    * // Row 3, Step 5 → Row 2, Step 1 (previous row, first step)
    * // Row 1, Step 8 → stays at Row 1, Step 8 (no previous row)
@@ -833,17 +826,14 @@ export class ProjectComponent implements HierarchicalList {
     this.doRowBackward();
   }
 
-  /**
-   * Keyboard navigation handler for down arrow key press.
+  /**   * Keyboard navigation handler for down arrow key press.
    * Provides keyboard-based row advancement for quick vertical navigation.
-   * 
-   * @param event - Optional keyboard event (automatically provided by HostListener)
-   * 
+   *
    * @example
    * ```typescript
    * // Automatic keyboard handling
    * // User presses down arrow → onDownArrow() called
-   * 
+   *
    * // Navigation behavior:
    * // Row 2, Step 5 → Row 3, Step 1 (next row, first step)
    * // Row 15, Step 8 (last row) → stays at Row 15, Step 8 (no next row)
@@ -972,15 +962,14 @@ export class ProjectComponent implements HierarchicalList {
 
   /**
    * Error boundary retry handler that recovers from component errors.
-   * 
+   *
    * This method is called by the error boundary component when the user clicks
    * the retry button after an error occurs. It provides a clean recovery mechanism
    * by reinitializing the component state and reloading project data.
-   * 
+   *
    * @public
-   * @method onRetry
    * @returns {void}
-   * 
+   *
    * @example
    * ```html
    * <!-- Template usage with error boundary -->
@@ -990,7 +979,7 @@ export class ProjectComponent implements HierarchicalList {
    *   </div>
    * </app-error-boundary>
    * ```
-   * 
+   *
    * @example
    * ```typescript
    * // Error boundary integration
@@ -1002,14 +991,13 @@ export class ProjectComponent implements HierarchicalList {
    *   }
    * }
    * ```
-   * 
-   * @description
+   *
    * The retry mechanism provides:
    * - Complete component state reset via ngOnInit()
    * - Route parameter re-evaluation for project loading
    * - Navigation hierarchy position restoration
    * - Reactive state stream re-subscription
-   * 
+   *
    * @see {@link ngOnInit} For the initialization logic being called
    * @see {@link HierarchicalList} For navigation state that gets restored
    * @since 1.0.0

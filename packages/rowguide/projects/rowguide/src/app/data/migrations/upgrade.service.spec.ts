@@ -10,7 +10,7 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Project, Step, Row, ModelFactory } from '../../core/models';
 
 /**
- * @fileoverview Comprehensive Test Suite for UpgradeService
+ * Comprehensive Test Suite for UpgradeService
  *
  * This test suite validates the UpgradeService functionality including:
  * - Service initialization and dependency injection

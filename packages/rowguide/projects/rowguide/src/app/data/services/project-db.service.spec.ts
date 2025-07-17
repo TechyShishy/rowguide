@@ -17,7 +17,7 @@ import {
 } from '../../core/models';
 
 /**
- * @fileoverview Comprehensive Test Suite for ProjectDbService
+ * Comprehensive Test Suite for ProjectDbService
  *
  * This test suite validates all database operations for the ProjectDbService,
  * including CRUD operations, error handling, validation, and edge cases.

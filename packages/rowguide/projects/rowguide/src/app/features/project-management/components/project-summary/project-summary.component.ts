@@ -14,47 +14,46 @@ import { ProjectService } from '../../services';
 
 /**
  * Project Summary Component for project management and overview display.
- * 
+ *
  * Provides comprehensive project management interface with essential project
  * operations including name editing, navigation, export, and deletion.
  * Designed as a reusable component for project list displays and management
  * dashboards with integrated persistence and navigation capabilities.
- * 
+ *
  * **Key Features:**
  * - **Inline Name Editing**: Direct project name modification with automatic persistence
  * - **Project Navigation**: One-click navigation to project tracking interface
  * - **Export Functionality**: GZIP-compressed project export for backup and sharing
  * - **Project Deletion**: Safe project removal with immediate UI feedback
  * - **Database Integration**: Automatic IndexedDB persistence for all operations
- * 
+ *
  * **Project Export Format:**
  * - Exports projects as compressed .rgp files (RowGuide Project format)
  * - Uses GZIP compression for efficient file size
  * - JSON-based project data with complete pattern information
  * - MIME type: application/x-rowguide-project
- * 
+ *
  * **Usage Patterns:**
  * - Project list displays with management controls
  * - Project gallery with quick access operations
  * - Project backup and sharing workflows
  * - Project organization and maintenance interfaces
- * 
- * @component
+ *
  * @example
  * ```typescript
  * // In template:
- * <app-project-summary 
+ * <app-project-summary
  *   [project]="selectedProject"
  *   class="project-card">
  * </app-project-summary>
- * 
+ *
  * // The component provides:
  * // 1. Editable project name with auto-save
  * // 2. Load button for navigation to project
  * // 3. Download button for project export
  * // 4. Delete button for project removal
  * ```
- * 
+ *
  * @since 1.0.0
  */
 @Component({
@@ -70,27 +69,26 @@ import { ProjectService } from '../../services';
   styleUrl: './project-summary.component.scss',
 })
 export class ProjectSummaryComponent {
-  /** 
+  /**
    * Project input for management operations.
-   * 
+   *
    * The project instance that this component manages. Must be provided
    * by parent component and contains all project data including rows,
    * FLAM data, position tracking, and metadata. All component operations
    * (save, load, delete, download) act on this project instance.
-   * 
-   * @required
+   *
    */
   @Input() project!: Project;
 
   /**
    * Component constructor with comprehensive service injection.
-   * 
+   *
    * Injects essential services for project management operations:
    * - Database service for persistence operations
    * - Element reference for DOM manipulation during deletion
    * - Router for navigation to project tracking interface
    * - Project service for current project state management
-   * 
+   *
    * @param indexedDBService - Database persistence for project operations
    * @param ref - Element reference for DOM manipulation and UI updates
    * @param router - Angular router for navigation to project interface
@@ -105,18 +103,18 @@ export class ProjectSummaryComponent {
 
   /**
    * Saves project name changes to persistent storage.
-   * 
+   *
    * Automatically persists project name modifications to IndexedDB
    * when the user completes inline editing. Provides immediate
    * persistence without requiring explicit save actions from the user.
-   * 
+   *
    * Typically called on input blur events or form submission to
    * ensure name changes are preserved across sessions.
-   * 
+   *
    * @example
    * ```typescript
    * // In template:
-   * <mat-input [(ngModel)]="project.name" 
+   * <mat-input [(ngModel)]="project.name"
    *           (blur)="saveName()"
    *           placeholder="Project Name">
    * ```
@@ -127,15 +125,15 @@ export class ProjectSummaryComponent {
 
   /**
    * Loads project for pattern tracking and navigation.
-   * 
+   *
    * Comprehensive project loading workflow that:
    * 1. Sets the project as the current active project
    * 2. Navigates to the project tracking interface
    * 3. Preserves project ID in route parameters for deep linking
-   * 
+   *
    * Integrates with ProjectService for current project state
    * management and Angular Router for seamless navigation.
-   * 
+   *
    * @example
    * ```typescript
    * // Navigation result:
@@ -148,23 +146,23 @@ export class ProjectSummaryComponent {
     this.projectService.saveCurrentProject(this.project.id ?? 0);
     this.router.navigate(['/project', { id: this.project.id }]);
   }
-  
+
   /**
    * Deletes project with immediate UI feedback.
-   * 
+   *
    * Performs project deletion with immediate visual feedback:
    * 1. Removes project from IndexedDB storage
    * 2. Hides the component element from UI immediately
    * 3. Provides instant user feedback during async operation
-   * 
+   *
    * **Note**: Uses DOM manipulation for immediate UI response.
    * This approach provides instant feedback while the database
    * operation completes asynchronously.
-   * 
-   * @todo Implement reactive approach to replace DOM manipulation
-   * @todo Add confirmation dialog for destructive operation
-   * @todo Emit deletion event for parent component refresh
-   * 
+   *
+   * TODO: Implement reactive approach to replace DOM manipulation
+   * TODO: Add confirmation dialog for destructive operation
+   * TODO: Emit deletion event for parent component refresh
+   *
    * @example
    * ```typescript
    * // Current implementation:
@@ -179,25 +177,25 @@ export class ProjectSummaryComponent {
     // TODO: This feels hacky.  Find a better way to trigger a refresh of the project list.
     this.ref.nativeElement.hidden = true;
   }
-  
+
   /**
    * Downloads project as compressed backup file.
-   * 
+   *
    * Comprehensive project export functionality that creates
    * a downloadable backup file with GZIP compression:
-   * 
+   *
    * **Export Process:**
    * 1. Serializes complete project data to JSON string
    * 2. Compresses JSON using GZIP for efficient file size
    * 3. Initiates browser download with proper MIME type
    * 4. Uses .rgp extension (RowGuide Project format)
-   * 
+   *
    * **File Format Details:**
    * - Extension: .rgp (RowGuide Project)
    * - MIME Type: application/x-rowguide-project
    * - Compression: GZIP for size optimization
    * - Content: Complete project JSON with all pattern data
-   * 
+   *
    * **Backup Contents:**
    * - Project metadata (name, ID, creation date)
    * - Complete row and step pattern data
@@ -205,7 +203,7 @@ export class ProjectSummaryComponent {
    * - Color mappings and assignments
    * - Current position and tracking state
    * - Attached project images (if present)
-   * 
+   *
    * @example
    * ```typescript
    * // Download process:
@@ -213,7 +211,7 @@ export class ProjectSummaryComponent {
    * // 2. JSON string → gzip() → Compressed binary data
    * // 3. Binary data → fileDownload() → Browser download
    * // 4. Result: project.rgp file ready for import
-   * 
+   *
    * // File can be imported via ProjectSelectorComponent
    * ```
    */

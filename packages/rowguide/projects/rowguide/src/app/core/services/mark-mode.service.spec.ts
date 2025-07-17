@@ -14,7 +14,7 @@ import {
 } from '../store/selectors/mark-mode-selectors';
 
 /**
- * @fileoverview Comprehensive Test Suite for MarkModeService
+ * Comprehensive Test Suite for MarkModeService
  *
  * This test suite validates all aspects of the MarkModeService functionality
  * with ReactiveStateStore integration, including mark mode state management,
@@ -238,7 +238,7 @@ describe('MarkModeService', () => {
     it('should undo to previous mark mode', () => {
       // Set initial mode
       service.updateMarkMode(5);
-      
+
       // Clear any previous dispatch calls
       storeSpy.dispatch.calls.reset();
 

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Notification Selectors for ReactiveStateStore
+ * Notification Selectors for ReactiveStateStore
  *
  * This file provides selectors for accessing notification state.
  * Selectors offer efficient access to notification state values and
@@ -24,28 +24,30 @@ export const selectNotificationState = (state: AppState): NotificationState => s
  * Select the currently displayed notification
  * @returns Current notification or null if none
  */
-export const selectCurrentNotification = (state: AppState): NotificationPayload | null => 
-  state.notifications.current;
+export const selectCurrentNotification = (
+  state: AppState
+): NotificationPayload | null => state.notifications.current;
 
 /**
  * Select the notification queue
  * @returns Array of pending notifications
  */
-export const selectNotificationQueue = (state: AppState): readonly NotificationPayload[] => 
-  state.notifications.queue;
+export const selectNotificationQueue = (
+  state: AppState
+): readonly NotificationPayload[] => state.notifications.queue;
 
 /**
  * Select whether there is a current notification
  * @returns True if notification is currently displayed
  */
-export const selectHasNotification = (state: AppState): boolean => 
+export const selectHasNotification = (state: AppState): boolean =>
   state.notifications.current !== null;
 
 /**
  * Select whether there are queued notifications
  * @returns True if notifications are waiting in queue
  */
-export const selectHasQueuedNotifications = (state: AppState): boolean => 
+export const selectHasQueuedNotifications = (state: AppState): boolean =>
   state.notifications.queue.length > 0;
 
 /**
@@ -61,21 +63,21 @@ export const selectTotalNotificationCount = (state: AppState): number => {
  * Select the current notification message
  * @returns Message string or empty string if no notification
  */
-export const selectCurrentNotificationMessage = (state: AppState): string => 
+export const selectCurrentNotificationMessage = (state: AppState): string =>
   state.notifications.current?.message ?? '';
 
 /**
  * Select the current notification type
  * @returns Notification type or 'info' as default
  */
-export const selectCurrentNotificationType = (state: AppState): string => 
+export const selectCurrentNotificationType = (state: AppState): string =>
   state.notifications.current?.type ?? 'info';
 
 /**
  * Select the current notification duration
  * @returns Duration in milliseconds or 0 if no auto-dismiss
  */
-export const selectCurrentNotificationDuration = (state: AppState): number => 
+export const selectCurrentNotificationDuration = (state: AppState): number =>
   state.notifications.current?.duration ?? 0;
 
 /**

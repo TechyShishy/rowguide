@@ -4,7 +4,7 @@ import { Step } from './step';
 import { Position } from './position';
 
 /**
- * @fileoverview Model Factory and Safe Access Utilities
+ * Model Factory and Safe Access Utilities
  *
  * This module provides safe factory functions and utilities for creating and
  * accessing domain objects in a null-safe manner. It replaces dangerous type

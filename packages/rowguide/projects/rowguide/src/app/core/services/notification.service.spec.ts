@@ -12,7 +12,7 @@ import {
 } from '../store/selectors/notification-selectors';
 
 /**
- * @fileoverview Test Suite for NotificationService with ReactiveStateStore
+ * Test Suite for NotificationService with ReactiveStateStore
  *
  * This test suite validates NotificationService functionality with
  * ReactiveStateStore integration including notification display, queuing,
