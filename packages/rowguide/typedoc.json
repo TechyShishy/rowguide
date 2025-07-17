@@ -42,5 +42,11 @@
   "githubPages": false,
   "hideGenerator": true,
   "searchInComments": true,
-  "cleanOutputDir": true
+  "cleanOutputDir": true,
+  "externalSymbolLinkMappings": {
+    "idb": {
+      "IDBPDatabase": "https://github.com/jakearchibald/idb#types",
+      "openDB": "https://github.com/jakearchibald/idb#opendb"
+    }
+  }
 }

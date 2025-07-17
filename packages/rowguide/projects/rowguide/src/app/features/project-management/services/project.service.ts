@@ -26,6 +26,153 @@ import { PeyoteShorthandService } from '../../file-import/loaders';
 import { StepComponent } from '../../pattern-tracking/components/step/step.component';
 import { NullProject } from '../models';
 
+/**
+ * Data Services Integration with ReactiveStateStore
+ *
+ * This architectural pattern demonstrates how data services integrate with the centralized
+ * ReactiveStateStore to provide a unified data flow architecture. The ProjectService serves
+ * as the primary integration layer, coordinating between persistent storage (data services)
+ * and reactive state management (ReactiveStateStore).
+ *
+ * @example
+ * ```typescript
+ * // Data Flow Architecture Pattern
+ * [UI Components]
+ *       ↕ (reactive streams)
+ * [ReactiveStateStore]
+ *       ↕ (actions/selectors)
+ * [Feature Services] (ProjectService, SettingsService, etc.)
+ *       ↕ (async operations)
+ * [Data Services] (ProjectDbService, MigrationDbService, etc.)
+ *       ↕ (persistence)
+ * [IndexedDB Storage]
+ * ```
+ *
+ * **Integration Patterns:**
+ *
+ * **1. Store-First Pattern** - State as Source of Truth:
+ * ```typescript
+ * class FeatureService {
+ *   // Expose store-managed state as observables
+ *   currentProject$ = this.store.select(selectCurrentProject);
+ *   projectList$ = this.store.select(selectAllProjects);
+ *
+ *   constructor(
+ *     private store: ReactiveStateStore,
+ *     private projectDb: ProjectDbService
+ *   ) {}
+ *
+ *   async loadProject(id: number): Promise<void> {
+ *     // Load from database
+ *     const project = await this.projectDb.loadProject(id);
+ *
+ *     // Update centralized state
+ *     this.store.dispatch(ProjectActions.setCurrentProject({ project }));
+ *   }
+ * }
+ * ```
+ *
+ * **2. Optimistic Updates Pattern** - Immediate UI Response:
+ * ```typescript
+ * async updateProject(project: Project): Promise<void> {
+ *   // Immediate state update for responsive UI
+ *   this.store.dispatch(ProjectActions.updateProjectOptimistic({ project }));
+ *
+ *   try {
+ *     // Persist to database
+ *     await this.projectDb.updateProject(project);
+ *
+ *     // Confirm success in state
+ *     this.store.dispatch(ProjectActions.updateProjectSuccess({ project }));
+ *   } catch (error) {
+ *     // Rollback optimistic update
+ *     this.store.dispatch(ProjectActions.updateProjectFailure({ error }));
+ *   }
+ * }
+ * ```
+ *
+ * **3. State Hydration Pattern** - Application Initialization:
+ * ```typescript
+ * async initializeApplication(): Promise<void> {
+ *   // Load all projects from database
+ *   const projects = await this.projectDb.loadProjects();
+ *
+ *   // Hydrate store with persisted data
+ *   this.store.dispatch(ProjectActions.loadProjectsSuccess({ projects }));
+ *
+ *   // Load user settings
+ *   const settings = await this.settingsService.loadSettings();
+ *   this.store.dispatch(SettingsActions.loadSettingsSuccess({ settings }));
+ * }
+ * ```
+ *
+ * **4. Selective Persistence Pattern** - Efficient Storage:
+ * ```typescript
+ * // Only persist significant state changes
+ * this.store.select(selectCurrentProject)
+ *   .pipe(
+ *     debounceTime(1000), // Avoid excessive saves
+ *     distinctUntilChanged(), // Only save when actually changed
+ *     filter(project => project && !isNullProject(project))
+ *   )
+ *   .subscribe(project => {
+ *     this.projectDb.updateProject(project);
+ *   });
+ * ```
+ *
+ * **5. Cross-Service Coordination Pattern** - Service Integration:
+ * ```typescript
+ * class ProjectService {
+ *   async deleteProject(id: number): Promise<void> {
+ *     // 1. Remove from database
+ *     await this.projectDb.deleteProject(id);
+ *
+ *     // 2. Update project state
+ *     this.store.dispatch(ProjectActions.removeProject({ id }));
+ *
+ *     // 3. Clear related settings
+ *     this.store.dispatch(SettingsActions.clearProjectSettings({ projectId: id }));
+ *
+ *     // 4. Clean up notifications
+ *     this.store.dispatch(NotificationActions.clearProjectNotifications({ projectId: id }));
+ *   }
+ * }
+ * ```
+ *
+ * **Benefits of This Architecture:**
+ * - **Single Source of Truth**: All UI components read from the same state
+ * - **Predictable Data Flow**: Clear separation between state and persistence
+ * - **Optimistic Updates**: Responsive UI with automatic rollback on errors
+ * - **Cross-Component Communication**: State changes automatically propagate
+ * - **Testing**: Easy to mock data services or state store independently
+ * - **Time-Travel Debugging**: Full state history for development
+ *
+ * **Error Handling Integration:**
+ * ```typescript
+ * // Centralized error handling across layers
+ * async performOperation(): Promise<void> {
+ *   try {
+ *     // Data service operation
+ *     await this.dataService.performDatabaseOperation();
+ *
+ *     // State update
+ *     this.store.dispatch(SuccessAction());
+ *   } catch (error) {
+ *     // Error handling service processes error
+ *     this.errorHandler.handleError(error, context);
+ *
+ *     // Error state update
+ *     this.store.dispatch(ErrorAction({ error }));
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link ReactiveStateStore} For state management implementation
+ * - Related service: ProjectDbService for data persistence operations
+ * @see {@link ProjectActions} For state modification actions
+ * - Related selectors: ProjectSelectors for state selection logic
+ */
+
 @Injectable({
   providedIn: 'root',
 })
