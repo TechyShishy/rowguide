@@ -559,6 +559,11 @@ export const selectZippedRows = ProjectSelectors.selectZippedRows;
 export const selectCurrentPosition = ProjectSelectors.selectCurrentPosition;
 
 /**
+ * @deprecated Use ProjectSelectors.selectProjectsReady instead
+ */
+export const selectProjectsReady = ProjectSelectors.selectProjectsReady;
+
+/**
  * Memoization Strategies and Performance Characteristics
  *
  * All selectors in this module are automatically memoized by the ReactiveStateStore
