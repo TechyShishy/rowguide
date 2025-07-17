@@ -1,3 +1,49 @@
+/**
+ * C2C Crochet Shorthand Service - Corner-to-Corner Crochet Pattern Processing
+ *
+ * This service handles parsing and processing of Corner-to-Corner (C2C) crochet patterns
+ * from shorthand notation. It converts C2C pattern strings into structured Project objects
+ * with comprehensive validation and error handling.
+ *
+ * ## Pattern Format Support
+ *
+ * - **C2C Row Format**: `ROW 1: ↗ 5 squares\n3xA, 2xB`
+ * - **Direction Indicators**: `↗` (up-right), `↙` (down-left)
+ * - **Stitch Notation**: `countxcolor` (e.g., `3xA`, `2xB`)
+ * - **Square Counting**: Total squares per row validation
+ *
+ * ## Input Processing
+ *
+ * - Pattern structure validation for C2C format
+ * - Input sanitization for security and data integrity
+ * - Regex-based pattern matching for reliable parsing
+ * - Comprehensive error handling with context
+ *
+ * ## Integration Features
+ *
+ * - **ErrorHandlerService**: Detailed error reporting and recovery
+ * - **DataIntegrityService**: Input validation and sanitization
+ * - **Logging**: Comprehensive debug and warning logging
+ *
+ * ## Usage Examples
+ *
+ * ```typescript
+ * // Parse C2C crochet pattern
+ * const pattern = `ROW 1: ↗ 5 squares
+ * 3xA, 2xB
+ * ROW 2: ↙ 4 squares
+ * 2xA, 2xB`;
+ * const project = service.loadProject(pattern);
+ *
+ * // Custom delimiter
+ * const customPattern = `ROW 1: ↗ 5 squares\n3xA; 2xB`;
+ * const project = service.loadProject(customPattern, ';');
+ * ```
+ *
+ * @service C2ccrochetShorthandService
+ * @since 2.0.0
+ */
+
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 
@@ -14,6 +60,33 @@ export class C2ccrochetShorthandService {
     private dataIntegrityService: DataIntegrityService
   ) {}
 
+  /**
+   * Load and parse C2C crochet pattern from shorthand notation
+   *
+   * Converts C2C crochet pattern strings into structured Project objects
+   * with comprehensive validation, error handling, and recovery. Supports
+   * directional indicators and square counting for pattern accuracy.
+   *
+   * @param {string} projectString - C2C pattern string to parse
+   * @param {string} delimiter - Stitch delimiter (default: ' ')
+   * @returns {Project} Parsed project with structured row and step data
+   *
+   * @example
+   * ```typescript
+   * // Parse standard C2C pattern
+   * const pattern = `ROW 1: ↗ 5 squares
+   * 3xA, 2xB
+   * ROW 2: ↙ 4 squares
+   * 2xA, 2xB`;
+   * const project = service.loadProject(pattern);
+   *
+   * // Parse with custom delimiter
+   * const customPattern = `ROW 1: ↗ 5 squares\n3xA; 2xB`;
+   * const project = service.loadProject(customPattern, ';');
+   * ```
+   *
+   * @throws {Error} When pattern parsing fails or validation encounters critical issues
+   */
   loadProject(projectString: string, delimiter: string = ' '): Project {
     let project: Project = { id: 0, rows: [] };
     try {
@@ -126,7 +199,27 @@ export class C2ccrochetShorthandService {
   }
 
   /**
-   * Validate pattern input data - Integration Point 1
+   * Validate C2C crochet pattern input data
+   *
+   * Performs comprehensive validation of C2C pattern string format and structure.
+   * Checks for required pattern elements, validates syntax, and ensures data integrity.
+   * This is Integration Point 1 for data validation before processing.
+   *
+   * @param {string} projectString - C2C pattern string to validate
+   * @param {string} delimiter - Stitch delimiter character
+   * @returns {ValidationResult} Validation result with sanitized data
+   *
+   * @example
+   * ```typescript
+   * const result = service.validatePatternInput(pattern, ',');
+   * if (result.isValid) {
+   *   console.log('Pattern is valid');
+   * } else {
+   *   console.log('Issues:', result.issues);
+   * }
+   * ```
+   *
+   * @private
    */
   private validatePatternInput(projectString: string, delimiter: string): {
     isValid: boolean;
@@ -192,6 +285,25 @@ export class C2ccrochetShorthandService {
 
   /**
    * Sanitize user input content - Integration Point 2
+   */
+  /**
+   * Sanitize user input for C2C pattern processing
+   *
+   * Removes potentially dangerous content while preserving C2C pattern structure.
+   * Uses DataIntegrityService for additional validation context and security.
+   * This is Integration Point 2 for content sanitization.
+   *
+   * @param {string} input - Raw user input to sanitize
+   * @returns {string} Sanitized input safe for processing
+   *
+   * @example
+   * ```typescript
+   * const sanitized = service.sanitizeUserInput(rawInput);
+   * // Script tags and control characters removed
+   * // Pattern structure preserved
+   * ```
+   *
+   * @private
    */
   private sanitizeUserInput(input: string): string {
     if (!input || typeof input !== 'string') {

@@ -1,3 +1,50 @@
+/**
+ * BeadTool PDF Service - PDF Pattern Extraction and Processing
+ *
+ * This service handles extraction and processing of beading patterns from BeadTool 4 PDF files.
+ * It provides comprehensive PDF parsing, text extraction, and pattern recognition capabilities
+ * with robust error handling and data validation.
+ *
+ * ## PDF Processing Features
+ *
+ * - **Text Extraction**: Multi-page PDF text extraction with content filtering
+ * - **Pattern Recognition**: Automatic detection and extraction of beading patterns
+ * - **Image Rendering**: Front page canvas rendering for preview generation
+ * - **Data Validation**: Comprehensive file and content validation
+ * - **Error Recovery**: Graceful handling of corrupted or invalid PDFs
+ *
+ * ## Supported PDF Features
+ *
+ * - BeadTool 4 generated PDFs with pattern notation
+ * - Multi-page documents with consistent formatting
+ * - Pattern extraction with step counting and color identification
+ * - Image rendering for thumbnail generation
+ *
+ * ## Integration Points
+ *
+ * - **PdfjslibService**: PDF.js library integration for PDF processing
+ * - **ErrorHandlerService**: Comprehensive error handling and reporting
+ * - **DataIntegrityService**: File validation and data integrity checks
+ *
+ * ## Usage Examples
+ *
+ * ```typescript
+ * // Extract pattern from PDF file
+ * const file = new File([pdfData], 'pattern.pdf', { type: 'application/pdf' });
+ * service.loadDocument(file).subscribe(pattern => {
+ *   console.log('Extracted pattern:', pattern);
+ * });
+ *
+ * // Render front page preview
+ * service.renderFrontPage(file).subscribe(imageBuffer => {
+ *   console.log('Rendered preview:', imageBuffer);
+ * });
+ * ```
+ *
+ * @service BeadtoolPdfService
+ * @since 2.0.0
+ */
+
 import { Injectable } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
 import {
@@ -22,15 +69,56 @@ export class BeadtoolPdfService {
     private dataIntegrity: DataIntegrityService
   ) {}
 
+  /**
+   * Type guard to check if PDF content item is TextMarkedContent
+   *
+   * @private
+   * @param {TextItem | TextMarkedContent} item - PDF content item to check
+   * @returns {boolean} True if item is TextMarkedContent
+   */
   private isTextMarkedContent(
     item: TextItem | TextMarkedContent
   ): item is TextMarkedContent {
     return (item as TextMarkedContent).type !== undefined;
   }
+
+  /**
+   * Type guard to check if PDF content item is TextItem
+   *
+   * @private
+   * @param {TextItem | TextMarkedContent} item - PDF content item to check
+   * @returns {boolean} True if item is TextItem
+   */
   private isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
     return (item as TextItem).str !== undefined;
   }
 
+  /**
+   * Load and extract pattern text from PDF document
+   *
+   * Processes PDF files to extract beading pattern text with comprehensive
+   * validation, error handling, and text cleaning. Supports multi-page documents
+   * and handles BeadTool 4 specific formatting.
+   *
+   * @param {File} file - PDF file to process
+   * @returns {Observable<string>} Observable emitting extracted pattern text
+   *
+   * @example
+   * ```typescript
+   * // Load pattern from PDF file
+   * const file = new File([pdfData], 'pattern.pdf', { type: 'application/pdf' });
+   * service.loadDocument(file).subscribe({
+   *   next: (pattern) => {
+   *     console.log('Extracted pattern:', pattern);
+   *   },
+   *   error: (error) => {
+   *     console.error('Failed to extract pattern:', error);
+   *   }
+   * });
+   * ```
+   *
+   * @throws {Error} When file validation fails or PDF processing encounters errors
+   */
   loadDocument(file: File): Observable<string> {
     // Validate file before processing
     const fileValidation = this.validateFile(file);
@@ -128,6 +216,26 @@ export class BeadtoolPdfService {
     );
   }
 
+  /**
+   * Extract and clean text content from a specific PDF page
+   *
+   * Processes individual PDF pages to extract text content with error handling
+   * and BeadTool specific formatting cleanup. Removes headers, footers, and
+   * application-specific metadata.
+   *
+   * @private
+   * @param {PDFDocumentProxy} pdfDoc - PDF document proxy from PDF.js
+   * @param {number} pageIndex - Page number to extract (1-based)
+   * @returns {Observable<string>} Observable emitting cleaned page text
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during PDF processing
+   * this.extractAndCleanPageText(pdfDoc, 1).subscribe(text => {
+   *   console.log('Page 1 text:', text);
+   * });
+   * ```
+   */
   private extractAndCleanPageText(
     pdfDoc: PDFDocumentProxy,
     pageIndex: number
@@ -193,6 +301,23 @@ export class BeadtoolPdfService {
     );
   }
 
+  /**
+   * Extract text content from PDF text content object
+   *
+   * Processes PDF.js text content objects to extract readable text,
+   * handling end-of-line markers and text concatenation.
+   *
+   * @private
+   * @param {any} textContent - PDF.js text content object
+   * @returns {string} Extracted text content with proper line breaks
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during text extraction
+   * const textContent = await page.getTextContent();
+   * const text = this.extractTextContent(textContent);
+   * ```
+   */
   private extractTextContent(textContent: any): string {
     const items: TextItem[] = textContent.items.filter(
       (item: TextItem | TextMarkedContent) => this.isTextItem(item)
@@ -210,10 +335,47 @@ export class BeadtoolPdfService {
     return items2.join('\n');
   }
 
+  /**
+   * Clean extracted text by removing formatting artifacts
+   *
+   * Removes BeadTool specific formatting artifacts, asterisk patterns,
+   * and normalizes line breaks for better pattern parsing.
+   *
+   * @private
+   * @param {string} text - Raw extracted text
+   * @returns {string} Cleaned text with artifacts removed
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during text processing
+   * const rawText = '***Pattern Name*** Row 1 (L) (3)A,\n\n(2)B';
+   * const cleaned = this.cleanText(rawText);
+   * // cleaned = 'Row 1 (L) (3)A, (2)B'
+   * ```
+   */
   private cleanText(text: string): string {
     return text.replace(/\*\*\*.*\*\*\*/g, '').replace(/,\n+/g, ', ');
   }
 
+  /**
+   * Convert HTML5 Canvas to ArrayBuffer for image storage
+   *
+   * Converts rendered PDF page canvas to ArrayBuffer format for storage
+   * and processing. Includes comprehensive error handling for blob creation
+   * and FileReader operations.
+   *
+   * @private
+   * @param {HTMLCanvasElement} canvas - Canvas element containing rendered PDF page
+   * @returns {Observable<ArrayBuffer>} Observable emitting ArrayBuffer of image data
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during image rendering
+   * this.canvasToArrayBuffer(canvas).subscribe(buffer => {
+   *   console.log('Image buffer size:', buffer.byteLength);
+   * });
+   * ```
+   */
   private canvasToArrayBuffer(
     canvas: HTMLCanvasElement
   ): Observable<ArrayBuffer> {
@@ -292,6 +454,25 @@ export class BeadtoolPdfService {
     return from(result$);
   }
 
+  /**
+   * Render PDF page to HTML5 Canvas element
+   *
+   * Converts PDF page to canvas for image generation and preview.
+   * Handles viewport scaling and rendering context setup with
+   * comprehensive error handling.
+   *
+   * @private
+   * @param {any} page - PDF.js page object
+   * @returns {Promise<HTMLCanvasElement>} Promise resolving to rendered canvas
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during PDF rendering
+   * this.renderPageToCanvas(page).then(canvas => {
+   *   console.log('Canvas size:', canvas.width, 'x', canvas.height);
+   * });
+   * ```
+   */
   private renderPageToCanvas(page: any): Promise<HTMLCanvasElement> {
     try {
       const viewport = page.getViewport({
@@ -349,6 +530,30 @@ export class BeadtoolPdfService {
     }
   }
 
+  /**
+   * Render PDF front page to ArrayBuffer for preview generation
+   *
+   * Processes the first page of a PDF document to generate a preview image
+   * as ArrayBuffer. Useful for creating thumbnails and visual previews
+   * of PDF patterns.
+   *
+   * @param {File} file - PDF file to render
+   * @returns {Observable<ArrayBuffer>} Observable emitting image data as ArrayBuffer
+   *
+   * @example
+   * ```typescript
+   * // Generate preview image from PDF
+   * const file = new File([pdfData], 'pattern.pdf', { type: 'application/pdf' });
+   * service.renderFrontPage(file).subscribe({
+   *   next: (imageBuffer) => {
+   *     console.log('Preview generated:', imageBuffer.byteLength, 'bytes');
+   *   },
+   *   error: (error) => {
+   *     console.error('Preview generation failed:', error);
+   *   }
+   * });
+   * ```
+   */
   renderFrontPage(file: File): Observable<ArrayBuffer> {
     return from(file.arrayBuffer()).pipe(
       switchMap(
@@ -379,7 +584,28 @@ export class BeadtoolPdfService {
   }
 
   /**
-   * Validate file before processing - Integration Point 1
+   * Validate PDF file before processing
+   *
+   * Comprehensive file validation including type checking, size limits,
+   * and content validation. Integrates with DataIntegrityService for
+   * consistent validation patterns.
+   *
+   * @private
+   * @param {File} file - File to validate
+   * @returns {FileValidationResult} Object containing validation results
+   *
+   * @interface FileValidationResult
+   * @property {boolean} isValid - Whether the file is valid
+   * @property {string[]} issues - Array of validation issues
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during file validation
+   * const validation = this.validateFile(file);
+   * if (!validation.isValid) {
+   *   console.error('File validation failed:', validation.issues);
+   * }
+   * ```
    */
   private validateFile(file: File): { isValid: boolean; issues: string[] } {
     const issues: string[] = [];
@@ -421,7 +647,23 @@ export class BeadtoolPdfService {
   }
 
   /**
-   * Sanitize text content for data integrity - Integration Point 2
+   * Sanitize extracted text content for data integrity
+   *
+   * Cleans extracted text content to remove potentially harmful content
+   * while preserving pattern structure. Provides logging for transparency
+   * and debugging.
+   *
+   * @private
+   * @param {string} text - Raw extracted text to sanitize
+   * @returns {string} Sanitized text safe for processing
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during text processing
+   * const rawText = 'Row 1 (L) (3)A\x00, (2)B';
+   * const sanitized = this.sanitizeTextContent(rawText);
+   * // sanitized = 'Row 1 (L) (3)A, (2)B'
+   * ```
    */
   private sanitizeTextContent(text: string): string {
     if (!text || typeof text !== 'string') {

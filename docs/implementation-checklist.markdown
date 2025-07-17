@@ -354,42 +354,50 @@ permalink: /implementation-checklist/
     - [x] Document mark mode values and their meanings
     - [x] Document timestamp tracking and user interaction patterns
 
-- [ ] **File Processing Documentation**
-  - [ ] PeyoteShorthandService - Document pattern parsing with comprehensive documentation and examples
-    - [ ] toProject() - Document pattern string parsing and project conversion
-    - [ ] createRow() - Document row creation from pattern text
-    - [ ] createFirstRow() - Document special handling for combined first rows
-    - [ ] stripRowTag() - Document row tag removal and text cleaning
-    - [ ] matchStep() - Document step pattern matching with regex
-    - [ ] createStep() - Document step object creation and validation
-    - [ ] checkStepCounts() - Document step count validation and warning system
-    - [ ] validateAndSanitizeInput() - Document input validation and sanitization
-  - [ ] BeadToolPdfService - Document PDF extraction with comprehensive file validation examples
-    - [ ] loadDocument() - Document PDF loading and text extraction pipeline
-    - [ ] Document file validation and error handling patterns
-    - [ ] Document PDF.js integration and worker management
-  - [ ] C2cCrochetShorthandService - Document crochet pattern documentation with comprehensive regex examples
-    - [ ] loadProject() - Document C2C crochet pattern parsing and project creation
-    - [ ] validatePatternInput() - Document pattern validation for crochet formats
-    - [ ] sanitizeUserInput() - Document input sanitization for crochet patterns
-    - [ ] Document crochet-specific pattern parsing and validation
-    - [ ] Document regex patterns for crochet notation and row structure
-    - [ ] Document error handling for malformed crochet patterns
-  - [ ] ZipperService - Document comprehensive step processing and pattern manipulation documentation
-    - [ ] expandSteps() - Document step expansion algorithm from compressed to individual steps
-    - [ ] compressSteps() - Document step compression and optimization for storage
-    - [ ] zipperSteps() - Document step merging for combined row patterns
-    - [ ] validateStepData() - Document step data validation before processing
-    - [ ] validateStepTransformations() - Document transformation integrity checking
-    - [ ] Document data integrity integration and error handling patterns
-    - [ ] Document memory management for large step arrays
-  - [ ] PdfjslibService - Document PDF.js integration documentation
-    - [ ] getDocument property - Document PDF.js getDocument method access
-    - [ ] Document PDF worker setup and management
-    - [ ] Document GlobalWorkerOptions configuration
-    - [ ] Document text extraction and parsing methods
-  - [ ] Document file validation and error handling patterns
-  - [ ] Document pattern format specifications and parsing rules
+- [x] **File Processing Documentation**
+  - [x] PeyoteShorthandService - Document pattern parsing with comprehensive documentation and examples
+    - [x] toProject() - Document pattern string parsing and project conversion
+    - [x] createRow() - Document row creation from pattern text
+    - [x] createFirstRow() - Document special handling for combined first rows
+    - [x] stripRowTag() - Document row tag removal and text cleaning
+    - [x] matchStep() - Document step pattern matching with regex
+    - [x] createStep() - Document step object creation and validation
+    - [x] checkStepCounts() - Document step count validation and warning system
+    - [x] validateAndSanitizeInput() - Document input validation and sanitization
+  - [x] BeadToolPdfService - Document PDF extraction with comprehensive file validation examples
+    - [x] loadDocument() - Document PDF loading and text extraction pipeline
+    - [x] Document file validation and error handling patterns
+    - [x] Document PDF.js integration and worker management
+  - [x] C2cCrochetShorthandService - Document crochet pattern documentation with comprehensive regex examples
+    - [x] loadProject() - Document C2C crochet pattern parsing and project creation
+    - [x] validatePatternInput() - Document pattern validation for crochet formats
+    - [x] sanitizeUserInput() - Document input sanitization for crochet patterns
+    - [x] Document crochet-specific pattern parsing and validation
+    - [x] Document regex patterns for crochet notation and row structure
+    - [x] Document error handling for malformed crochet patterns
+  - [x] ZipperService - Document comprehensive step processing and pattern manipulation documentation
+    - [x] expandSteps() - Document step expansion algorithm from compressed to individual steps
+    - [x] compressSteps() - Document step compression and optimization for storage
+    - [x] zipperSteps() - Document step merging for combined row patterns
+    - [x] validateStepData() - Document step data validation before processing
+    - [x] validateStepTransformations() - Document transformation integrity checking
+    - [x] Document data integrity integration and error handling patterns
+    - [x] Document memory management for large step arrays
+  - [x] PdfjslibService - Document PDF.js integration documentation
+    - [x] getDocument property - Document PDF.js getDocument method access
+    - [x] Document PDF worker setup and management
+    - [x] Document GlobalWorkerOptions configuration
+    - [x] Document text extraction and parsing methods
+  - [x] Document file validation and error handling patterns
+    - [x] Cross-service validation patterns documented in PeyoteShorthandService, BeadtoolPdfService, C2cCrochetShorthandService
+    - [x] Common error handling strategies documented with ErrorHandlerService integration
+    - [x] DataIntegrityService integration patterns documented across all file processing services
+  - [x] Document pattern format specifications and parsing rules
+    - [x] Peyote shorthand format specifications documented in PeyoteShorthandService
+    - [x] C2C crochet pattern format specifications documented in C2cCrochetShorthandService
+    - [x] PDF pattern extraction rules documented in BeadtoolPdfService
+    - [x] Step processing rules documented in ZipperService
+    - [x] Format validation specifications documented across all pattern services
 
 - [ ] **Model Classes Documentation**
   - [ ] NullProject class - Document null object pattern with comprehensive documentation and examples
