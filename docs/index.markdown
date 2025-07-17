@@ -49,6 +49,26 @@ Row 2:
   - Step 4: stepD
 ```
 
+## Documentation
+
+### Development Resources
+
+- **[Implementation Checklist](implementation-checklist/)** - Development progress and task tracking
+- **[Code Quality Plan](code-quality-improvement-plan/)** - Code quality improvement roadmap
+- **[Architecture Documentation](architecture/)** - Architectural patterns and design principles
+- **[Code Examples](code-examples/)** - Implementation guides and code examples
+
+### Deployment & Configuration
+
+- **[Deployment Documentation](deployment/)** - Complete deployment and configuration guide
+- **[Configuration Guide](deployment/configuration-guide/)** - Build and runtime configuration
+- **[Angular Configuration](deployment/angular-configuration/)** - Angular CLI build configuration
+
+### User Guides
+
+- **[Import Guide](import/)** - How to import patterns from various sources
+- **[Privacy Policy](privacy/)** - Privacy and data handling information
+
 ## Tips
 
 - Ensure each step is formatted correctly to avoid errors.

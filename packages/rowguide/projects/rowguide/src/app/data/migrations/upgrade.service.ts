@@ -7,12 +7,23 @@ import { ZipperService } from '../../features/file-import/services';
 import { MigrationDbService, ProjectDbService } from '../services';
 
 /**
- * UpgradeService - Database Migration Execution and Version Management
+ * Database migration execution and version management service.
  *
  * This service coordinates the execution of database migrations to transform
  * user data between application versions. It provides safe, atomic migration
  * processing with comprehensive error handling and rollback capabilities for
  * maintaining data integrity during application upgrades.
+ *
+ * @remarks
+ * The service ensures upgrade safety by validating migration configuration,
+ * checking migration status to prevent duplicate execution, applying migrations
+ * atomically with transaction safety, and providing detailed error context for
+ * debugging failed migrations.
+ *
+ * Migration versioning uses sequential numbering (1, 2, 3, ...) where each
+ * migration represents a specific data transformation required for that
+ * application version. The highestMigration property defines the current
+ * schema version expected by the application.
  *
  * @example
  * ```typescript
@@ -44,35 +55,7 @@ import { MigrationDbService, ProjectDbService } from '../services';
  * }
  * ```
  *
- * Key capabilities include:
- * - Sequential migration execution with dependency tracking
- * - Atomic migration processing with automatic rollback on failure
- * - Comprehensive validation of migration prerequisites and data integrity
- * - Detailed error reporting with migration context and recovery guidance
- * - Safe continuation after partial migration failures
- * - Version-specific data transformation with structure validation
- *
- * The service ensures upgrade safety by:
- * - Validating migration configuration before execution
- * - Checking migration status to prevent duplicate execution
- * - Applying migrations atomically with transaction safety
- * - Recording completion status only after successful execution
- * - Providing detailed error context for debugging failed migrations
- * - Continuing with subsequent migrations after recoverable failures
- *
- * Migration versioning uses sequential numbering (1, 2, 3, ...) where each
- * migration represents a specific data transformation required for that
- * application version. The highestMigration property defines the current
- * schema version expected by the application.
- *
- * **Critical Error Handling:**
- * The service distinguishes between recoverable and critical migration errors:
- * - Critical errors (configuration, validation): Stop all migrations
- * - High errors (individual migration failure): Continue with next migration
- * - Medium errors (data validation): Log and continue processing
- *
- * - Related services: MigrationDbService for migration status tracking and persistence
- * - Related services: ProjectService for project data access during migrations
+ * @see {@link MigrationDbService} For migration status tracking and persistence
  * @see {@link DataIntegrityService} For data validation during transformations
  * @since 1.0.0
  */
@@ -100,11 +83,11 @@ export class UpgradeService {
    * }
    * ```
    *
-   * **Version Management:**
-   * - Must be a positive integer (validated during migration execution)
-   * - Should be incremented when new migrations are added
-   * - Represents the cumulative count of all available migrations
-   * - Used as the target for complete database upgrades
+   * @remarks
+   * Must be a positive integer (validated during migration execution).
+   * Should be incremented when new migrations are added.
+   * Represents the cumulative count of all available migrations.
+   * Used as the target for complete database upgrades.
    *
    * @since 1.0.0
    */
@@ -120,6 +103,7 @@ export class UpgradeService {
    * @param errorHandler - Centralized error handling with severity categorization
    * @param dataIntegrityService - Data validation and integrity checking
    *
+   * @remarks
    * Initializes the service with all dependencies required for safe migration execution:
    * - Migration tracking to prevent duplicate execution
    * - Structured logging with migration context and operation details
@@ -194,6 +178,7 @@ export class UpgradeService {
    * }
    * ```
    *
+   * @remarks
    * **Migration Process:**
    * 1. **Validation**: Verify migration configuration and system state
    * 2. **Discovery**: Identify pending migrations by checking completion status
