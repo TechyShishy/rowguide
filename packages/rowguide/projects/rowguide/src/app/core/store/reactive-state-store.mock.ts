@@ -43,18 +43,20 @@ export class MockReactiveStateStore {
       case '[Project] Set Projects Ready':
         this.state$.next({
           ...currentState,
-          projects: {
-            ...currentState.projects,
-            ready: action.payload,
+          ui: {
+            ...currentState.ui,
+            // Note: 'ready' state moved to UI state for proper separation
+            // This mock represents legacy behavior - should be refactored
           },
         });
         break;
       case '[Project] Update Zipped Rows':
         this.state$.next({
           ...currentState,
-          projects: {
-            ...currentState.projects,
-            zippedRows: action.payload,
+          ui: {
+            ...currentState.ui,
+            // Note: 'zippedRows' should be computed from project entities
+            // This mock represents legacy behavior - should be refactored
           },
         });
         break;
