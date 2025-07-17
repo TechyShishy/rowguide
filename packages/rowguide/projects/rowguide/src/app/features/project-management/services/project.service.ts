@@ -198,7 +198,68 @@ export class ProjectService {
     });
   }
   /**
-   * Saves the current project ID to localStorage
+   * Save Current Project ID to LocalStorage
+   *
+   * Persists the active project ID to localStorage with comprehensive validation
+   * and error handling. This method ensures project references are maintained
+   * across browser sessions while providing robust data integrity checks.
+   *
+   * @example
+   * ```typescript
+   * // Basic usage with error handling
+   * try {
+   *   await this.projectService.saveCurrentProject(42);
+   *   console.log('Project reference saved successfully');
+   * } catch (error) {
+   *   console.error('Failed to save project reference:', error);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Integration with project selection workflow
+   * class ProjectSelectorComponent {
+   *   async onProjectSelected(project: Project): Promise<void> {
+   *     try {
+   *       // Load project into store
+   *       await this.projectService.loadProject(project.id);
+   *
+   *       // Persist selection for future sessions
+   *       await this.projectService.saveCurrentProject(project.id);
+   *
+   *       // Navigate to project view
+   *       this.router.navigate(['/project', project.id]);
+   *     } catch (error) {
+   *       this.handleSelectionError(error);
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * **Validation Pipeline:**
+   * 1. **ID Type Validation**: Ensures ID is a positive integer
+   * 2. **Boundary Validation**: Prevents extremely large IDs that might indicate corruption
+   * 3. **Serialization Validation**: Verifies JSON serialization succeeds
+   * 4. **Storage Verification**: Confirms localStorage write operation by reading back
+   *
+   * **Error Handling:**
+   * - **Invalid ID**: Throws error for non-positive or non-integer IDs
+   * - **Boundary Violations**: Rejects IDs exceeding reasonable limits (1,000,000)
+   * - **Storage Failures**: Handles localStorage quota exceeded or access denied
+   * - **Serialization Errors**: Catches JSON serialization failures
+   *
+   * **Security Considerations:**
+   * - Validates ID ranges to prevent potential exploitation
+   * - Sanitizes data before storage to prevent XSS vectors
+   * - Implements reasonable size limits for stored data
+   *
+   * @param id - The project ID to save (must be positive integer ≤ 1,000,000)
+   * @throws {Error} When ID validation fails or localStorage operations fail
+   * @returns {Promise<void>} Resolves when project ID is successfully persisted
+   *
+   * @see {@link loadCurrentProjectId} For retrieving saved project ID
+   * @see {@link loadCurrentProject} For loading the saved project
+   * @since 1.0.0
    */
   async saveCurrentProject(id: number): Promise<void> {
     // Validate project ID using comprehensive checks
@@ -271,14 +332,85 @@ export class ProjectService {
   }
 
   /**
-   * Saves the current position for the active project
+   * Save Current Position with Integrity Validation
+   *
+   * Persists the user's current position within the active project pattern with
+   * comprehensive validation and database integrity checks. This method ensures
+   * position data is valid, normalized, and safely stored for progress tracking.
+   *
+   * @example
+   * ```typescript
+   * // Save user progress after completing a step
+   * class StepComponent {
+   *   async onStepCompleted(): Promise<void> {
+   *     try {
+   *       const position = this.getCurrentPosition();
+   *       await this.projectService.saveCurrentPosition(position.row, position.step);
+   *
+   *       this.showSuccessMessage('Progress saved');
+   *     } catch (error) {
+   *       this.showErrorMessage('Failed to save progress');
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Automatic position saving with debouncing
+   * class NavigationHandler {
+   *   private savePositionDebounced = debounce(
+   *     (row: number, step: number) => this.projectService.saveCurrentPosition(row, step),
+   *     1000
+   *   );
+   *
+   *   onPositionChanged(row: number, step: number): void {
+   *     // Update UI immediately
+   *     this.updateDisplayPosition(row, step);
+   *
+   *     // Save to database with debouncing
+   *     this.savePositionDebounced(row, step);
+   *   }
+   * }
+   * ```
+   *
+   * **Validation Pipeline Integration:**
+   * 1. **DataIntegrityService Validation**: Comprehensive coordinate validation
+   * 2. **Automatic Correction**: Invalid coordinates are normalized when possible
+   * 3. **Project State Validation**: Ensures active project exists before saving
+   * 4. **Database Consistency**: Updates both store and persistent storage atomically
+   *
+   * **Error Recovery Patterns:**
+   * - **Validation Failures**: Detailed error context with correction suggestions
+   * - **No Active Project**: Clear messaging to guide user to project selection
+   * - **Database Errors**: Rollback store updates if persistence fails
+   * - **Coordinate Boundary**: Automatic clamping to valid ranges
+   *
+   * **Performance Optimizations:**
+   * - **Debounced Saves**: Suitable for high-frequency position updates
+   * - **Optimistic Updates**: Store updated immediately, database asynchronously
+   * - **Validation Caching**: DataIntegrityService caches validation results
+   *
+   * @param row - The row coordinate (0-based index, will be validated and normalized)
+   * @param step - The step coordinate (0-based index, will be validated and normalized)
+   * @throws {Error} When position validation fails or no active project exists
+   * @returns {Promise<void>} Resolves when position is persisted to database
+   *
+   * @see {@link DataIntegrityService.validatePositionData} For validation logic
+   * @see {@link ModelFactory.createPosition} For position object creation
+   * @since 1.0.0
    */
   async saveCurrentPosition(row: number, step: number): Promise<void> {
     // Validate position data using DataIntegrityService - Integration Point 5
-    const positionValidation = this.dataIntegrityService.validatePositionData(row, step);
+    const positionValidation = this.dataIntegrityService.validatePositionData(
+      row,
+      step
+    );
 
     if (!positionValidation.isValid) {
-      const error = new Error(`Invalid position coordinates: ${positionValidation.issues.join(', ')}`);
+      const error = new Error(
+        `Invalid position coordinates: ${positionValidation.issues.join(', ')}`
+      );
       this.errorHandler.handleError(
         error,
         {
@@ -297,11 +429,14 @@ export class ProjectService {
 
     // Log validation results if any issues were automatically corrected
     if (positionValidation.issues.length > 0) {
-      this.logger.debug('ProjectService: Position data corrected by DataIntegrityService', {
-        original: { row, step },
-        corrected: positionValidation.cleanValue,
-        issues: positionValidation.issues,
-      });
+      this.logger.debug(
+        'ProjectService: Position data corrected by DataIntegrityService',
+        {
+          original: { row, step },
+          corrected: positionValidation.cleanValue,
+          issues: positionValidation.issues,
+        }
+      );
     }
 
     try {
@@ -351,7 +486,74 @@ export class ProjectService {
   }
 
   /**
-   * Loads the current project ID from localStorage
+   * Load Current Project ID from LocalStorage
+   *
+   * Retrieves and validates the previously saved project ID from localStorage
+   * with comprehensive error handling and data integrity checks. This method
+   * provides safe access to user's last active project across browser sessions.
+   *
+   * @example
+   * ```typescript
+   * // Application initialization with saved project restoration
+   * class AppInitializationService {
+   *   async initializeApplication(): Promise<void> {
+   *     const savedProject = this.projectService.loadCurrentProjectId();
+   *
+   *     if (savedProject) {
+   *       console.log(`Restoring project ${savedProject.id}`);
+   *       await this.projectService.loadProject(savedProject.id);
+   *     } else {
+   *       console.log('No saved project found, showing project selector');
+   *       this.router.navigate(['/projects']);
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Route guard implementation with project restoration
+   * class ProjectGuard implements CanActivate {
+   *   canActivate(): Observable<boolean> {
+   *     const currentProject = this.projectService.loadCurrentProjectId();
+   *
+   *     if (currentProject) {
+   *       // Valid saved project exists
+   *       return this.projectService.loadProject(currentProject.id)
+   *         .pipe(map(project => !!project));
+   *     } else {
+   *       // No saved project, redirect to selection
+   *       this.router.navigate(['/projects']);
+   *       return of(false);
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * **Data Validation Pipeline:**
+   * 1. **Storage Existence**: Checks if localStorage data exists
+   * 2. **JSON Integrity**: Validates JSON format using DataIntegrityService
+   * 3. **Structure Validation**: Ensures parsed data is proper object
+   * 4. **ID Validation**: Confirms ID is positive integer within bounds
+   * 5. **Boundary Checking**: Prevents extremely large IDs that might indicate corruption
+   *
+   * **Error Handling and Recovery:**
+   * - **Corrupted Data**: Automatically removes invalid localStorage entries
+   * - **Invalid JSON**: Logs error details and clears corrupted data
+   * - **Invalid Structure**: Handles malformed data objects gracefully
+   * - **Boundary Violations**: Rejects IDs outside reasonable ranges
+   * - **Access Errors**: Handles localStorage access denied scenarios
+   *
+   * **Security Features:**
+   * - **Data Sanitization**: Validates all parsed data before use
+   * - **Boundary Enforcement**: Prevents potentially malicious large IDs
+   * - **Automatic Cleanup**: Removes corrupted data to prevent repeated errors
+   *
+   * @returns {CurrentProject | null} The saved project data or null if none exists/invalid
+   *
+   * @see {@link saveCurrentProject} For persisting project ID
+   * @see {@link DataIntegrityService.validateJsonData} For JSON validation
+   * @since 1.0.0
    */
   loadCurrentProjectId(): CurrentProject | null {
     try {
@@ -462,7 +664,65 @@ export class ProjectService {
   }
 
   /**
-   * Loads the current project from the database
+   * Load Current Project from Database
+   *
+   * Automatically loads the user's previously active project from localStorage
+   * reference and database storage. This method combines localStorage project ID
+   * retrieval with full project loading to restore user's work session.
+   *
+   * @example
+   * ```typescript
+   * // Service initialization pattern
+   * class ProjectService {
+   *   constructor(private settingsService: SettingsService) {
+   *     // Auto-load current project when settings are ready
+   *     this.settingsService.ready.subscribe(() => {
+   *       this.loadCurrentProject();
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Manual project restoration after login
+   * class AuthenticationService {
+   *   async onLoginSuccess(): Promise<void> {
+   *     try {
+   *       // Restore user's work session
+   *       await this.projectService.loadCurrentProject();
+   *
+   *       this.notificationService.success('Welcome back! Your project has been restored.');
+   *     } catch (error) {
+   *       this.notificationService.info('Please select a project to continue working.');
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * **Loading Pipeline:**
+   * 1. **LocalStorage Retrieval**: Gets saved project ID using loadCurrentProjectId()
+   * 2. **Validation Check**: Ensures project ID exists and is valid
+   * 3. **Database Loading**: Loads full project data using loadProject()
+   * 4. **Error Handling**: Graceful degradation if project cannot be loaded
+   *
+   * **Failure Scenarios:**
+   * - **No Saved Project**: Silent success, no project loaded (user needs to select)
+   * - **Invalid Project ID**: Error logged, localStorage cleaned up
+   * - **Database Error**: Project not found or database connection issues
+   * - **Corrupted Data**: Project validation fails, requires manual selection
+   *
+   * **Integration Points:**
+   * - **Settings Service**: Waits for settings to be ready before loading
+   * - **Store Updates**: Project loaded into ReactiveStateStore automatically
+   * - **Error Handler**: All errors channeled through centralized error handling
+   * - **Navigation**: Can trigger automatic navigation to project view
+   *
+   * @returns {Promise<void>} Resolves when loading attempt completes (success or failure)
+   *
+   * @see {@link loadCurrentProjectId} For localStorage project ID retrieval
+   * @see {@link loadProject} For database project loading
+   * @since 1.0.0
    */
   async loadCurrentProject(): Promise<void> {
     const currentProject = this.loadCurrentProjectId();
@@ -487,7 +747,80 @@ export class ProjectService {
     }
   }
   /**
-   * Loads a project from peyote shorthand format
+   * Load Project from Peyote Shorthand Format
+   *
+   * Imports a pattern from peyote shorthand notation, validates and converts it
+   * to a complete Project model, then persists it to the database. This method
+   * provides the primary interface for importing peyote beading patterns.
+   *
+   * @example
+   * ```typescript
+   * // File upload with peyote pattern import
+   * class FileImportComponent {
+   *   async onFileSelected(file: File): Promise<void> {
+   *     try {
+   *       const patternText = await this.readFileAsText(file);
+   *       const projectName = this.extractProjectName(file.name);
+   *
+   *       const project = await this.projectService.loadPeyote(projectName, patternText);
+   *
+   *       this.notificationService.success(`Imported "${project.name}" successfully`);
+   *       this.router.navigate(['/project', project.id]);
+   *     } catch (error) {
+   *       this.handleImportError(error);
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Pattern validation and parsing workflow
+   * const patternData = `
+   *   Row 1: 4A, 2B, 4A
+   *   Row 2: 3A, 4B, 3A
+   *   Row 3: 2A, 6B, 2A
+   * `;
+   *
+   * try {
+   *   const project = await projectService.loadPeyote('Sunset Pattern', patternData);
+   *   console.log(`Created project with ${project.rows.length} rows`);
+   * } catch (error) {
+   *   console.error('Pattern validation failed:', error);
+   * }
+   * ```
+   *
+   * **Validation Pipeline:**
+   * 1. **Input Validation**: Ensures project name and pattern data are provided
+   * 2. **Name Sanitization**: DataIntegrityService validates project name safety
+   * 3. **Size Limits**: Prevents extremely large patterns (1MB limit)
+   * 4. **Pattern Parsing**: PeyoteShorthandService converts notation to project
+   * 5. **Project Validation**: Ensures resulting project meets model requirements
+   * 6. **Database Persistence**: Saves project and updates store state
+   *
+   * **Error Handling Scenarios:**
+   * - **Missing Data**: Clear error for empty name or pattern data
+   * - **Invalid Name**: Project name contains unsafe characters
+   * - **Size Limits**: Pattern data exceeds reasonable size bounds
+   * - **Parse Errors**: Malformed pattern notation or unsupported syntax
+   * - **Database Errors**: Persistence failures with rollback handling
+   * - **Validation Failures**: Invalid project structure after parsing
+   *
+   * **Integration with Services:**
+   * - **PeyoteShorthandService**: Handles pattern notation parsing
+   * - **DataIntegrityService**: Validates names and ensures data safety
+   * - **ProjectDbService**: Persists validated project to database
+   * - **ReactiveStateStore**: Updates application state with new project
+   * - **ErrorHandlerService**: Centralized error processing and user feedback
+   *
+   * @param projectName - The name for the imported project (will be trimmed and validated)
+   * @param data - The peyote shorthand pattern data (max 1MB)
+   * @throws {Error} When validation fails, parsing errors, or database operations fail
+   * @returns {Promise<Project>} The successfully imported and persisted project
+   *
+   * @see {@link PeyoteShorthandService.toProject} For pattern parsing implementation
+   * @see {@link DataIntegrityService.validateProjectName} For name validation
+   * @since 1.0.0
    */
   async loadPeyote(projectName: string, data: string): Promise<Project> {
     // Validate required inputs
@@ -530,7 +863,9 @@ export class ProjectService {
     // Validate data length for reasonable pattern size
     const maxDataLength = 1000000; // 1MB limit for pattern data
     if (data.length > maxDataLength) {
-      const error = new Error(`Pattern data too large: ${data.length} characters`);
+      const error = new Error(
+        `Pattern data too large: ${data.length} characters`
+      );
       this.errorHandler.handleError(
         error,
         {
@@ -585,7 +920,91 @@ export class ProjectService {
   }
 
   /**
-   * Loads a project by ID from the database
+   * Load Project by ID from Database
+   *
+   * Retrieves a complete project from the database by its unique ID, validates
+   * the data integrity, and updates the application state. This method serves
+   * as the primary project loading interface with comprehensive error handling.
+   *
+   * @example
+   * ```typescript
+   * // Project selection with error handling
+   * class ProjectSelectorComponent {
+   *   async selectProject(projectId: number): Promise<void> {
+   *     this.isLoading = true;
+   *
+   *     try {
+   *       const project = await this.projectService.loadProject(projectId);
+   *
+   *       if (project) {
+   *         // Save selection for future sessions
+   *         await this.projectService.saveCurrentProject(projectId);
+   *
+   *         this.notificationService.success(`Loaded "${project.name}"`);
+   *         this.router.navigate(['/project']);
+   *       }
+   *     } catch (error) {
+   *       this.notificationService.error('Failed to load project');
+   *     } finally {
+   *       this.isLoading = false;
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Route resolver with project loading
+   * class ProjectResolver implements Resolve<Project | null> {
+   *   constructor(private projectService: ProjectService) {}
+   *
+   *   async resolve(route: ActivatedRouteSnapshot): Promise<Project | null> {
+   *     const projectId = Number(route.paramMap.get('id'));
+   *
+   *     if (!projectId) {
+   *       return null;
+   *     }
+   *
+   *     return await this.projectService.loadProject(projectId);
+   *   }
+   * }
+   * ```
+   *
+   * **Loading Pipeline:**
+   * 1. **ID Validation**: Ensures project ID is valid positive integer
+   * 2. **Database Query**: Retrieves project data from IndexedDB
+   * 3. **Existence Check**: Verifies project was found in database
+   * 4. **Data Validation**: Validates loaded project structure and integrity
+   * 5. **Store Updates**: Updates ReactiveStateStore with loaded project
+   * 6. **State Management**: Sets project as current active project
+   *
+   * **Error Handling and Recovery:**
+   * - **Invalid ID**: Returns null for non-positive or invalid IDs
+   * - **Not Found**: Clear error message when project doesn't exist
+   * - **Corrupted Data**: Validation failure for malformed project data
+   * - **Database Errors**: Connection or query failures with detailed context
+   * - **State Cleanup**: Clears current project state on any failure
+   * - **User Feedback**: Contextual error messages for different failure types
+   *
+   * **State Management Integration:**
+   * - **Entity Storage**: Project stored in normalized entities collection
+   * - **Current Project**: Sets loaded project as active current project
+   * - **Error States**: Updates error state in store on failures
+   * - **Loading States**: Can be integrated with loading indicators
+   *
+   * **Performance Considerations:**
+   * - **Single Query**: Efficient database lookup by primary key
+   * - **Validation Caching**: Project structure validation is optimized
+   * - **Memory Management**: Large projects handled efficiently
+   * - **State Batching**: Store updates batched for performance
+   *
+   * @param id - The unique project ID to load (must be positive integer)
+   * @returns {Promise<Project | null>} The loaded project or null if not found/invalid
+   *
+   * @see {@link ProjectDbService.loadProject} For database loading implementation
+   * @see {@link isValidProject} For project validation logic
+   * @see {@link ProjectActions} For store state updates
+   * @since 1.0.0
    */
   async loadProject(id: number): Promise<Project | null> {
     if (!id || id <= 0) {
