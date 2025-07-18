@@ -346,7 +346,7 @@ describe('MarkModeService', () => {
           type: '[Projects] Update Project Success',
           payload: jasmine.objectContaining({
             project: jasmine.objectContaining({
-              markedSteps: { '0-3': 2 }
+              markedSteps: { 0: { 3: 2 } }
             })
           })
         })
@@ -405,12 +405,12 @@ describe('MarkModeService', () => {
       // Initially unmarked
       expect(service.getStepMark(0, 3)).toBe(0);
 
-      // Update mock project state to have marked steps
+      // Update mock project state to have marked steps using new structured format
       const mockProjectWithMarks: Project = {
         id: 1,
         name: 'Test Project',
         rows: [],
-        markedSteps: { '0-3': 2, '1-5': 1 }
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 } }
       };
 
       storeSpy.getState.and.returnValue({
@@ -473,12 +473,12 @@ describe('MarkModeService', () => {
     });
 
     it('should get all marked steps correctly', () => {
-      // Update mock project state to have marked steps
+      // Update mock project state to have marked steps using new structured format
       const mockProjectWithMarks: Project = {
         id: 1,
         name: 'Test Project',
         rows: [],
-        markedSteps: { '0-3': 2, '1-5': 1, '2-7': 3 }
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 }, 2: { 7: 3 } }
       };
 
       storeSpy.getState.and.returnValue({
@@ -537,16 +537,16 @@ describe('MarkModeService', () => {
 
       const markedSteps = service.getAllMarkedSteps();
 
-      expect(markedSteps).toEqual({ '0-3': 2, '1-5': 1, '2-7': 3 });
+      expect(markedSteps).toEqual({ 0: { 3: 2 }, 1: { 5: 1 }, 2: { 7: 3 } });
     });
 
     it('should clear all marked steps', async () => {
-      // Update mock project state to have marked steps
+      // Update mock project state to have marked steps using new structured format
       const mockProjectWithMarks: Project = {
         id: 1,
         name: 'Test Project',
         rows: [],
-        markedSteps: { '0-3': 2, '1-5': 1 }
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 } }
       };
 
       storeSpy.getState.and.returnValue({

@@ -74,22 +74,46 @@ describe('StepComponent', () => {
     );
     mockZipperService = jasmine.createSpyObj('ZipperService', ['expandSteps']);
     
-    // Create a more realistic mock that tracks marked steps
-    const markedStepsStorage: { [key: string]: number } = {};
-    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark'], {
+    // Create a more realistic mock that tracks marked steps with new structured format
+    const markedStepsStorage: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
+    const stepMarkSubjects: { [key: string]: BehaviorSubject<number> } = {};
+    
+    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$'], {
       markModeChanged$: markModeChanged$,
     });
+    
     mockMarkModeService.getStepMark.and.callFake((rowIndex: number, stepIndex: number) => {
-      const key = `${rowIndex}-${stepIndex}`;
-      return markedStepsStorage[key] || 0;
+      return markedStepsStorage[rowIndex]?.[stepIndex] || 0;
     });
-    mockMarkModeService.markStep.and.callFake((rowIndex: number, stepIndex: number, markMode: number) => {
+    
+    mockMarkModeService.getStepMark$.and.callFake((rowIndex: number, stepIndex: number) => {
       const key = `${rowIndex}-${stepIndex}`;
-      if (markMode === 0) {
-        delete markedStepsStorage[key];
-      } else {
-        markedStepsStorage[key] = markMode;
+      if (!stepMarkSubjects[key]) {
+        stepMarkSubjects[key] = new BehaviorSubject<number>(markedStepsStorage[rowIndex]?.[stepIndex] || 0);
       }
+      return stepMarkSubjects[key].asObservable();
+    });
+    
+    mockMarkModeService.markStep.and.callFake((rowIndex: number, stepIndex: number, markMode: number) => {
+      if (!markedStepsStorage[rowIndex]) {
+        markedStepsStorage[rowIndex] = {};
+      }
+      
+      if (markMode === 0) {
+        delete markedStepsStorage[rowIndex][stepIndex];
+        if (Object.keys(markedStepsStorage[rowIndex]).length === 0) {
+          delete markedStepsStorage[rowIndex];
+        }
+      } else {
+        markedStepsStorage[rowIndex][stepIndex] = markMode;
+      }
+      
+      // Update the subject for reactive updates
+      const key = `${rowIndex}-${stepIndex}`;
+      if (stepMarkSubjects[key]) {
+        stepMarkSubjects[key].next(markMode);
+      }
+      
       return Promise.resolve();
     });
 

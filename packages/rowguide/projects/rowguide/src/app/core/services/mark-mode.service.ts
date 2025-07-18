@@ -252,7 +252,7 @@ export class MarkModeService {
 
   /**
    * Marks a specific step with the given mark mode value and persists to project.
-   * Creates or updates the step marking and automatically saves to the database.
+   * Creates or updates the step marking using structured data format and automatically saves to the database.
    *
    * @param rowIndex - Zero-based index of the row containing the step
    * @param stepIndex - Zero-based index of the step within the row
@@ -271,7 +271,6 @@ export class MarkModeService {
    */
   async markStep(rowIndex: number, stepIndex: number, markMode: number): Promise<void> {
     try {
-      const stepKey = `${rowIndex}-${stepIndex}`;
       const currentState = this.store.getState();
       const currentProjectId = currentState.projects.currentProjectId;
 
@@ -287,15 +286,25 @@ export class MarkModeService {
         return;
       }
 
-      // Update the project with the new step marking
+      // Update the project with the new step marking using structured format
       const updatedMarkedSteps = { ...currentProject.markedSteps };
       
       if (markMode === 0) {
         // Remove the marking if mode is 0
-        delete updatedMarkedSteps[stepKey];
+        if (updatedMarkedSteps[rowIndex]) {
+          const { [stepIndex]: removed, ...remainingSteps } = updatedMarkedSteps[rowIndex];
+          if (Object.keys(remainingSteps).length === 0) {
+            delete updatedMarkedSteps[rowIndex];
+          } else {
+            updatedMarkedSteps[rowIndex] = remainingSteps;
+          }
+        }
       } else {
         // Add or update the marking
-        updatedMarkedSteps[stepKey] = markMode;
+        if (!updatedMarkedSteps[rowIndex]) {
+          updatedMarkedSteps[rowIndex] = {};
+        }
+        updatedMarkedSteps[rowIndex] = { ...updatedMarkedSteps[rowIndex], [stepIndex]: markMode };
       }
 
       const updatedProject: Project = {
@@ -309,7 +318,7 @@ export class MarkModeService {
       // Save to database
       await this.projectDbService.updateProject(updatedProject);
       
-      this.logger.debug(`Step marking saved: ${stepKey} = ${markMode}`);
+      this.logger.debug(`Step marking saved: row ${rowIndex}, step ${stepIndex} = ${markMode}`);
     } catch (error) {
       this.logger.error('Error marking step:', error);
       this.errorHandler.handleError(
@@ -363,7 +372,6 @@ export class MarkModeService {
    */
   getStepMark(rowIndex: number, stepIndex: number): number {
     try {
-      const stepKey = `${rowIndex}-${stepIndex}`;
       const currentState = this.store.getState();
       const currentProjectId = currentState.projects.currentProjectId;
 
@@ -377,7 +385,7 @@ export class MarkModeService {
         return 0;
       }
 
-      return currentProject.markedSteps[stepKey] ?? 0;
+      return currentProject.markedSteps[rowIndex]?.[stepIndex] ?? 0;
     } catch (error) {
       this.logger.error('Error getting step mark:', error);
       return 0;
@@ -388,19 +396,20 @@ export class MarkModeService {
    * Gets all marked steps for the current project.
    * Returns a copy of the marked steps object to prevent direct mutation.
    *
-   * @returns Object mapping step keys to mark mode values
+   * @returns Object mapping row indices to step index mappings with mark mode values
    *
    * @example
    * ```typescript
    * // Get all marked steps
    * const markedSteps = this.markModeService.getAllMarkedSteps();
-   * Object.entries(markedSteps).forEach(([stepKey, markMode]) => {
-   *   const [rowIndex, stepIndex] = stepKey.split('-').map(Number);
-   *   console.log(`Row ${rowIndex}, Step ${stepIndex}: Mark Mode ${markMode}`);
+   * Object.entries(markedSteps).forEach(([rowIndex, stepMap]) => {
+   *   Object.entries(stepMap).forEach(([stepIndex, markMode]) => {
+   *     console.log(`Row ${rowIndex}, Step ${stepIndex}: Mark Mode ${markMode}`);
+   *   });
    * });
    * ```
    */
-  getAllMarkedSteps(): { [stepKey: string]: number } {
+  getAllMarkedSteps(): { [rowIndex: number]: { [stepIndex: number]: number } } {
     try {
       const currentState = this.store.getState();
       const currentProjectId = currentState.projects.currentProjectId;
@@ -411,7 +420,15 @@ export class MarkModeService {
 
       const currentProject = currentState.projects.entities[currentProjectId];
       
-      return { ...(currentProject?.markedSteps || {}) };
+      // Deep copy the marked steps structure
+      const markedSteps = currentProject?.markedSteps || {};
+      const copy: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
+      
+      Object.entries(markedSteps).forEach(([rowIndex, stepMap]) => {
+        copy[Number(rowIndex)] = { ...stepMap };
+      });
+      
+      return copy;
     } catch (error) {
       this.logger.error('Error getting all marked steps:', error);
       return {};
@@ -468,5 +485,30 @@ export class MarkModeService {
         'medium'
       );
     }
+  }
+
+  /**
+   * Gets an observable stream for a specific step's mark mode that updates when project data changes.
+   * This enables reactive updates to step components when marked steps are modified.
+   *
+   * @param rowIndex - Zero-based index of the row containing the step
+   * @param stepIndex - Zero-based index of the step within the row
+   * @returns Observable that emits the current mark mode value for the step
+   *
+   * @example
+   * ```typescript
+   * // Subscribe to step mark changes for reactive UI updates
+   * this.markModeService.getStepMark$(0, 3).subscribe(markMode => {
+   *   this.stepMarked = markMode;
+   *   this.updateStepVisuals();
+   * });
+   * ```
+   */
+  getStepMark$(rowIndex: number, stepIndex: number): Observable<number> {
+    return this.store.select(selectCurrentProject).pipe(
+      filter(project => project !== null),
+      map(project => project?.markedSteps?.[rowIndex]?.[stepIndex] ?? 0),
+      distinctUntilChanged()
+    );
   }
 }

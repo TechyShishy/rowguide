@@ -420,47 +420,62 @@ export interface Project {
   /**
    * Marked Steps State
    *
-   * Optional mapping of marked steps for pattern progress tracking and bead marking.
-   * Stores which specific steps have been marked with which mark mode values,
-   * enabling persistent step marking across sessions and project navigation.
+   * Optional structured mapping of marked steps for pattern progress tracking and bead marking.
+   * Stores which specific steps have been marked with which mark mode values using a nested
+   * object structure for efficient lookup and persistence across sessions and project navigation.
    *
    * @example
    * ```typescript
-   * // Marked steps management
+   * // Marked steps management with structured data
    * class MarkedStepsManager {
    *   markStep(project: Project, rowIndex: number, stepIndex: number, markMode: number): Project {
-   *     const stepKey = `${rowIndex}-${stepIndex}`;
+   *     const markedSteps = { ...project.markedSteps };
+   *     if (!markedSteps[rowIndex]) {
+   *       markedSteps[rowIndex] = {};
+   *     }
+   *     markedSteps[rowIndex] = { ...markedSteps[rowIndex], [stepIndex]: markMode };
+   *     
    *     return {
    *       ...project,
-   *       markedSteps: {
-   *         ...project.markedSteps,
-   *         [stepKey]: markMode
-   *       }
+   *       markedSteps
    *     };
    *   }
    *
    *   unmarkStep(project: Project, rowIndex: number, stepIndex: number): Project {
-   *     const stepKey = `${rowIndex}-${stepIndex}`;
-   *     const { [stepKey]: removed, ...remainingSteps } = project.markedSteps || {};
+   *     const markedSteps = { ...project.markedSteps };
+   *     if (markedSteps[rowIndex]) {
+   *       const { [stepIndex]: removed, ...remainingSteps } = markedSteps[rowIndex];
+   *       if (Object.keys(remainingSteps).length === 0) {
+   *         delete markedSteps[rowIndex];
+   *       } else {
+   *         markedSteps[rowIndex] = remainingSteps;
+   *       }
+   *     }
    *     return {
    *       ...project,
-   *       markedSteps: remainingSteps
+   *       markedSteps
    *     };
    *   }
    *
    *   getStepMark(project: Project, rowIndex: number, stepIndex: number): number {
-   *     const stepKey = `${rowIndex}-${stepIndex}`;
-   *     return project.markedSteps?.[stepKey] ?? 0; // Default to unmarked
+   *     return project.markedSteps?.[rowIndex]?.[stepIndex] ?? 0; // Default to unmarked
    *   }
    * }
    * ```
    *
-   * **Key Format**: "rowIndex-stepIndex" (e.g., "0-3" for row 0, step 3)
+   * **Structured Format**: `{ [rowIndex: number]: { [stepIndex: number]: number } }`
    * **Mark Mode Values:**
-   * - **0**: Unmarked (not stored in the map)
+   * - **0**: Unmarked (not stored in the structure)
    * - **1**: First mark state (typically for starting beads)
    * - **2**: Second mark state (progress tracking)
    * - **3+**: Additional marking states as needed
+   *
+   * **Benefits of Structured Approach:**
+   * - **Efficient Lookup**: Direct O(1) access to step marks without string parsing
+   * - **Type Safety**: Full TypeScript support with proper number indexing
+   * - **Memory Efficient**: Only stores rows and steps that have markings
+   * - **Hierarchical Organization**: Natural alignment with project row/step structure
+   * - **Easy Iteration**: Simple nested loops for processing all marked steps
    *
    * **Project-Specific Benefits:**
    * - **Step-Level Persistence**: Individual step markings persist with project data
@@ -469,5 +484,5 @@ export interface Project {
    * - **Data Portability**: Marked steps travel with exported projects
    * - **Pattern Analysis**: Enables analysis of marking patterns and completion
    */
-  markedSteps?: { [stepKey: string]: number };
+  markedSteps?: { [rowIndex: number]: { [stepIndex: number]: number } };
 }

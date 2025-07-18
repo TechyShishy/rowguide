@@ -492,6 +492,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    *    markers, zoom level, and FLAM analysis results to update visual state
    * 2. **Bead Count Observable**: Creates reactive stream for cumulative bead
    *    count calculation based on project data
+   * 3. **Step Mark Observable**: Reactive monitoring of step marking state changes
    *
    * The method uses combineLatest to efficiently manage multiple observable
    * sources, ensuring consistent state updates when any dependency changes.
@@ -519,6 +520,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * @see {@link SettingsService.flammarkers$} For FLAM marker settings
    * @see {@link SettingsService.zoom$} For zoom level settings
    * @see {@link ProjectService.zippedRows$} For bead count data source
+   * @see {@link MarkModeService.getStepMark$} For reactive step marking
    * @since 1.0.0
    */
   ngOnInit() {
@@ -538,24 +540,10 @@ export class StepComponent implements HierarchicalList, OnInit {
       this._isZoomed = zoom;
     });
 
-    /*if (this.settingsService.flammarkers$.value) {
-      this.isFirstStep = this.flamService.isFirstStep(
-        this.row.index,
-        this.step
-      );
-      this.isLastStep = this.flamService.isLastStep(this.row.index, this.step);
-    } else {
-      this.isFirstStep = false;
-      this.isLastStep = false;
-    }
-
-    this.settingsService.zoom$.subscribe((value) => {
-      this.isZoomed = value;
+    // Set up reactive step marking that updates when project marked steps change
+    this.markModeService.getStepMark$(this.row.index, this.index).subscribe(markMode => {
+      this.marked = markMode;
     });
-    this.isZoomed = this.settingsService.zoom$.value;*/
-
-    // Load the step's marking state from persistent storage
-    this.marked = this.markModeService.getStepMark(this.row.index, this.index);
 
     this.beadCount$ = this.projectService.zippedRows$.pipe(
       map((rows) => rows[this.row.index]),
