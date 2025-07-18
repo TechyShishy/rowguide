@@ -416,4 +416,42 @@ export interface Project {
    * - **Bookmarking**: Allows users to bookmark specific positions
    */
   position?: Position;
+
+  /**
+   * Mark Mode State
+   *
+   * Optional mark mode setting for the project, indicating the current
+   * marking state for pattern step interaction. Enables project-specific
+   * mark mode persistence and restoration across sessions.
+   *
+   * @example
+   * ```typescript
+   * // Mark mode management
+   * class MarkModeManager {
+   *   setProjectMarkMode(project: Project, mode: number): Project {
+   *     return {
+   *       ...project,
+   *       markMode: mode
+   *     };
+   *   }
+   *
+   *   getProjectMarkMode(project: Project): number {
+   *     return project.markMode ?? 0; // Default to neutral mode
+   *   }
+   * }
+   * ```
+   *
+   * **Mark Mode Values:**
+   * - **0**: Default/neutral mode (no special marking)
+   * - **1**: First mark state (typically for starting beads)
+   * - **2**: Second mark state (progress tracking)
+   * - **3+**: Additional marking states as needed
+   *
+   * **Project-Specific Benefits:**
+   * - **Context Preservation**: Mark mode persists with project data
+   * - **Project Switching**: Each project maintains its own mark mode
+   * - **Cross-Session Continuity**: Mark mode restored when project loads
+   * - **Data Portability**: Mark mode travels with exported projects
+   */
+  markMode?: number;
 }

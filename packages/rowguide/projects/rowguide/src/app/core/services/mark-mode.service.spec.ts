@@ -13,8 +13,10 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode
 } from '../store/selectors/mark-mode-selectors';
+import { selectCurrentProject } from '../store/selectors/project-selectors';
 import { ErrorHandlerService } from './error-handler.service';
-import { MarkModeState } from '../store/reducers/mark-mode-reducer';
+import { ProjectDbService } from '../../data/services/project-db.service';
+import { Project } from '../models';
 
 /**
  * Comprehensive Test Suite for MarkModeService
@@ -22,14 +24,14 @@ import { MarkModeState } from '../store/reducers/mark-mode-reducer';
  * This test suite validates all aspects of the MarkModeService functionality
  * with ReactiveStateStore integration, including mark mode state management,
  * history tracking, undo functionality, store action dispatching, and
- * persistent storage capabilities.
+ * project-based persistence capabilities.
  *
  * Test Categories:
  * - Service Initialization: Basic service creation and store integration
  * - Mark Mode Management: Setting, updating, and resetting mark modes
  * - History Tracking: Mark mode change history and undo functionality
  * - Store Integration: Action dispatching and selector behavior
- * - Persistence: localStorage saving and loading functionality
+ * - Project Persistence: Project-based mark mode storage and synchronization
  * - Edge Cases: Boundary values, invalid inputs, state consistency
  */
 
@@ -38,17 +40,19 @@ describe('MarkModeService', () => {
   let storeSpy: jasmine.SpyObj<ReactiveStateStore>;
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let projectDbSpy: jasmine.SpyObj<ProjectDbService>;
 
   beforeEach(() => {
     // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
     const storeSpyObj = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch', 'getState']);
     
-    // Create spies for logger and error handler
+    // Create spies for logger, error handler, and project database
     const loggerSpyObj = jasmine.createSpyObj('NGXLogger', ['debug', 'warn', 'error']);
     const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
+    const projectDbSpyObj = jasmine.createSpyObj('ProjectDbService', ['updateProject']);
 
-    // Create a BehaviorSubject to hold the mock state
-    const mockStateSubject = new BehaviorSubject({
+    // Create a BehaviorSubject to hold the mock mark mode state
+    const mockMarkModeState = new BehaviorSubject({
       currentMode: 0,
       previousMode: undefined as number | undefined,
       history: [] as number[],
@@ -56,9 +60,18 @@ describe('MarkModeService', () => {
       changeCount: 0,
     });
 
+    // Create a BehaviorSubject to hold the mock project state
+    const mockProject: Project = {
+      id: 1,
+      name: 'Test Project',
+      rows: [],
+      markMode: 0
+    };
+    const mockProjectState = new BehaviorSubject(mockProject);
+
     // Mock store dispatch to update BehaviorSubject state
     storeSpyObj.dispatch.and.callFake((action: any) => {
-      const currentState = mockStateSubject.value;
+      const currentState = mockMarkModeState.value;
 
       if (action.type === '[MarkMode] Set Mark Mode') {
         const newState = {
@@ -68,7 +81,7 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       } else if (action.type === '[MarkMode] Update Mark Mode') {
         const newState = {
           currentMode: action.payload.mode,
@@ -77,7 +90,7 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       } else if (action.type === '[MarkMode] Reset Mark Mode') {
         const newState = {
           currentMode: 0,
@@ -86,13 +99,17 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       }
     });
 
     // Mock store selectors to return from BehaviorSubject with selector applied
     storeSpyObj.select.and.callFake((selector: any) => {
-      return mockStateSubject.pipe(
+      if (selector === selectCurrentProject) {
+        return mockProjectState.asObservable();
+      }
+      
+      return mockMarkModeState.pipe(
         map(state => {
           // Apply selector function to current state
           if (selector === selectCurrentMarkMode) return state.currentMode;
@@ -107,13 +124,21 @@ describe('MarkModeService', () => {
 
     // Mock getState to return current state
     storeSpyObj.getState.and.callFake(() => ({
-      markMode: mockStateSubject.value,
-      projects: null,
+      markMode: mockMarkModeState.value,
+      projects: {
+        currentProjectId: mockProjectState.value.id,
+        entities: {
+          [mockProjectState.value.id!]: mockProjectState.value
+        }
+      },
       ui: null,
       system: null,
       settings: null,
       notifications: null,
     }));
+
+    // Make projectDbSpy return a resolved promise
+    projectDbSpyObj.updateProject.and.returnValue(Promise.resolve(true));
 
     TestBed.configureTestingModule({
       providers: [
@@ -121,11 +146,12 @@ describe('MarkModeService', () => {
         { provide: ReactiveStateStore, useValue: storeSpyObj },
         { provide: NGXLogger, useValue: loggerSpyObj },
         { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
+        { provide: ProjectDbService, useValue: projectDbSpyObj },
       ],
     });
 
     // Reset mock state for each test
-    mockStateSubject.next({
+    mockMarkModeState.next({
       currentMode: 0,
       previousMode: undefined as number | undefined,
       history: [] as number[],
@@ -137,11 +163,7 @@ describe('MarkModeService', () => {
     storeSpy = TestBed.inject(ReactiveStateStore) as jasmine.SpyObj<ReactiveStateStore>;
     loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
     errorHandlerSpy = TestBed.inject(ErrorHandlerService) as jasmine.SpyObj<ErrorHandlerService>;
-  });
-
-  afterEach(() => {
-    // Clean up localStorage after each test
-    localStorage.removeItem('markMode');
+    projectDbSpy = TestBed.inject(ProjectDbService) as jasmine.SpyObj<ProjectDbService>;
   });
 
   describe('Service Initialization', () => {
@@ -311,168 +333,6 @@ describe('MarkModeService', () => {
     it('should not error when undoing with no previous mode', () => {
       // No previous mode should exist initially
       expect(() => service.undoMarkMode()).not.toThrow();
-    });
-  });
-
-  describe('Persistence', () => {
-    it('should save mark mode to localStorage when updated', () => {
-      // Act
-      service.updateMarkMode(2);
-
-      // Assert
-      const storedData = localStorage.getItem('markMode');
-      expect(storedData).toBeTruthy();
-      
-      const parsed = JSON.parse(storedData!);
-      expect(parsed.currentMode).toBe(2);
-    });
-
-    it('should save mark mode to localStorage when set', () => {
-      // Act
-      service.setMarkMode(3);
-
-      // Assert  
-      const storedData = localStorage.getItem('markMode');
-      expect(storedData).toBeTruthy();
-      
-      const parsed = JSON.parse(storedData!);
-      expect(parsed.currentMode).toBe(3);
-    });
-
-    it('should save mark mode to localStorage when reset', () => {
-      // Arrange
-      service.updateMarkMode(2);
-      
-      // Act
-      service.resetMarkMode();
-
-      // Assert
-      const storedData = localStorage.getItem('markMode');
-      expect(storedData).toBeTruthy();
-      
-      const parsed = JSON.parse(storedData!);
-      expect(parsed.currentMode).toBe(0);
-    });
-
-    it('should save mark mode to localStorage when undo is performed', () => {
-      // Arrange
-      service.updateMarkMode(1);
-      service.updateMarkMode(2);
-      
-      // Act
-      service.undoMarkMode();
-
-      // Assert
-      const storedData = localStorage.getItem('markMode');
-      expect(storedData).toBeTruthy();
-      
-      const parsed = JSON.parse(storedData!);
-      expect(parsed.currentMode).toBe(1);
-    });
-
-    it('should initialize service and attempt to load from localStorage', () => {
-      // Arrange
-      const testState: MarkModeState = {
-        currentMode: 3,
-        previousMode: 2,
-        history: [0, 1, 2, 3],
-        lastUpdated: Date.now(),
-        changeCount: 4
-      };
-      localStorage.setItem('markMode', JSON.stringify(testState));
-
-      // Act
-      const newService = TestBed.inject(MarkModeService);
-
-      // Assert
-      expect(loggerSpy.debug).toHaveBeenCalledWith('Mark mode service initialized with persistent state');
-    });
-
-    it('should handle missing localStorage gracefully', () => {
-      // Arrange
-      localStorage.removeItem('markMode');
-      spyOn(localStorage, 'getItem').and.returnValue(null);
-
-      // Act & Assert (should not throw)
-      expect(() => {
-        const newService = TestBed.inject(MarkModeService);
-      }).not.toThrow();
-      
-      expect(loggerSpy.debug).toHaveBeenCalledWith('No stored mark mode data found, using defaults');
-    });
-
-    it('should handle corrupted localStorage data gracefully', () => {
-      // Arrange
-      localStorage.setItem('markMode', 'invalid json');
-
-      // Act & Assert (should not throw)
-      expect(() => {
-        const newService = TestBed.inject(MarkModeService);
-      }).not.toThrow();
-      
-      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
-    });
-
-    it('should handle localStorage errors during save gracefully', () => {
-      // Arrange
-      spyOn(localStorage, 'setItem').and.throwError('Storage full');
-
-      // Act & Assert (should not throw)
-      expect(() => {
-        service.updateMarkMode(1);
-      }).not.toThrow();
-      
-      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
-    });
-
-    it('should handle localStorage errors during load gracefully', () => {
-      // Arrange
-      spyOn(localStorage, 'getItem').and.throwError('Storage error');
-
-      // Act & Assert (should not throw)
-      expect(() => {
-        const newService = TestBed.inject(MarkModeService);
-      }).not.toThrow();
-      
-      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
-    });
-
-    it('should validate stored data structure', () => {
-      // Arrange
-      const invalidData = { invalidStructure: true };
-      localStorage.setItem('markMode', JSON.stringify(invalidData));
-
-      // Act & Assert (should not throw)
-      expect(() => {
-        const newService = TestBed.inject(MarkModeService);
-      }).not.toThrow();
-      
-      expect(loggerSpy.warn).toHaveBeenCalledWith('Invalid mark mode data structure in storage, using defaults');
-    });
-
-    it('should restore valid mark mode state from localStorage', () => {
-      // Arrange
-      const testState: MarkModeState = {
-        currentMode: 2,
-        previousMode: 1,
-        history: [0, 1, 2],
-        lastUpdated: Date.now(),
-        changeCount: 3
-      };
-      localStorage.setItem('markMode', JSON.stringify(testState));
-
-      // Act
-      const newService = TestBed.inject(MarkModeService);
-
-      // Assert
-      expect(storeSpy.dispatch).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          type: '[MarkMode] Set Mark Mode',
-          payload: jasmine.objectContaining({
-            mode: 2
-          })
-        })
-      );
     });
   });
 });

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { filter, map, distinctUntilChanged } from 'rxjs/operators';
 import { NGXLogger } from 'ngx-logger';
 
 import { ReactiveStateStore } from '../store/reactive-state-store';
@@ -11,13 +12,16 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode,
 } from '../store/selectors/mark-mode-selectors';
-import { MarkModeState } from '../store/reducers/mark-mode-reducer';
+import { selectCurrentProject } from '../store/selectors/project-selectors';
+import { ProjectActions } from '../store/actions/project-actions';
+import { Project, hasValidId } from '../models';
 import { ErrorHandlerService } from './error-handler.service';
+import { ProjectDbService } from '../../data/services/project-db.service';
 
 /**
  * Service for managing mark mode state in the pattern tracking application.
- * Handles mode switching, history tracking, undo functionality, and persistence
- * for bead marking states across sessions.
+ * Handles mode switching, history tracking, undo functionality, and project-based
+ * persistence for bead marking states.
  *
  * Mark modes represent different states for pattern step interaction:
  * - 0: Default/neutral mode (no special marking)
@@ -28,11 +32,11 @@ import { ErrorHandlerService } from './error-handler.service';
  * Features:
  * - Reactive mark mode state management
  * - Mode history tracking with undo capability
- * - Persistent storage using localStorage
+ * - Project-based persistent storage
  * - Integration with global application state
  * - Real-time mode change notifications
  * - Default mode restoration functionality
- * - Automatic state persistence on changes
+ * - Automatic mark mode synchronization with project data
  *
  * @example
  * ```typescript
@@ -44,7 +48,7 @@ import { ErrorHandlerService } from './error-handler.service';
  *   this.updateUIForMode(mode);
  * });
  *
- * // Set specific modes (automatically persisted)
+ * // Set specific modes (automatically saved to project)
  * this.markModeService.setMarkMode(1); // Set to first mark state
  * this.markModeService.updateMarkMode(2); // Update to second mark state
  *
@@ -110,19 +114,21 @@ export class MarkModeService {
    * @param store - The reactive state store for mark mode state management
    * @param logger - NGX logger for debugging and error tracking
    * @param errorHandler - Service for handling and reporting errors
+   * @param projectDbService - Service for persisting project data to database
    */
   constructor(
     private store: ReactiveStateStore,
     private logger: NGXLogger,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private projectDbService: ProjectDbService
   ) {
-    this.initializeMarkMode();
+    this.initializeMarkModeSync();
   }
 
   /**
-   * Updates the current mark mode with history tracking and state persistence.
+   * Updates the current mark mode with history tracking and project persistence.
    * Records the previous mode in history for undo functionality and automatically
-   * persists the state to localStorage for cross-session continuity.
+   * saves the mark mode to the current project for cross-session continuity.
    * Use this method when you want full history tracking of mode changes.
    *
    * @param mode - The new mark mode number (typically 0-3, but supports any positive integer)
@@ -145,14 +151,17 @@ export class MarkModeService {
    */
   updateMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.updateMarkMode(mode));
-    this.saveMarkModeToStorage();
+    // Fire and forget the async save operation
+    this.saveMarkModeToProject(mode).catch(error => {
+      this.logger.error('Failed to save mark mode to project:', error);
+    });
   }
 
   /**
-   * Sets the mark mode directly without history tracking but with persistence.
+   * Sets the mark mode directly without history tracking but with project persistence.
    * Simpler alternative to updateMarkMode() when history management isn't needed.
    * Use for initialization or when you want to avoid creating history entries.
-   * State is automatically persisted to localStorage.
+   * Mark mode is automatically saved to the current project.
    *
    * @param mode - The mark mode number to set immediately
    *
@@ -171,14 +180,17 @@ export class MarkModeService {
    */
   setMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.setMarkMode(mode));
-    this.saveMarkModeToStorage();
+    // Fire and forget the async save operation
+    this.saveMarkModeToProject(mode).catch(error => {
+      this.logger.error('Failed to save mark mode to project:', error);
+    });
   }
 
   /**
-   * Resets the mark mode to the default state (mode 0) with persistence.
+   * Resets the mark mode to the default state (mode 0) with project persistence.
    * Provides a quick way to return to the neutral marking state.
    * Commonly used for clearing all markings or starting fresh.
-   * State is automatically persisted to localStorage.
+   * Mark mode is automatically saved to the current project.
    *
    * @example
    * ```typescript
@@ -201,14 +213,17 @@ export class MarkModeService {
    */
   resetMarkMode(): void {
     this.store.dispatch(MarkModeActions.resetMarkMode());
-    this.saveMarkModeToStorage();
+    // Fire and forget the async save operation
+    this.saveMarkModeToProject(0).catch(error => {
+      this.logger.error('Failed to save mark mode to project:', error);
+    });
   }
 
   /**
-   * Reverts to the previous mark mode if available in history with persistence.
+   * Reverts to the previous mark mode if available in history with project persistence.
    * Implements undo functionality for mark mode changes, providing user-friendly
    * correction of accidental mode switches. No-op if no previous mode exists.
-   * State is automatically persisted to localStorage after undo.
+   * Mark mode is automatically saved to the current project after undo.
    *
    * @example
    * ```typescript
@@ -242,113 +257,128 @@ export class MarkModeService {
 
     if (previousMode !== undefined) {
       this.store.dispatch(MarkModeActions.setMarkMode(previousMode));
-      this.saveMarkModeToStorage();
+      // Fire and forget the async save operation
+      this.saveMarkModeToProject(previousMode).catch(error => {
+        this.logger.error('Failed to save mark mode to project:', error);
+      });
     }
   }
 
   /**
-   * Initializes mark mode service with persistent state loading.
-   * Attempts to load previous mark mode state from localStorage and
-   * applies it to the store. If no stored state exists or loading fails,
-   * uses default state values.
+   * Initializes mark mode service with project-based state synchronization.
+   * Sets up automatic mark mode loading when projects change and handles
+   * initial state setup for the service.
    *
    * @private
    */
-  private initializeMarkMode(): void {
+  private initializeMarkModeSync(): void {
     try {
-      this.loadMarkModeFromStorage();
-      this.logger.debug('Mark mode service initialized with persistent state');
-    } catch (error) {
-      this.logger.warn('Failed to initialize mark mode from storage, using defaults');
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'initializeMarkMode',
-          details: 'Failed to initialize mark mode from localStorage',
-          storageType: 'localStorage',
-          storageKey: 'markMode',
-        },
-        'Mark mode settings could not be restored. Using default settings.',
-        'low'
-      );
-    }
-  }
+      // Subscribe to project changes to load mark mode from each project
+      this.store.select(selectCurrentProject).pipe(
+        filter(project => hasValidId(project)),
+        map(project => project.markMode ?? 0),
+        distinctUntilChanged()
+      ).subscribe(markMode => {
+        this.loadMarkModeFromProject(markMode);
+      });
 
-  /**
-   * Loads mark mode state from localStorage and applies it to the store.
-   * Handles missing storage, invalid JSON, and provides fallback to default values.
-   * Follows the same pattern as SettingsService for consistency.
-   *
-   * @private
-   */
-  private loadMarkModeFromStorage(): void {
-    try {
-      const storedData = localStorage.getItem('markMode');
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        
-        // Validate the stored data structure
-        if (parsed && typeof parsed === 'object' && typeof parsed.currentMode === 'number') {
-          // Create a valid MarkModeState object with defaults for missing properties
-          const markModeState: MarkModeState = {
-            currentMode: parsed.currentMode ?? 0,
-            previousMode: parsed.previousMode,
-            history: Array.isArray(parsed.history) ? parsed.history : [],
-            lastUpdated: parsed.lastUpdated ?? Date.now(),
-            changeCount: parsed.changeCount ?? 0,
-          };
-          
-          // Apply the loaded state to the store
-          this.store.dispatch(MarkModeActions.setMarkMode(markModeState.currentMode));
-          this.logger.debug('Mark mode state loaded from storage:', markModeState);
-        } else {
-          this.logger.warn('Invalid mark mode data structure in storage, using defaults');
-        }
-      } else {
-        this.logger.debug('No stored mark mode data found, using defaults');
-      }
+      this.logger.debug('Mark mode service initialized with project-based synchronization');
     } catch (error) {
-      this.logger.error('Error loading mark mode from storage:', error);
+      this.logger.warn('Failed to initialize mark mode service with project sync');
       this.errorHandler.handleError(
         error,
         {
-          operation: 'loadMarkModeFromStorage',
-          details: 'Failed to load mark mode from localStorage',
-          storageType: 'localStorage',
-          storageKey: 'markMode',
+          operation: 'initializeMarkModeSync',
+          details: 'Failed to initialize mark mode service with project synchronization',
         },
-        'Unable to load your mark mode settings. Default settings will be used.',
+        'Mark mode settings may not work properly. Please refresh the page.',
         'medium'
       );
     }
   }
 
   /**
-   * Saves the current mark mode state to localStorage.
-   * Handles serialization and storage errors with appropriate error reporting.
-   * Follows the same pattern as SettingsService for consistency.
+   * Loads mark mode from the current project and applies it to the store.
+   * Called when a project is loaded or when the project's mark mode changes.
    *
+   * @param markMode - The mark mode value from the project
    * @private
    */
-  private saveMarkModeToStorage(): void {
+  private loadMarkModeFromProject(markMode: number): void {
     try {
-      const currentState = this.store.getState();
-      const markModeState = currentState.markMode;
-      
-      // Store the complete mark mode state
-      localStorage.setItem('markMode', JSON.stringify(markModeState));
-      this.logger.debug('Mark mode state saved to storage:', markModeState);
+      // Validate mark mode value
+      if (typeof markMode !== 'number' || markMode < 0) {
+        this.logger.warn('Invalid mark mode value from project, using default:', markMode);
+        markMode = 0;
+      }
+
+      // Set the mark mode in the store without triggering a save back to project
+      this.store.dispatch(MarkModeActions.setMarkMode(markMode));
+      this.logger.debug('Mark mode loaded from project:', markMode);
     } catch (error) {
-      this.logger.error('Error saving mark mode to storage:', error);
+      this.logger.error('Error loading mark mode from project:', error);
       this.errorHandler.handleError(
         error,
         {
-          operation: 'saveMarkModeToStorage',
-          details: 'Failed to save mark mode to localStorage',
-          storageType: 'localStorage',
-          storageKey: 'markMode',
+          operation: 'loadMarkModeFromProject',
+          details: 'Failed to load mark mode from project',
+          markMode: markMode,
         },
-        'Unable to save your mark mode settings. They may not persist after refreshing.',
+        'Unable to load mark mode from project. Using default mode.',
+        'low'
+      );
+    }
+  }
+
+  /**
+   * Saves the current mark mode to the active project.
+   * Updates the project's markMode property and triggers a project update
+   * in both the store and the database.
+   *
+   * @param markMode - The mark mode value to save to the project
+   * @private
+   */
+  private async saveMarkModeToProject(markMode: number): Promise<void> {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        this.logger.debug('No active project to save mark mode to');
+        return;
+      }
+
+      // Get the current project from entities
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        this.logger.debug('Current project not found in entities');
+        return;
+      }
+
+      // Update the project with the new mark mode
+      const updatedProject: Project = {
+        ...currentProject,
+        markMode: markMode
+      };
+
+      // Dispatch the project update to the store
+      this.store.dispatch(ProjectActions.updateProjectSuccess(updatedProject));
+      
+      // Save to database
+      await this.projectDbService.updateProject(updatedProject);
+      
+      this.logger.debug('Mark mode saved to project and database:', markMode);
+    } catch (error) {
+      this.logger.error('Error saving mark mode to project:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveMarkModeToProject',
+          details: 'Failed to save mark mode to project',
+          markMode: markMode,
+        },
+        'Unable to save mark mode to project. Mark mode may not persist.',
         'medium'
       );
     }
