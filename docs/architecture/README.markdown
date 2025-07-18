@@ -21,14 +21,17 @@ Rowguide follows a modern Angular architecture with:
 
 ### Core Architecture
 
-- [Component Patterns]({{ site.baseurl }}/architecture/component-patterns)
-- [Error Recovery Patterns]({{ site.baseurl }}/architecture/error-recovery-patterns)
-- [Performance Optimization]({{ site.baseurl }}/architecture/performance-optimization)
+- [Service Contracts and Interfaces]({{ site.baseurl }}/architecture/service-contracts) - API definitions and contracts
+- [Design Patterns and Usage]({{ site.baseurl }}/architecture/design-patterns) - Implementation patterns and examples
+- [Component Patterns]({{ site.baseurl }}/architecture/component-patterns) - Angular component architecture
+- [Error Recovery Patterns]({{ site.baseurl }}/architecture/error-recovery-patterns) - Error handling strategies
+- [Performance Optimization]({{ site.baseurl }}/architecture/performance-optimization) - Performance best practices
 
 ### System Design
 
-- [Migration System]({{ site.baseurl }}/architecture/migration-system)
-- [Accessibility Guidelines]({{ site.baseurl }}/architecture/accessibility-guidelines)
+- [Architectural Decision Records]({{ site.baseurl }}/architecture/adrs) - Key architectural decisions and rationale
+- [Migration System]({{ site.baseurl }}/architecture/migration-system) - Database evolution and upgrades
+- [Accessibility Guidelines]({{ site.baseurl }}/architecture/accessibility-guidelines) - WCAG compliance and best practices
 
 ### Technical References
 
