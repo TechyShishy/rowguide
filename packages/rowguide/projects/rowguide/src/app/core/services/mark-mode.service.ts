@@ -10,10 +10,12 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode,
 } from '../store/selectors/mark-mode-selectors';
+import { ErrorHandlerService } from './error-handler.service';
 
 /**
  * Service for managing mark mode state in the pattern tracking application.
- * Handles mode switching, history tracking, and undo functionality for bead marking.
+ * Handles mode switching, history tracking, undo functionality, and persistence
+ * for bead marking across application sessions.
  *
  * Mark modes represent different states for pattern step interaction:
  * - 0: Default/neutral mode (no special marking)
@@ -27,6 +29,9 @@ import {
  * - Integration with global application state
  * - Real-time mode change notifications
  * - Default mode restoration functionality
+ * - Persistent storage using localStorage
+ * - Automatic persistence on mode changes
+ * - Session restoration on service initialization
  *
  * @example
  * ```typescript
@@ -102,8 +107,15 @@ export class MarkModeService {
    * Creates an instance of MarkModeService.
    *
    * @param store - The reactive state store for mark mode state management
+   * @param errorHandler - Error handling service for storage operations
    */
-  constructor(private store: ReactiveStateStore) {}
+  constructor(
+    private store: ReactiveStateStore,
+    private errorHandler: ErrorHandlerService
+  ) {
+    this.initializeMarkMode();
+    this.setupPersistence();
+  }
 
   /**
    * Updates the current mark mode with history tracking and state persistence.
@@ -221,6 +233,73 @@ export class MarkModeService {
 
     if (previousMode !== undefined) {
       this.store.dispatch(MarkModeActions.setMarkMode(previousMode));
+    }
+  }
+
+  /**
+   * Initializes mark mode by loading persisted state from localStorage.
+   * Called during service construction to restore the user's previous mark mode.
+   *
+   * @private
+   */
+  private initializeMarkMode(): void {
+    try {
+      const savedMode = localStorage.getItem('markMode');
+      if (savedMode !== null) {
+        const mode = parseInt(savedMode, 10);
+        if (!isNaN(mode) && mode >= 0 && mode <= 6) {
+          this.store.dispatch(MarkModeActions.setMarkMode(mode));
+        }
+      }
+    } catch (error) {
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'initializeMarkMode',
+          details: 'Failed to load mark mode from localStorage',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        },
+        'Unable to restore your previous mark mode. Default mode will be used.',
+        'low'
+      );
+    }
+  }
+
+  /**
+   * Sets up automatic persistence by subscribing to mark mode changes.
+   * Saves the current mark mode to localStorage whenever it changes.
+   *
+   * @private
+   */
+  private setupPersistence(): void {
+    this.markModeChanged$.subscribe(mode => {
+      this.saveMarkMode(mode);
+    });
+  }
+
+  /**
+   * Saves the current mark mode to localStorage.
+   * Called automatically when mark mode changes to ensure persistence.
+   *
+   * @private
+   * @param mode - The mark mode to save
+   */
+  private saveMarkMode(mode: number): void {
+    try {
+      localStorage.setItem('markMode', mode.toString());
+    } catch (error) {
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveMarkMode',
+          details: 'Failed to save mark mode to localStorage',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        },
+        'Unable to save your mark mode preference. Your selection may not persist.',
+        'low'
+      );
     }
   }
 }

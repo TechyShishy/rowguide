@@ -12,6 +12,7 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode
 } from '../store/selectors/mark-mode-selectors';
+import { ErrorHandlerService } from './error-handler.service';
 
 /**
  * Comprehensive Test Suite for MarkModeService
@@ -31,8 +32,15 @@ import {
 describe('MarkModeService', () => {
   let service: MarkModeService;
   let storeSpy: jasmine.SpyObj<ReactiveStateStore>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
 
   beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+    
+    // Create spy for ErrorHandlerService
+    const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
+    
     // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
     const storeSpyObj = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch', 'getState']);
 
@@ -108,6 +116,7 @@ describe('MarkModeService', () => {
       providers: [
         MarkModeService,
         { provide: ReactiveStateStore, useValue: storeSpyObj },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
       ],
     });
 
@@ -122,6 +131,7 @@ describe('MarkModeService', () => {
 
     service = TestBed.inject(MarkModeService);
     storeSpy = TestBed.inject(ReactiveStateStore) as jasmine.SpyObj<ReactiveStateStore>;
+    errorHandlerSpy = TestBed.inject(ErrorHandlerService) as jasmine.SpyObj<ErrorHandlerService>;
   });
 
   describe('Service Initialization', () => {
@@ -291,6 +301,191 @@ describe('MarkModeService', () => {
     it('should not error when undoing with no previous mode', () => {
       // No previous mode should exist initially
       expect(() => service.undoMarkMode()).not.toThrow();
+    });
+  });
+
+  describe('Persistence', () => {
+    it('should save mark mode to localStorage when mode changes', () => {
+      // Check initial state
+      expect(localStorage.getItem('markMode')).toBe('0');
+      
+      // Change mode and verify it gets saved
+      service.updateMarkMode(3);
+      expect(localStorage.getItem('markMode')).toBe('3');
+      
+      // Change to another mode
+      service.setMarkMode(1);
+      expect(localStorage.getItem('markMode')).toBe('1');
+      
+      // Reset mode
+      service.resetMarkMode();
+      expect(localStorage.getItem('markMode')).toBe('0');
+    });
+
+    it('should load mark mode from localStorage on service initialization', () => {
+      // Set a value in localStorage before service creation
+      localStorage.setItem('markMode', '5');
+      
+      // Create a new service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          MarkModeService,
+          { provide: ReactiveStateStore, useValue: storeSpy },
+          { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        ],
+      });
+      
+      const newService = TestBed.inject(MarkModeService);
+      
+      // Verify that setMarkMode was called with the stored value
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[MarkMode] Set Mark Mode',
+          payload: jasmine.objectContaining({
+            mode: 5,
+          })
+        })
+      );
+    });
+
+    it('should handle invalid values in localStorage gracefully', () => {
+      // Test with invalid JSON-like string
+      localStorage.setItem('markMode', 'invalid');
+      
+      // Create a new service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          MarkModeService,
+          { provide: ReactiveStateStore, useValue: storeSpy },
+          { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        ],
+      });
+      
+      const newService = TestBed.inject(MarkModeService);
+      
+      // Should not call setMarkMode with invalid value
+      expect(storeSpy.dispatch).not.toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[MarkMode] Set Mark Mode',
+          payload: jasmine.objectContaining({
+            mode: jasmine.any(Number),
+          })
+        })
+      );
+    });
+
+    it('should handle out-of-range values in localStorage gracefully', () => {
+      // Test with out-of-range values
+      localStorage.setItem('markMode', '-1');
+      
+      // Create a new service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          MarkModeService,
+          { provide: ReactiveStateStore, useValue: storeSpy },
+          { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        ],
+      });
+      
+      const newService = TestBed.inject(MarkModeService);
+      
+      // Should not call setMarkMode with out-of-range value
+      expect(storeSpy.dispatch).not.toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[MarkMode] Set Mark Mode',
+          payload: jasmine.objectContaining({
+            mode: -1,
+          })
+        })
+      );
+    });
+
+    it('should handle localStorage errors gracefully', () => {
+      // Mock localStorage to throw an error
+      const originalGetItem = localStorage.getItem;
+      const originalSetItem = localStorage.setItem;
+      
+      spyOn(localStorage, 'getItem').and.throwError('Storage error');
+      spyOn(localStorage, 'setItem').and.throwError('Storage error');
+      
+      // Create a new service instance - should not throw
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          MarkModeService,
+          { provide: ReactiveStateStore, useValue: storeSpy },
+          { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        ],
+      });
+      
+      expect(() => TestBed.inject(MarkModeService)).not.toThrow();
+      
+      // Verify error handler was called for initialization
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'initializeMarkMode',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        }),
+        jasmine.any(String),
+        'low'
+      );
+      
+      // Reset spies
+      localStorage.getItem = originalGetItem;
+      localStorage.setItem = originalSetItem;
+    });
+
+    it('should handle localStorage save errors gracefully', () => {
+      // Mock localStorage.setItem to throw an error
+      spyOn(localStorage, 'setItem').and.throwError('Storage full');
+      
+      // Should not throw when trying to save
+      expect(() => service.updateMarkMode(2)).not.toThrow();
+      
+      // Verify error handler was called for save operation
+      expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+        jasmine.any(Error),
+        jasmine.objectContaining({
+          operation: 'saveMarkMode',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        }),
+        jasmine.any(String),
+        'low'
+      );
+    });
+
+    it('should persist mark mode across simulated sessions', () => {
+      // Set a mark mode
+      service.updateMarkMode(4);
+      expect(localStorage.getItem('markMode')).toBe('4');
+      
+      // Simulate a new session by creating a new service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          MarkModeService,
+          { provide: ReactiveStateStore, useValue: storeSpy },
+          { provide: ErrorHandlerService, useValue: errorHandlerSpy },
+        ],
+      });
+      
+      const newService = TestBed.inject(MarkModeService);
+      
+      // Verify that the persisted value was restored
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[MarkMode] Set Mark Mode',
+          payload: jasmine.objectContaining({
+            mode: 4,
+          })
+        })
+      );
     });
   });
 });
