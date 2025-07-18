@@ -2,7 +2,7 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["./projects/rowguide/src/app/"],
   "entryPointStrategy": "expand",
-  "out": "../..//docs/api/",
+  "out": "../../docs/api/",
   "exclude": ["**/*.spec.ts", "**/*.spec.js", "**/node_modules/**"],
   "excludePrivate": true,
   "excludeProtected": false,
@@ -42,11 +42,81 @@
   "githubPages": false,
   "hideGenerator": true,
   "searchInComments": true,
-  "cleanOutputDir": true,
+  "cleanOutputDir": false,
+  "treatWarningsAsErrors": false,
+  "treatValidationWarningsAsErrors": false,
+  "skipErrorChecking": false,
+  "validation": {
+    "notExported": false,
+    "invalidLink": false,
+    "notDocumented": false
+  },
+  "blockTags": [
+    "@alpha",
+    "@beta",
+    "@component",
+    "@constant",
+    "@decorator",
+    "@deprecated",
+    "@eventproperty",
+    "@example",
+    "@experimental",
+    "@fileoverview",
+    "@implements",
+    "@inheritdoc",
+    "@internal",
+    "@lifecycle",
+    "@module",
+    "@namespace",
+    "@optional",
+    "@override",
+    "@packagedocumentation",
+    "@param",
+    "@public",
+    "@readonly",
+    "@required",
+    "@returns",
+    "@selector",
+    "@service",
+    "@since",
+    "@throws",
+    "@typeParam",
+    "@virtual"
+  ],
   "externalSymbolLinkMappings": {
     "idb": {
       "IDBPDatabase": "https://github.com/jakearchibald/idb#types",
       "openDB": "https://github.com/jakearchibald/idb#opendb"
+    },
+    "rxjs": {
+      "Observable": "https://rxjs.dev/api/index/class/Observable",
+      "Subject": "https://rxjs.dev/api/index/class/Subject",
+      "BehaviorSubject": "https://rxjs.dev/api/index/class/BehaviorSubject"
+    },
+    "@angular/core": {
+      "Injectable": "https://angular.io/api/core/Injectable",
+      "Component": "https://angular.io/api/core/Component",
+      "OnInit": "https://angular.io/api/core/OnInit",
+      "OnDestroy": "https://angular.io/api/core/OnDestroy"
+    },
+    "@angular/material": {
+      "MatDialog": "https://material.angular.io/components/dialog/api",
+      "MatSnackBar": "https://material.angular.io/components/snack-bar/api"
     }
+  },
+  "groupOrder": [
+    "Core Services",
+    "Data Services",
+    "Feature Services",
+    "Components",
+    "Models",
+    "Interfaces",
+    "State Management",
+    "Utilities",
+    "*"
+  ],
+  "navigationLinks": {
+    "GitHub": "https://github.com/TechyShishy/rowguide",
+    "Home": "https://techyshishy.github.io/rowguide/"
   }
 }

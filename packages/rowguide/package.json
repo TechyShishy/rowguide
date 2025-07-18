@@ -10,7 +10,16 @@
     "test": "ng test",
     "docs:generate": "typedoc",
     "docs:serve": "http-server ../../docs/api -p 8080 -o",
-    "docs:build": "yarn run docs:generate && yarn run docs:serve"
+    "docs:build": "node scripts/build-docs.js",
+    "docs:clean": "rm -rf ../../docs/api",
+    "docs:validate": "typedoc --validation.notExported --validation.invalidLink --validation.notDocumented --logLevel Warn",
+    "docs:coverage": "typedoc --listInvalidSymbolLinks --logLevel Error",
+    "docs:dev": "node scripts/deploy-docs.js local",
+    "docs:deploy": "node scripts/deploy-docs.js",
+    "docs:deploy:github": "node scripts/deploy-docs.js github",
+    "docs:deploy:local": "node scripts/deploy-docs.js local",
+    "docs:watch": "node scripts/deploy-docs.js watch",
+    "docs:validate:structure": "node scripts/deploy-docs.js validate"
   },
   "private": true,
   "dependencies": {

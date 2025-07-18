@@ -1,0 +1,137 @@
+{
+  "name": "Rowguide Documentation Configuration",
+  "version": "1.0.0",
+  "description": "Comprehensive documentation build and deployment configuration for Rowguide",
+
+  "typeDoc": {
+    "entryPoints": [
+      "src/main.ts",
+      "src/app/app.module.ts",
+      "src/app/app.component.ts"
+    ],
+    "exclude": [
+      "**/*.spec.ts",
+      "**/*.test.ts",
+      "**/node_modules/**",
+      "**/dist/**"
+    ],
+    "includeVersion": true,
+    "sort": ["source-order"],
+    "categorizeByGroup": true,
+    "categoryOrder": [
+      "Core",
+      "Data",
+      "Features",
+      "Shared",
+      "Services",
+      "Components",
+      "Models",
+      "Utilities"
+    ]
+  },
+
+  "deployment": {
+    "github": {
+      "enabled": true,
+      "branch": "main",
+      "directory": "docs/",
+      "baseUrl": "https://techyshishy.github.io/rowguide/"
+    },
+    "local": {
+      "enabled": true,
+      "port": 8080,
+      "host": "localhost",
+      "openBrowser": true
+    }
+  },
+
+  "validation": {
+    "strictMode": true,
+    "checkExternalLinks": true,
+    "requireDocumentation": [
+      "public-api",
+      "classes",
+      "interfaces",
+      "enums",
+      "functions"
+    ],
+    "excludeFromValidation": [
+      "test-files",
+      "internal-utilities",
+      "generated-code"
+    ]
+  },
+
+  "coverage": {
+    "minimum": 85,
+    "target": 95,
+    "reportFormats": [
+      "json",
+      "html",
+      "text-summary"
+    ],
+    "includePrivate": false,
+    "excludePatterns": [
+      "*.spec.ts",
+      "*.test.ts",
+      "test-utils/**"
+    ]
+  },
+
+  "build": {
+    "parallel": true,
+    "cache": true,
+    "outputFormats": [
+      "html",
+      "json"
+    ],
+    "plugins": [
+      "search",
+      "navigation",
+      "source-links"
+    ],
+    "theme": {
+      "name": "default",
+      "customCss": "assets/docs-theme.css",
+      "logo": "assets/logo.png",
+      "favicon": "assets/favicon.ico"
+    }
+  },
+
+  "integration": {
+    "vscode": {
+      "enabled": true,
+      "tasks": [
+        "docs:build",
+        "docs:serve",
+        "docs:deploy"
+      ]
+    },
+    "ci": {
+      "enabled": true,
+      "validateOnPR": true,
+      "deployOnMerge": true,
+      "failOnWarnings": false
+    }
+  },
+
+  "monitoring": {
+    "performance": {
+      "enabled": true,
+      "budgets": {
+        "buildTime": "30s",
+        "bundleSize": "10MB",
+        "renderTime": "2s"
+      }
+    },
+    "quality": {
+      "enabled": true,
+      "metrics": [
+        "coverage",
+        "completeness",
+        "accuracy",
+        "freshness"
+      ]
+    }
+  }
+}
