@@ -343,9 +343,11 @@ describe('MarkModeService', () => {
 
       expect(storeSpy.dispatch).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          type: '[Project] Update Project Success',
+          type: '[Projects] Update Project Success',
           payload: jasmine.objectContaining({
-            markedSteps: { '0-3': 2 }
+            project: jasmine.objectContaining({
+              markedSteps: { '0-3': 2 }
+            })
           })
         })
       );
@@ -364,9 +366,11 @@ describe('MarkModeService', () => {
 
       expect(storeSpy.dispatch).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          type: '[Project] Update Project Success',
+          type: '[Projects] Update Project Success',
           payload: jasmine.objectContaining({
-            markedSteps: {}
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
           })
         })
       );
@@ -385,9 +389,11 @@ describe('MarkModeService', () => {
 
       expect(storeSpy.dispatch).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          type: '[Project] Update Project Success',
+          type: '[Projects] Update Project Success',
           payload: jasmine.objectContaining({
-            markedSteps: {}
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
           })
         })
       );
@@ -411,9 +417,54 @@ describe('MarkModeService', () => {
         markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
         projects: {
           currentProjectId: 1,
-          entities: { 1: mockProjectWithMarks }
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
         },
-        ui: null, system: null, settings: null, notifications: null,
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
       });
 
       expect(service.getStepMark(0, 3)).toBe(2);
@@ -434,9 +485,54 @@ describe('MarkModeService', () => {
         markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
         projects: {
           currentProjectId: 1,
-          entities: { 1: mockProjectWithMarks }
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
         },
-        ui: null, system: null, settings: null, notifications: null,
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
       });
 
       const markedSteps = service.getAllMarkedSteps();
@@ -457,18 +553,65 @@ describe('MarkModeService', () => {
         markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
         projects: {
           currentProjectId: 1,
-          entities: { 1: mockProjectWithMarks }
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
         },
-        ui: null, system: null, settings: null, notifications: null,
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
       });
 
       await service.clearAllMarkedSteps();
 
       expect(storeSpy.dispatch).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          type: '[Project] Update Project Success',
+          type: '[Projects] Update Project Success',
           payload: jasmine.objectContaining({
-            markedSteps: {}
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
           })
         })
       );
@@ -481,9 +624,54 @@ describe('MarkModeService', () => {
         markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
         projects: {
           currentProjectId: null,
-          entities: {}
+          entities: {},
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
         },
-        ui: null, system: null, settings: null, notifications: null,
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
       });
 
       // Should not throw errors

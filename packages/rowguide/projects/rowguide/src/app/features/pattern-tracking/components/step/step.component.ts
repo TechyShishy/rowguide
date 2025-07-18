@@ -624,8 +624,10 @@ export class StepComponent implements HierarchicalList, OnInit {
    */
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
-    if (this.row.project.markMode) {
-      const currentMarkMode = this.row.project.markMode;
+    // Get the current mark mode from the service
+    const currentMarkMode = await firstValueFrom(this.markModeService.markModeChanged$);
+    
+    if (currentMarkMode > 0) {
       const newMarkMode = this.marked === currentMarkMode ? 0 : currentMarkMode;
       
       // Update the persistent step marking

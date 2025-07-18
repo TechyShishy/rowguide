@@ -10,7 +10,7 @@ import { QueryList } from '@angular/core';
 
 import { StepComponent } from './step.component';
 import { Step } from '../../../../core/models/step';
-import { FlamService, SettingsService } from '../../../../core/services';
+import { FlamService, SettingsService, MarkModeService } from '../../../../core/services';
 import { ProjectService } from '../../../project-management/services';
 import { ZipperService } from '../../../file-import/services';
 import { RowComponent } from '../row/row.component';
@@ -23,6 +23,7 @@ describe('StepComponent', () => {
   let mockSettingsService: jasmine.SpyObj<SettingsService>;
   let mockProjectService: jasmine.SpyObj<ProjectService>;
   let mockZipperService: jasmine.SpyObj<ZipperService>;
+  let mockMarkModeService: jasmine.SpyObj<MarkModeService>;
   let mockRowComponent: jasmine.SpyObj<RowComponent>;
   let mockProject: any;
 
@@ -32,11 +33,13 @@ describe('StepComponent', () => {
   let zippedRows$: BehaviorSubject<any[]>;
   let isFirstStep$: BehaviorSubject<boolean>;
   let isLastStep$: BehaviorSubject<boolean>;
+  let markModeChanged$: BehaviorSubject<number>;
 
   beforeEach(async () => {
     // Initialize mock observables
     flammarkers$ = new BehaviorSubject<boolean>(true);
     zoom$ = new BehaviorSubject<boolean>(false);
+    markModeChanged$ = new BehaviorSubject<number>(0);
     zippedRows$ = new BehaviorSubject<any[]>([
       { steps: [{ count: 5 }, { count: 3 }, { count: 2 }] },
       { steps: [{ count: 1 }, { count: 4 }] },
@@ -70,6 +73,10 @@ describe('StepComponent', () => {
       }
     );
     mockZipperService = jasmine.createSpyObj('ZipperService', ['expandSteps']);
+    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark'], {
+      markModeChanged$: markModeChanged$,
+    });
+    mockMarkModeService.getStepMark.and.returnValue(0); // Default to unmarked
 
     // Mock RowComponent
     mockRowComponent = jasmine.createSpyObj('RowComponent', [], {
@@ -84,6 +91,7 @@ describe('StepComponent', () => {
         { provide: SettingsService, useValue: mockSettingsService },
         { provide: ProjectService, useValue: mockProjectService },
         { provide: ZipperService, useValue: mockZipperService },
+        { provide: MarkModeService, useValue: mockMarkModeService },
       ],
     }).compileComponents();
 
@@ -157,7 +165,7 @@ describe('StepComponent', () => {
 
     describe('when in mark mode', () => {
       beforeEach(() => {
-        mockProject.markMode = 3;
+        markModeChanged$.next(3);
       });
 
       it('should set marked to markMode when marked is 0', fakeAsync(() => {
@@ -197,7 +205,7 @@ describe('StepComponent', () => {
 
     describe('when not in mark mode', () => {
       beforeEach(() => {
-        mockProject.markMode = 0;
+        markModeChanged$.next(0);
       });
 
       it('should set isCurrentStep to true and save position', fakeAsync(() => {
@@ -309,6 +317,8 @@ describe('StepComponent', () => {
     }));
 
     it('should bind marked values to marked-X classes', () => {
+      component.ngOnInit(); // Ensure component is initialized
+      
       // marked property is only set via onClick mark mode, test direct manipulation
       for (let i = 1; i <= 6; i++) {
         component.marked = i;
