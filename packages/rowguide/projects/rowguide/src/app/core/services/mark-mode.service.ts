@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { NGXLogger } from 'ngx-logger';
 
 import { ReactiveStateStore } from '../store/reactive-state-store';
 import { MarkModeActions } from '../store/actions/mark-mode-actions';
@@ -10,10 +11,13 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode,
 } from '../store/selectors/mark-mode-selectors';
+import { MarkModeState } from '../store/reducers/mark-mode-reducer';
+import { ErrorHandlerService } from './error-handler.service';
 
 /**
  * Service for managing mark mode state in the pattern tracking application.
- * Handles mode switching, history tracking, and undo functionality for bead marking.
+ * Handles mode switching, history tracking, undo functionality, and persistence
+ * for bead marking states across sessions.
  *
  * Mark modes represent different states for pattern step interaction:
  * - 0: Default/neutral mode (no special marking)
@@ -24,9 +28,11 @@ import {
  * Features:
  * - Reactive mark mode state management
  * - Mode history tracking with undo capability
+ * - Persistent storage using localStorage
  * - Integration with global application state
  * - Real-time mode change notifications
  * - Default mode restoration functionality
+ * - Automatic state persistence on changes
  *
  * @example
  * ```typescript
@@ -38,7 +44,7 @@ import {
  *   this.updateUIForMode(mode);
  * });
  *
- * // Set specific modes
+ * // Set specific modes (automatically persisted)
  * this.markModeService.setMarkMode(1); // Set to first mark state
  * this.markModeService.updateMarkMode(2); // Update to second mark state
  *
@@ -102,12 +108,21 @@ export class MarkModeService {
    * Creates an instance of MarkModeService.
    *
    * @param store - The reactive state store for mark mode state management
+   * @param logger - NGX logger for debugging and error tracking
+   * @param errorHandler - Service for handling and reporting errors
    */
-  constructor(private store: ReactiveStateStore) {}
+  constructor(
+    private store: ReactiveStateStore,
+    private logger: NGXLogger,
+    private errorHandler: ErrorHandlerService
+  ) {
+    this.initializeMarkMode();
+  }
 
   /**
    * Updates the current mark mode with history tracking and state persistence.
-   * Records the previous mode in history for undo functionality.
+   * Records the previous mode in history for undo functionality and automatically
+   * persists the state to localStorage for cross-session continuity.
    * Use this method when you want full history tracking of mode changes.
    *
    * @param mode - The new mark mode number (typically 0-3, but supports any positive integer)
@@ -130,12 +145,14 @@ export class MarkModeService {
    */
   updateMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.updateMarkMode(mode));
+    this.saveMarkModeToStorage();
   }
 
   /**
-   * Sets the mark mode directly without history tracking.
+   * Sets the mark mode directly without history tracking but with persistence.
    * Simpler alternative to updateMarkMode() when history management isn't needed.
    * Use for initialization or when you want to avoid creating history entries.
+   * State is automatically persisted to localStorage.
    *
    * @param mode - The mark mode number to set immediately
    *
@@ -154,12 +171,14 @@ export class MarkModeService {
    */
   setMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.setMarkMode(mode));
+    this.saveMarkModeToStorage();
   }
 
   /**
-   * Resets the mark mode to the default state (mode 0).
+   * Resets the mark mode to the default state (mode 0) with persistence.
    * Provides a quick way to return to the neutral marking state.
    * Commonly used for clearing all markings or starting fresh.
+   * State is automatically persisted to localStorage.
    *
    * @example
    * ```typescript
@@ -182,12 +201,14 @@ export class MarkModeService {
    */
   resetMarkMode(): void {
     this.store.dispatch(MarkModeActions.resetMarkMode());
+    this.saveMarkModeToStorage();
   }
 
   /**
-   * Reverts to the previous mark mode if available in history.
+   * Reverts to the previous mark mode if available in history with persistence.
    * Implements undo functionality for mark mode changes, providing user-friendly
    * correction of accidental mode switches. No-op if no previous mode exists.
+   * State is automatically persisted to localStorage after undo.
    *
    * @example
    * ```typescript
@@ -221,6 +242,115 @@ export class MarkModeService {
 
     if (previousMode !== undefined) {
       this.store.dispatch(MarkModeActions.setMarkMode(previousMode));
+      this.saveMarkModeToStorage();
+    }
+  }
+
+  /**
+   * Initializes mark mode service with persistent state loading.
+   * Attempts to load previous mark mode state from localStorage and
+   * applies it to the store. If no stored state exists or loading fails,
+   * uses default state values.
+   *
+   * @private
+   */
+  private initializeMarkMode(): void {
+    try {
+      this.loadMarkModeFromStorage();
+      this.logger.debug('Mark mode service initialized with persistent state');
+    } catch (error) {
+      this.logger.warn('Failed to initialize mark mode from storage, using defaults');
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'initializeMarkMode',
+          details: 'Failed to initialize mark mode from localStorage',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        },
+        'Mark mode settings could not be restored. Using default settings.',
+        'low'
+      );
+    }
+  }
+
+  /**
+   * Loads mark mode state from localStorage and applies it to the store.
+   * Handles missing storage, invalid JSON, and provides fallback to default values.
+   * Follows the same pattern as SettingsService for consistency.
+   *
+   * @private
+   */
+  private loadMarkModeFromStorage(): void {
+    try {
+      const storedData = localStorage.getItem('markMode');
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        
+        // Validate the stored data structure
+        if (parsed && typeof parsed === 'object' && typeof parsed.currentMode === 'number') {
+          // Create a valid MarkModeState object with defaults for missing properties
+          const markModeState: MarkModeState = {
+            currentMode: parsed.currentMode ?? 0,
+            previousMode: parsed.previousMode,
+            history: Array.isArray(parsed.history) ? parsed.history : [],
+            lastUpdated: parsed.lastUpdated ?? Date.now(),
+            changeCount: parsed.changeCount ?? 0,
+          };
+          
+          // Apply the loaded state to the store
+          this.store.dispatch(MarkModeActions.setMarkMode(markModeState.currentMode));
+          this.logger.debug('Mark mode state loaded from storage:', markModeState);
+        } else {
+          this.logger.warn('Invalid mark mode data structure in storage, using defaults');
+        }
+      } else {
+        this.logger.debug('No stored mark mode data found, using defaults');
+      }
+    } catch (error) {
+      this.logger.error('Error loading mark mode from storage:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'loadMarkModeFromStorage',
+          details: 'Failed to load mark mode from localStorage',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        },
+        'Unable to load your mark mode settings. Default settings will be used.',
+        'medium'
+      );
+    }
+  }
+
+  /**
+   * Saves the current mark mode state to localStorage.
+   * Handles serialization and storage errors with appropriate error reporting.
+   * Follows the same pattern as SettingsService for consistency.
+   *
+   * @private
+   */
+  private saveMarkModeToStorage(): void {
+    try {
+      const currentState = this.store.getState();
+      const markModeState = currentState.markMode;
+      
+      // Store the complete mark mode state
+      localStorage.setItem('markMode', JSON.stringify(markModeState));
+      this.logger.debug('Mark mode state saved to storage:', markModeState);
+    } catch (error) {
+      this.logger.error('Error saving mark mode to storage:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'saveMarkModeToStorage',
+          details: 'Failed to save mark mode to localStorage',
+          storageType: 'localStorage',
+          storageKey: 'markMode',
+        },
+        'Unable to save your mark mode settings. They may not persist after refreshing.',
+        'medium'
+      );
     }
   }
 }
