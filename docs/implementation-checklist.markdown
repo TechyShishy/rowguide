@@ -9,9 +9,9 @@ permalink: /implementation-checklist/
 ## Project Status Overview
 
 **Last Updated**: July 17, 2025
-**Current Phase**: Phase 3.2 - API Documentation Generation
+**Current Phase**: Phase 3.3 - Code Examples and Guides
 **Test Coverage**: 737/737 tests passing (100% success rate)
-**Implementation Focus**: Automated TypeDoc generation with comprehensive JSDoc documentation complete
+**Implementation Focus**: Service usage examples and component integration patterns
 
 ---
 
@@ -231,6 +231,7 @@ permalink: /implementation-checklist/
     - [x] Document text extraction and parsing methods
   - [x] Document service error handling patterns
 - [x] **Utility and Interface Documentation**
+
   - [x] HierarchicalList interface - Document navigation tree structure with comprehensive interface documentation and usage examples
     - [x] Document navigation properties: index, next, prev, parent, children
     - [x] Document interface implementation patterns in components
@@ -283,6 +284,7 @@ permalink: /implementation-checklist/
     - [x] Constants index file is empty - no shared constants requiring documentation
 
 - [x] **State Management Documentation**
+
   - [x] AppState interface - Document application state with comprehensive state shape documentation
     - [x] Document projects property - entity management structure
     - [x] Document ui property - UI state management patterns
@@ -355,6 +357,7 @@ permalink: /implementation-checklist/
     - [x] Document timestamp tracking and user interaction patterns
 
 - [x] **File Processing Documentation**
+
   - [x] PeyoteShorthandService - Document pattern parsing with comprehensive documentation and examples
     - [x] toProject() - Document pattern string parsing and project conversion
     - [x] createRow() - Document row creation from pattern text
@@ -400,6 +403,7 @@ permalink: /implementation-checklist/
     - [x] Format validation specifications documented across all pattern services
 
 - [x] **Model Classes Documentation**
+
   - [x] NullProject class - Document null object pattern with comprehensive documentation and examples
     - [x] isNull() - Document null object identification method
     - [x] toString() - Document string representation for debugging
@@ -451,6 +455,7 @@ permalink: /implementation-checklist/
     - [x] Document additional type guard functions for null safety
 
 - [x] **Application Level Documentation**
+
   - [x] AppComponent - Document comprehensive root component with lifecycle and dependency integration documentation
     - [x] ngOnInit() - Document upgrade service initialization and database migration
     - [x] constructor() - Document dependency injection pattern and service integration
@@ -479,23 +484,27 @@ permalink: /implementation-checklist/
     - [x] Document logging levels and debug settings
 
 - [x] **Database Schema Documentation**
+
   - [x] RowguideDb interface - Document IndexedDB schema structure with comprehensive documentation
   - [x] ProjectDb schema - Document project database schema with field descriptions and constraints
   - [x] MigrationDb schema - Document JSDoc for migration tracking schema and version management
   - [x] IndexedDbService - Document database connection management, upgrade procedures, and error handling
 
 - [x] **State Management Documentation Completions**
+
   - [x] All reducer files - Document comprehensive JSDoc for reducer functions, state transitions, and action handling
   - [x] All selector files - Document selector functions, memoization strategies, and performance characteristics
   - [x] All action files - Document action type documentation, payload structures, and usage examples
   - [x] AppStateInterface - Document state tree documentation with domain relationships and data flow
 
 - [x] **Utility and Helper Documentation**
+
   - [x] HierarchicalList interface - Document navigation tree structure with comprehensive documentation
   - [x] Sanity.ts - Document sanity check utilities and validation purposes
   - [x] All index files - Document barrel export documentation explaining module organization and dependencies
 
 - [x] **File Import System Documentation**
+
   - [x] PdfjslibService - Document PDF.js integration, worker management, and text extraction
     - [x] getDocument property - Document PDF.js getDocument method access
     - [x] Document PDF worker setup and management
@@ -511,6 +520,7 @@ permalink: /implementation-checklist/
   - [x] All pattern loaders - Document pattern parsing algorithms, supported formats, and validation rules
 
 - [x] **Component Documentation Completions**
+
   - [x] ProjectInspectorComponent - Document comprehensive component documentation for data inspection UI
   - [x] ProjectSelectorComponent - Document project selection interface and state management
   - [x] ProjectSummaryComponent - Document JSDoc for project overview display and metrics calculation
@@ -585,14 +595,14 @@ permalink: /implementation-checklist/
 
 **Implementation Areas:**
 
-- [ ] **Service Usage Examples**
-  - [ ] ErrorHandlerService integration patterns
-  - [ ] ReactiveStateStore implementation examples
-  - [ ] DataIntegrityService validation patterns
-- [ ] **Component Integration Guides**
-  - [ ] Component integration patterns and best practices
-  - [ ] State management integration examples
-  - [ ] Error handling integration patterns
+- [x] **Service Usage Examples**
+  - [x] ErrorHandlerService integration patterns
+  - [x] ReactiveStateStore implementation examples
+  - [x] DataIntegrityService validation patterns
+- [x] **Component Integration Guides**
+  - [x] Component integration patterns and best practices
+  - [x] State management integration examples
+  - [x] Error handling integration patterns
 - [ ] **Developer Resources**
   - [ ] Document testing patterns and utilities usage
   - [ ] Create developer onboarding guides with practical examples
@@ -637,16 +647,19 @@ _Use this template when adding new development phases to the roadmap:_
 **Priority**: [HIGH/MEDIUM/LOW]
 
 **Standards and Requirements** - Use as needed
+
 - [ ] [Standard or requirement 1]
 - [ ] [Standard or requirement 2]
 - [ ] [Standard or requirement 3]
 
 **Key Features:** - Use as needed
+
 - [ ] [Feature or capability 1]
 - [ ] [Feature or capability 2]
 - [ ] [Feature or capability 3]
 
 **Implementation Areas:**
+
 - [ ] **[Category 1]**: [Description]
 - [ ] **[Category 2]**: [Description]
 - [ ] **[Category 3]**: [Description]

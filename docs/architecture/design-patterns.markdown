@@ -370,12 +370,12 @@ abstract class ValidationDecorator implements IValidationService {
 export class ProjectValidationDecorator extends ValidationDecorator {
   validate(data: unknown): ValidationResult {
     const result = super.validate(data);
-    
+
     if (!ModelTypeGuards.isProject(data)) {
       result.isValid = false;
       result.errors.push('Invalid project structure');
     }
-    
+
     return result;
   }
 }
@@ -383,7 +383,7 @@ export class ProjectValidationDecorator extends ValidationDecorator {
 export class IntegrityCheckDecorator extends ValidationDecorator {
   validate(data: unknown): ValidationResult {
     const result = super.validate(data);
-    
+
     if (result.isValid && ModelTypeGuards.isProject(data)) {
       // Perform integrity checks
       const integrityResult = this.checkIntegrity(data);
@@ -392,7 +392,7 @@ export class IntegrityCheckDecorator extends ValidationDecorator {
         result.errors.push(...integrityResult.errors);
       }
     }
-    
+
     return result;
   }
 }
@@ -426,11 +426,11 @@ export class ProjectFacade {
     try {
       const project = await this.loader.loadById(id);
       const validation = this.validator.validate(project);
-      
+
       if (!validation.isValid) {
         throw new Error('Invalid project data');
       }
-      
+
       this.notifier.notifySuccess('Project loaded successfully');
       return project;
     } catch (error) {
@@ -442,11 +442,11 @@ export class ProjectFacade {
   async saveProject(project: Project): Promise<void> {
     try {
       const validation = this.validator.validate(project);
-      
+
       if (!validation.isValid) {
         throw new Error('Invalid project data');
       }
-      
+
       await this.saver.save(project);
       this.notifier.notifySuccess('Project saved successfully');
     } catch (error) {
@@ -550,7 +550,7 @@ export class ProjectDirector {
 
   createProjectFromPattern(pattern: string): Project {
     const rows = this.parsePattern(pattern);
-    
+
     return this.builder
       .setId(Math.floor(Math.random() * 1000000))
       .setName('Imported Project')
@@ -727,10 +727,10 @@ export class ProjectManagementService {
 
       // Create project
       const project = await this.projectService.createProject(name, rows);
-      
+
       // Notify success
       this.notificationService.success('Project created successfully');
-      
+
       return project;
     } catch (error) {
       this.errorHandler.handleError(error, { context: 'ProjectManagementService.createProject' });
