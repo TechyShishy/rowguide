@@ -65,7 +65,7 @@ interface AccessibilityStandards {
       <div id="loading-status"
            class="sr-only"
            [attr.aria-live]="isLoading ? 'polite' : null">
-        {{ isLoading ? 'Loading project data...' : '' }}
+        {% raw %}{{ isLoading ? 'Loading project data...' : '' }}{% endraw %}
       </div>
 
       <header role="banner">
@@ -209,7 +209,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
           *ngFor="let step of row.steps; let stepIndex = index"
           [id]="getStepDescriptionId(step)"
           [attr.aria-label]="getDetailedStepDescription(step, rowIndex, stepIndex)">
-          {{ getDetailedStepDescription(step, rowIndex, stepIndex) }}
+          {% raw %}{{ getDetailedStepDescription(step, rowIndex, stepIndex) }}{% endraw %}
         </div>
       </div>
     </div>
@@ -624,17 +624,17 @@ export class ScreenReaderService {
       <dl class="step-details">
         <dt>Position</dt>
         <dd id="step-position">
-          Row {{ position.row + 1 }}, Step {{ position.step + 1 }}
+          Row {% raw %}{{ position.row + 1 }}{% endraw %}, Step {% raw %}{{ position.step + 1 }}{% endraw %}
         </dd>
 
         <dt>Description</dt>
         <dd id="step-description">
-          {{ step?.description || 'No description available' }}
+          {% raw %}{{ step?.description || 'No description available' }}{% endraw %}
         </dd>
 
         <dt>Count</dt>
         <dd id="step-count">
-          {{ step?.count || 0 }}
+          {% raw %}{{ step?.count || 0 }}{% endraw %}
         </dd>
 
         <dt>Color</dt>
@@ -643,12 +643,12 @@ export class ScreenReaderService {
                 class="color-swatch"
                 [attr.aria-label]="getColorDescription(step?.color)">
           </span>
-          {{ step?.color || 'No color specified' }}
+          {% raw %}{{ step?.color || 'No color specified' }}{% endraw %}
         </dd>
 
         <dt>Progress</dt>
         <dd id="step-progress">
-          {{ getProgressDescription() }}
+          {% raw %}{{ getProgressDescription() }}{% endraw %}
         </dd>
       </dl>
 
@@ -663,7 +663,7 @@ export class ScreenReaderService {
         </button>
 
         <div id="mark-complete-desc" class="sr-only">
-          {{ step ? 'Mark this step as complete and move to next step' : 'No step selected' }}
+          {% raw %}{{ step ? 'Mark this step as complete and move to next step' : 'No step selected' }}{% endraw %}
         </div>
       </footer>
     </article>

@@ -60,7 +60,7 @@ import { Step } from "../../../../core/models";
         [id]="stepDescriptionId"
         [attr.aria-label]="step.description || 'No description'"
       >
-        {{ step.description || "Step " + step.id }}
+        {% raw %}{{ step.description || "Step " + step.id }}{% endraw %}
       </span>
 
       <span *ngIf="isCompleted" class="completion-indicator" aria-hidden="true">
@@ -467,7 +467,7 @@ import { StepComponent } from "../step/step.component";
             {{ stepsSummary }}
           </span>
           <span class="toggle-icon" aria-hidden="true">
-            {{ isExpanded ? "▼" : "▶" }}
+            {% raw %}{{ isExpanded ? "▼" : "▶" }}{% endraw %}
           </span>
         </button>
       </div>

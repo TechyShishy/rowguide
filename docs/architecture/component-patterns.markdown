@@ -1118,14 +1118,14 @@ describe('ProjectComponent Integration', () => {
 // ❌ DON'T: Expensive operations in template expressions
 @Component({
   template: `
-    <div>{{ calculateExpensiveValue(item) }}</div> <!-- Recalculated every change detection -->
+    <div>{% raw %}{{ calculateExpensiveValue(item) }}{% endraw %}</div> <!-- Recalculated every change detection -->
   `
 })
 
 // ✅ DO: Memoize expensive calculations
 @Component({
   template: `
-    <div>{{ getDisplayValue(item) }}</div>
+    <div>{% raw %}{{ getDisplayValue(item) }}{% endraw %}</div>
   `
 })
 export class OptimizedComponent {

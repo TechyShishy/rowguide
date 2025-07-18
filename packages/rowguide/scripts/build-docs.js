@@ -116,9 +116,6 @@ function generateApiDocumentation() {
 
   if (result.success) {
     console.log(`📖 API documentation generated in ${CONFIG.docsDir}`);
-
-    // Generate portal page AFTER TypeDoc has finished
-    generateDocumentationPortal();
   }
 
   return result;
@@ -340,7 +337,7 @@ function buildDocumentation() {
   const buildTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
   console.log(`\n✅ Documentation build completed in ${buildTime}s`);
-  console.log(`📖 View documentation at: ${CONFIG.docsDir}/portal.html`);
+  console.log(`📖 View documentation at: ${CONFIG.docsDir}/index.html`);
   console.log(`📊 View reports at: ${CONFIG.outputDir}/`);
 }
 

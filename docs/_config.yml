@@ -32,6 +32,19 @@ theme: minima
 plugins:
   - jekyll-feed
 
+# Minima theme settings
+minima:
+  skin: auto
+  social_links:
+    github: techyshishy
+
+# Header pages - only show these in navigation
+header_pages:
+  - index.markdown
+  - about.markdown
+  - import.markdown
+  - privacy.markdown
+
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to

@@ -54,7 +54,7 @@ enum ErrorCategory {
     <div *ngIf="hasError" class="error-boundary">
       <mat-card class="error-card" [ngClass]="'severity-' + errorSeverity">
         <mat-card-header>
-          <mat-card-title>{{ getErrorTitle() }}</mat-card-title>
+          <mat-card-title>{% raw %}{{ getErrorTitle() }}{% endraw %}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <p>{{ errorMessage }}</p>
