@@ -418,40 +418,56 @@ export interface Project {
   position?: Position;
 
   /**
-   * Mark Mode State
+   * Marked Steps State
    *
-   * Optional mark mode setting for the project, indicating the current
-   * marking state for pattern step interaction. Enables project-specific
-   * mark mode persistence and restoration across sessions.
+   * Optional mapping of marked steps for pattern progress tracking and bead marking.
+   * Stores which specific steps have been marked with which mark mode values,
+   * enabling persistent step marking across sessions and project navigation.
    *
    * @example
    * ```typescript
-   * // Mark mode management
-   * class MarkModeManager {
-   *   setProjectMarkMode(project: Project, mode: number): Project {
+   * // Marked steps management
+   * class MarkedStepsManager {
+   *   markStep(project: Project, rowIndex: number, stepIndex: number, markMode: number): Project {
+   *     const stepKey = `${rowIndex}-${stepIndex}`;
    *     return {
    *       ...project,
-   *       markMode: mode
+   *       markedSteps: {
+   *         ...project.markedSteps,
+   *         [stepKey]: markMode
+   *       }
    *     };
    *   }
    *
-   *   getProjectMarkMode(project: Project): number {
-   *     return project.markMode ?? 0; // Default to neutral mode
+   *   unmarkStep(project: Project, rowIndex: number, stepIndex: number): Project {
+   *     const stepKey = `${rowIndex}-${stepIndex}`;
+   *     const { [stepKey]: removed, ...remainingSteps } = project.markedSteps || {};
+   *     return {
+   *       ...project,
+   *       markedSteps: remainingSteps
+   *     };
+   *   }
+   *
+   *   getStepMark(project: Project, rowIndex: number, stepIndex: number): number {
+   *     const stepKey = `${rowIndex}-${stepIndex}`;
+   *     return project.markedSteps?.[stepKey] ?? 0; // Default to unmarked
    *   }
    * }
    * ```
    *
+   * **Key Format**: "rowIndex-stepIndex" (e.g., "0-3" for row 0, step 3)
    * **Mark Mode Values:**
-   * - **0**: Default/neutral mode (no special marking)
+   * - **0**: Unmarked (not stored in the map)
    * - **1**: First mark state (typically for starting beads)
    * - **2**: Second mark state (progress tracking)
    * - **3+**: Additional marking states as needed
    *
    * **Project-Specific Benefits:**
-   * - **Context Preservation**: Mark mode persists with project data
-   * - **Project Switching**: Each project maintains its own mark mode
-   * - **Cross-Session Continuity**: Mark mode restored when project loads
-   * - **Data Portability**: Mark mode travels with exported projects
+   * - **Step-Level Persistence**: Individual step markings persist with project data
+   * - **Progress Tracking**: Visual indication of completed or marked steps
+   * - **Cross-Session Continuity**: Marked steps restored when project loads
+   * - **Data Portability**: Marked steps travel with exported projects
+   * - **Pattern Analysis**: Enables analysis of marking patterns and completion
    */
-  markMode?: number;
+  markedSteps?: { [stepKey: string]: number };
 }

@@ -19,9 +19,9 @@ import { ErrorHandlerService } from './error-handler.service';
 import { ProjectDbService } from '../../data/services/project-db.service';
 
 /**
- * Service for managing mark mode state in the pattern tracking application.
+ * Service for managing mark mode state and marked steps in the pattern tracking application.
  * Handles mode switching, history tracking, undo functionality, and project-based
- * persistence for bead marking states.
+ * persistence for individual step markings.
  *
  * Mark modes represent different states for pattern step interaction:
  * - 0: Default/neutral mode (no special marking)
@@ -30,13 +30,13 @@ import { ProjectDbService } from '../../data/services/project-db.service';
  * - 3+: Additional marking states as needed
  *
  * Features:
- * - Reactive mark mode state management
+ * - Reactive mark mode state management for current active mode
  * - Mode history tracking with undo capability
- * - Project-based persistent storage
+ * - Project-based persistent storage for individual step markings
  * - Integration with global application state
  * - Real-time mode change notifications
  * - Default mode restoration functionality
- * - Automatic mark mode synchronization with project data
+ * - Individual step marking persistence across sessions
  *
  * @example
  * ```typescript
@@ -48,18 +48,20 @@ import { ProjectDbService } from '../../data/services/project-db.service';
  *   this.updateUIForMode(mode);
  * });
  *
- * // Set specific modes (automatically saved to project)
+ * // Set specific modes (for the current active marking mode)
  * this.markModeService.setMarkMode(1); // Set to first mark state
  * this.markModeService.updateMarkMode(2); // Update to second mark state
+ *
+ * // Mark/unmark individual steps
+ * this.markModeService.markStep(0, 3, 2); // Mark row 0, step 3 with mode 2
+ * this.markModeService.unmarkStep(0, 3); // Remove marking from row 0, step 3
+ *
+ * // Check step marking
+ * const stepMark = this.markModeService.getStepMark(0, 3); // Get mark for row 0, step 3
  *
  * // Mode management
  * this.markModeService.resetMarkMode(); // Return to default
  * this.markModeService.undoMarkMode(); // Revert to previous mode
- *
- * // Check mode state
- * this.markModeService.canUndo$.subscribe(canUndo => {
- *   this.undoButton.disabled = !canUndo;
- * });
  * ```
  */
 @Injectable({
@@ -122,14 +124,14 @@ export class MarkModeService {
     private errorHandler: ErrorHandlerService,
     private projectDbService: ProjectDbService
   ) {
-    this.initializeMarkModeSync();
+    this.logger.debug('MarkModeService initialized');
   }
 
   /**
-   * Updates the current mark mode with history tracking and project persistence.
-   * Records the previous mode in history for undo functionality and automatically
-   * saves the mark mode to the current project for cross-session continuity.
+   * Updates the current mark mode with history tracking.
+   * Records the previous mode in history for undo functionality.
    * Use this method when you want full history tracking of mode changes.
+   * Note: This only affects the current active marking mode, not individual step markings.
    *
    * @param mode - The new mark mode number (typically 0-3, but supports any positive integer)
    *
@@ -151,17 +153,13 @@ export class MarkModeService {
    */
   updateMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.updateMarkMode(mode));
-    // Fire and forget the async save operation
-    this.saveMarkModeToProject(mode).catch(error => {
-      this.logger.error('Failed to save mark mode to project:', error);
-    });
   }
 
   /**
-   * Sets the mark mode directly without history tracking but with project persistence.
+   * Sets the mark mode directly without history tracking.
    * Simpler alternative to updateMarkMode() when history management isn't needed.
    * Use for initialization or when you want to avoid creating history entries.
-   * Mark mode is automatically saved to the current project.
+   * Note: This only affects the current active marking mode, not individual step markings.
    *
    * @param mode - The mark mode number to set immediately
    *
@@ -180,17 +178,13 @@ export class MarkModeService {
    */
   setMarkMode(mode: number): void {
     this.store.dispatch(MarkModeActions.setMarkMode(mode));
-    // Fire and forget the async save operation
-    this.saveMarkModeToProject(mode).catch(error => {
-      this.logger.error('Failed to save mark mode to project:', error);
-    });
   }
 
   /**
-   * Resets the mark mode to the default state (mode 0) with project persistence.
+   * Resets the mark mode to the default state (mode 0).
    * Provides a quick way to return to the neutral marking state.
    * Commonly used for clearing all markings or starting fresh.
-   * Mark mode is automatically saved to the current project.
+   * Note: This only affects the current active marking mode, not individual step markings.
    *
    * @example
    * ```typescript
@@ -213,17 +207,13 @@ export class MarkModeService {
    */
   resetMarkMode(): void {
     this.store.dispatch(MarkModeActions.resetMarkMode());
-    // Fire and forget the async save operation
-    this.saveMarkModeToProject(0).catch(error => {
-      this.logger.error('Failed to save mark mode to project:', error);
-    });
   }
 
   /**
-   * Reverts to the previous mark mode if available in history with project persistence.
+   * Reverts to the previous mark mode if available in history.
    * Implements undo functionality for mark mode changes, providing user-friendly
    * correction of accidental mode switches. No-op if no previous mode exists.
-   * Mark mode is automatically saved to the current project after undo.
+   * Note: This only affects the current active marking mode, not individual step markings.
    *
    * @example
    * ```typescript
@@ -257,98 +247,39 @@ export class MarkModeService {
 
     if (previousMode !== undefined) {
       this.store.dispatch(MarkModeActions.setMarkMode(previousMode));
-      // Fire and forget the async save operation
-      this.saveMarkModeToProject(previousMode).catch(error => {
-        this.logger.error('Failed to save mark mode to project:', error);
-      });
     }
   }
 
   /**
-   * Initializes mark mode service with project-based state synchronization.
-   * Sets up automatic mark mode loading when projects change and handles
-   * initial state setup for the service.
+   * Marks a specific step with the given mark mode value and persists to project.
+   * Creates or updates the step marking and automatically saves to the database.
    *
-   * @private
-   */
-  private initializeMarkModeSync(): void {
-    try {
-      // Subscribe to project changes to load mark mode from each project
-      this.store.select(selectCurrentProject).pipe(
-        filter(project => hasValidId(project)),
-        map(project => project.markMode ?? 0),
-        distinctUntilChanged()
-      ).subscribe(markMode => {
-        this.loadMarkModeFromProject(markMode);
-      });
-
-      this.logger.debug('Mark mode service initialized with project-based synchronization');
-    } catch (error) {
-      this.logger.warn('Failed to initialize mark mode service with project sync');
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'initializeMarkModeSync',
-          details: 'Failed to initialize mark mode service with project synchronization',
-        },
-        'Mark mode settings may not work properly. Please refresh the page.',
-        'medium'
-      );
-    }
-  }
-
-  /**
-   * Loads mark mode from the current project and applies it to the store.
-   * Called when a project is loaded or when the project's mark mode changes.
+   * @param rowIndex - Zero-based index of the row containing the step
+   * @param stepIndex - Zero-based index of the step within the row
+   * @param markMode - The mark mode value to apply to the step (1-6, use 0 to unmark)
    *
-   * @param markMode - The mark mode value from the project
-   * @private
-   */
-  private loadMarkModeFromProject(markMode: number): void {
-    try {
-      // Validate mark mode value
-      if (typeof markMode !== 'number' || markMode < 0) {
-        this.logger.warn('Invalid mark mode value from project, using default:', markMode);
-        markMode = 0;
-      }
-
-      // Set the mark mode in the store without triggering a save back to project
-      this.store.dispatch(MarkModeActions.setMarkMode(markMode));
-      this.logger.debug('Mark mode loaded from project:', markMode);
-    } catch (error) {
-      this.logger.error('Error loading mark mode from project:', error);
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'loadMarkModeFromProject',
-          details: 'Failed to load mark mode from project',
-          markMode: markMode,
-        },
-        'Unable to load mark mode from project. Using default mode.',
-        'low'
-      );
-    }
-  }
-
-  /**
-   * Saves the current mark mode to the active project.
-   * Updates the project's markMode property and triggers a project update
-   * in both the store and the database.
+   * @example
+   * ```typescript
+   * // Mark step for progress tracking
+   * this.markModeService.markStep(0, 3, 2); // Mark row 0, step 3 with mode 2
    *
-   * @param markMode - The mark mode value to save to the project
-   * @private
+   * // Mark multiple steps
+   * for (let i = 0; i < 5; i++) {
+   *   this.markModeService.markStep(currentRow, i, 1);
+   * }
+   * ```
    */
-  private async saveMarkModeToProject(markMode: number): Promise<void> {
+  async markStep(rowIndex: number, stepIndex: number, markMode: number): Promise<void> {
     try {
+      const stepKey = `${rowIndex}-${stepIndex}`;
       const currentState = this.store.getState();
       const currentProjectId = currentState.projects.currentProjectId;
 
       if (!currentProjectId) {
-        this.logger.debug('No active project to save mark mode to');
+        this.logger.debug('No active project to save step marking to');
         return;
       }
 
-      // Get the current project from entities
       const currentProject = currentState.projects.entities[currentProjectId];
       
       if (!currentProject) {
@@ -356,10 +287,20 @@ export class MarkModeService {
         return;
       }
 
-      // Update the project with the new mark mode
+      // Update the project with the new step marking
+      const updatedMarkedSteps = { ...currentProject.markedSteps };
+      
+      if (markMode === 0) {
+        // Remove the marking if mode is 0
+        delete updatedMarkedSteps[stepKey];
+      } else {
+        // Add or update the marking
+        updatedMarkedSteps[stepKey] = markMode;
+      }
+
       const updatedProject: Project = {
         ...currentProject,
-        markMode: markMode
+        markedSteps: updatedMarkedSteps
       };
 
       // Dispatch the project update to the store
@@ -368,17 +309,162 @@ export class MarkModeService {
       // Save to database
       await this.projectDbService.updateProject(updatedProject);
       
-      this.logger.debug('Mark mode saved to project and database:', markMode);
+      this.logger.debug(`Step marking saved: ${stepKey} = ${markMode}`);
     } catch (error) {
-      this.logger.error('Error saving mark mode to project:', error);
+      this.logger.error('Error marking step:', error);
       this.errorHandler.handleError(
         error,
         {
-          operation: 'saveMarkModeToProject',
-          details: 'Failed to save mark mode to project',
-          markMode: markMode,
+          operation: 'markStep',
+          details: 'Failed to mark step',
+          rowIndex,
+          stepIndex,
+          markMode,
         },
-        'Unable to save mark mode to project. Mark mode may not persist.',
+        'Unable to save step marking. Marking may not persist.',
+        'medium'
+      );
+    }
+  }
+
+  /**
+   * Removes marking from a specific step and persists to project.
+   * Convenience method equivalent to markStep(rowIndex, stepIndex, 0).
+   *
+   * @param rowIndex - Zero-based index of the row containing the step
+   * @param stepIndex - Zero-based index of the step within the row
+   *
+   * @example
+   * ```typescript
+   * // Remove marking from step
+   * this.markModeService.unmarkStep(0, 3); // Remove marking from row 0, step 3
+   * ```
+   */
+  async unmarkStep(rowIndex: number, stepIndex: number): Promise<void> {
+    await this.markStep(rowIndex, stepIndex, 0);
+  }
+
+  /**
+   * Gets the current mark mode value for a specific step.
+   * Returns 0 if the step is not marked.
+   *
+   * @param rowIndex - Zero-based index of the row containing the step
+   * @param stepIndex - Zero-based index of the step within the row
+   * @returns The mark mode value for the step (0 if unmarked)
+   *
+   * @example
+   * ```typescript
+   * // Check step marking
+   * const stepMark = this.markModeService.getStepMark(0, 3);
+   * if (stepMark > 0) {
+   *   console.log(`Step is marked with mode ${stepMark}`);
+   * }
+   * ```
+   */
+  getStepMark(rowIndex: number, stepIndex: number): number {
+    try {
+      const stepKey = `${rowIndex}-${stepIndex}`;
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        return 0;
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject?.markedSteps) {
+        return 0;
+      }
+
+      return currentProject.markedSteps[stepKey] ?? 0;
+    } catch (error) {
+      this.logger.error('Error getting step mark:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets all marked steps for the current project.
+   * Returns a copy of the marked steps object to prevent direct mutation.
+   *
+   * @returns Object mapping step keys to mark mode values
+   *
+   * @example
+   * ```typescript
+   * // Get all marked steps
+   * const markedSteps = this.markModeService.getAllMarkedSteps();
+   * Object.entries(markedSteps).forEach(([stepKey, markMode]) => {
+   *   const [rowIndex, stepIndex] = stepKey.split('-').map(Number);
+   *   console.log(`Row ${rowIndex}, Step ${stepIndex}: Mark Mode ${markMode}`);
+   * });
+   * ```
+   */
+  getAllMarkedSteps(): { [stepKey: string]: number } {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        return {};
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      return { ...(currentProject?.markedSteps || {}) };
+    } catch (error) {
+      this.logger.error('Error getting all marked steps:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Clears all marked steps from the current project.
+   *
+   * @example
+   * ```typescript
+   * // Clear all markings
+   * this.markModeService.clearAllMarkedSteps();
+   * ```
+   */
+  async clearAllMarkedSteps(): Promise<void> {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        this.logger.debug('No active project to clear marked steps from');
+        return;
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        this.logger.debug('Current project not found in entities');
+        return;
+      }
+
+      const updatedProject: Project = {
+        ...currentProject,
+        markedSteps: {}
+      };
+
+      // Dispatch the project update to the store
+      this.store.dispatch(ProjectActions.updateProjectSuccess(updatedProject));
+      
+      // Save to database
+      await this.projectDbService.updateProject(updatedProject);
+      
+      this.logger.debug('All marked steps cleared');
+    } catch (error) {
+      this.logger.error('Error clearing marked steps:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'clearAllMarkedSteps',
+          details: 'Failed to clear all marked steps',
+        },
+        'Unable to clear step markings. Some markings may persist.',
         'medium'
       );
     }
