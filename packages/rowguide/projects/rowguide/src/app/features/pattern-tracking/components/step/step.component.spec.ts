@@ -73,10 +73,25 @@ describe('StepComponent', () => {
       }
     );
     mockZipperService = jasmine.createSpyObj('ZipperService', ['expandSteps']);
+    
+    // Create a more realistic mock that tracks marked steps
+    const markedStepsStorage: { [key: string]: number } = {};
     mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark'], {
       markModeChanged$: markModeChanged$,
     });
-    mockMarkModeService.getStepMark.and.returnValue(0); // Default to unmarked
+    mockMarkModeService.getStepMark.and.callFake((rowIndex: number, stepIndex: number) => {
+      const key = `${rowIndex}-${stepIndex}`;
+      return markedStepsStorage[key] || 0;
+    });
+    mockMarkModeService.markStep.and.callFake((rowIndex: number, stepIndex: number, markMode: number) => {
+      const key = `${rowIndex}-${stepIndex}`;
+      if (markMode === 0) {
+        delete markedStepsStorage[key];
+      } else {
+        markedStepsStorage[key] = markMode;
+      }
+      return Promise.resolve();
+    });
 
     // Mock RowComponent
     mockRowComponent = jasmine.createSpyObj('RowComponent', [], {
@@ -316,12 +331,14 @@ describe('StepComponent', () => {
       expect(fixture.nativeElement.classList.contains('zoom')).toBe(false);
     }));
 
-    it('should bind marked values to marked-X classes', () => {
+    it('should bind marked values to marked-X classes', async () => {
       component.ngOnInit(); // Ensure component is initialized
       
-      // marked property is only set via onClick mark mode, test direct manipulation
+      // marked property is only set via onClick mark mode, test the real workflow
       for (let i = 1; i <= 6; i++) {
-        component.marked = i;
+        // Use the service to mark the step, which is how it works in the real component
+        await mockMarkModeService.markStep(component.row.index, component.index, i);
+        component.marked = i; // Also set the property directly for immediate feedback
         fixture.detectChanges();
 
         expect(fixture.nativeElement.classList.contains(`marked-${i}`)).toBe(
@@ -329,6 +346,7 @@ describe('StepComponent', () => {
         );
 
         // Reset for next iteration
+        await mockMarkModeService.markStep(component.row.index, component.index, 0);
         component.marked = 0;
         fixture.detectChanges();
         expect(fixture.nativeElement.classList.contains(`marked-${i}`)).toBe(
