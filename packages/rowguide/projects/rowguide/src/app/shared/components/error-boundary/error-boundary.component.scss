@@ -1,3 +1,9 @@
+// When content is displayed (no error), inherit the parent layout
+:host {
+  display: contents;
+}
+
+// When error is displayed, use flex layout
 .error-boundary {
   display: flex;
   justify-content: center;

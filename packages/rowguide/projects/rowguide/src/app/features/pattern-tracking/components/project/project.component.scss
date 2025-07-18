@@ -1,7 +1,6 @@
 @use '../../../../../styles/colors' as colors;
 
 mat-accordion {
-  height: calc(100vh - 8rem);
   overflow-y: scroll;
   margin-top:0;
   margin-bottom:0;
@@ -11,6 +10,7 @@ mat-accordion {
  {
   display: grid;
   align-items: stretch;
+  height: calc(100vh - 4rem);
  }
 
 
