@@ -569,6 +569,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * **Mark Mode Behavior**: When the project is in mark mode, toggles the
    * marking state between unmarked (0) and the current mark mode value.
    * Uses MarkModeService for persistent step marking that survives sessions.
+   * All toggle logic and validation is handled by the service layer.
    *
    * **Selection Mode Behavior**: When not in mark mode, performs current
    * step selection with coordinated state management:
@@ -577,21 +578,20 @@ export class StepComponent implements HierarchicalList, OnInit {
    * 3. Persists the position to project storage
    * 4. Updates the project's current step observable
    *
-   * The method uses async/await pattern for safe observable value access
-   * and ensures proper state transitions between different steps.
+   * The method delegates all business logic to appropriate services,
+   * maintaining clean separation of concerns between UI and business logic.
+   * Component state updates automatically via reactive subscriptions.
    *
    * @example
    * ```typescript
-   * // Automatic click handling via @HostListener
-   * // User clicks step in mark mode
+   * // User clicks step - behavior determined by service state
    * async onClick(event): Promise<void> {
-   *   if (this.row.project.markMode) {
-   *     // Toggle marking with persistent storage: 0 ↔ current mark mode
-   *     const newMarkMode = this.marked === markMode ? 0 : markMode;
-   *     await this.markModeService.markStep(this.row.index, this.index, newMarkMode);
-   *     this.marked = newMarkMode;
+   *   if (this.markModeService.canMarkSteps()) {
+   *     // Service handles all toggle logic and persistence
+   *     await this.markModeService.toggleStepMark(this.row.index, this.index);
+   *     // Component state updates automatically via reactive subscription
    *   } else {
-   *     // Set as current step with state coordination
+   *     // Handle navigation mode
    *     await this.selectAsCurrentStep();
    *   }
    * }
@@ -599,33 +599,31 @@ export class StepComponent implements HierarchicalList, OnInit {
    *
    * @example
    * ```typescript
-   * // Mark mode interaction flow with persistence
-   * // If step is unmarked (marked = 0) and mark mode = 3:
-   * onClick() // → marked becomes 3, saved to project
-   * onClick() // → marked becomes 0, removed from project
-   * onClick() // → marked becomes 3, saved to project again
+   * // Mark mode interaction flow with service delegation
+   * // Component just calls service - all logic centralized
+   * onClick() // → Service toggles step, component reacts to state change
+   * onClick() // → Service toggles step, component reacts to state change
    * ```
    *
    * @see {@link ProjectService.saveCurrentPosition} For position persistence
-   * @see {@link MarkModeService.markStep} For step marking persistence
+   * @see {@link MarkModeService.toggleStepMark} For step marking toggle logic
+   * @see {@link MarkModeService.canMarkSteps} For marking mode validation
    * @since 1.0.0
    */
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
-    // Get the current mark mode from the service
-    const currentMarkMode = await firstValueFrom(this.markModeService.markModeChanged$);
-    
-    if (currentMarkMode > 0) {
-      const newMarkMode = this.marked === currentMarkMode ? 0 : currentMarkMode;
+    // Use service method to check if marking is enabled
+    if (this.markModeService.canMarkSteps()) {
+      // Delegate toggle logic to service - no business logic in component
+      await this.markModeService.toggleStepMark(this.row.index, this.index);
       
-      // Update the persistent step marking
-      await this.markModeService.markStep(this.row.index, this.index, newMarkMode);
-      
-      // Update local state for immediate visual feedback
-      this.marked = newMarkMode;
+      // Note: Component state (this.marked) automatically updates via reactive subscription
+      // No manual state synchronization needed
       
       return;
     }
+    
+    // Handle navigation mode (when not in mark mode)
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
     if (currentStep) {
       currentStep.isCurrentStep = false;

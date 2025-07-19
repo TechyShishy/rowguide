@@ -78,8 +78,9 @@ describe('StepComponent', () => {
     const markedStepsStorage: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
     const stepMarkSubjects: { [key: string]: BehaviorSubject<number> } = {};
     
-    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$'], {
+    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$', 'toggleStepMark', 'canMarkSteps', 'markMultipleSteps'], {
       markModeChanged$: markModeChanged$,
+      canMarkSteps$: new BehaviorSubject<boolean>(true),
     });
     
     mockMarkModeService.getStepMark.and.callFake((rowIndex: number, stepIndex: number) => {
@@ -115,6 +116,29 @@ describe('StepComponent', () => {
       }
       
       return Promise.resolve();
+    });
+
+    // Mock the new enterprise service methods
+    mockMarkModeService.toggleStepMark.and.callFake(async (rowIndex: number, stepIndex: number) => {
+      const currentMark = mockMarkModeService.getStepMark(rowIndex, stepIndex);
+      const currentMarkMode = markModeChanged$.value;
+      const newMarkMode = currentMark === currentMarkMode ? 0 : currentMarkMode;
+      await mockMarkModeService.markStep(rowIndex, stepIndex, newMarkMode);
+      return newMarkMode;
+    });
+
+    mockMarkModeService.canMarkSteps.and.callFake(() => {
+      return markModeChanged$.value > 0;
+    });
+
+    mockMarkModeService.markMultipleSteps.and.callFake(async (steps: Array<{ rowIndex: number, stepIndex: number }>) => {
+      const currentMarkMode = markModeChanged$.value;
+      let markedCount = 0;
+      for (const step of steps) {
+        await mockMarkModeService.markStep(step.rowIndex, step.stepIndex, currentMarkMode);
+        markedCount++;
+      }
+      return markedCount;
     });
 
     // Mock RowComponent
@@ -217,6 +241,8 @@ describe('StepComponent', () => {
       }));
 
       it('should reset marked to 0 when marked equals markMode', fakeAsync(() => {
+        // Set up the initial mark in the mock service storage
+        mockMarkModeService.markStep(0, 1, 3);
         component.marked = 3;
 
         component.onClick({});

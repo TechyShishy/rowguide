@@ -111,6 +111,24 @@ export class MarkModeService {
   isDefault$: Observable<boolean> = this.store.select(selectIsDefaultMarkMode);
 
   /**
+   * Observable boolean indicating whether step marking is currently enabled.
+   * Returns true when in an active mark mode (> 0), false when in default mode (0).
+   * Enables components to reactively respond to marking availability.
+   *
+   * @example
+   * ```typescript
+   * this.markModeService.canMarkSteps$.subscribe(canMark => {
+   *   this.stepClickBehavior = canMark ? 'mark' : 'navigate';
+   *   this.updateCursorStyle();
+   * });
+   * ```
+   */
+  canMarkSteps$: Observable<boolean> = this.store.select(selectCurrentMarkMode).pipe(
+    map(mode => mode > 0),
+    distinctUntilChanged()
+  );
+
+  /**
    * Creates an instance of MarkModeService.
    *
    * @param store - The reactive state store for mark mode state management
@@ -251,6 +269,27 @@ export class MarkModeService {
   }
 
   /**
+   * Checks if step marking is currently enabled (active mark mode > 0).
+   * Returns true when in an active mark mode, false when in default mode (0).
+   *
+   * @returns Boolean indicating whether step marking is currently allowed
+   *
+   * @example
+   * ```typescript
+   * // Check before performing marking operation
+   * if (this.markModeService.canMarkSteps()) {
+   *   await this.markModeService.toggleStepMark(0, 3);
+   * } else {
+   *   this.handleNavigationClick();
+   * }
+   * ```
+   */
+  canMarkSteps(): boolean {
+    const currentState = this.store.getState();
+    return currentState.markMode.currentMode > 0;
+  }
+
+  /**
    * Marks a specific step with the given mark mode value and persists to project.
    * Creates or updates the step marking using structured data format and automatically saves to the database.
    *
@@ -351,6 +390,63 @@ export class MarkModeService {
    */
   async unmarkStep(rowIndex: number, stepIndex: number): Promise<void> {
     await this.markStep(rowIndex, stepIndex, 0);
+  }
+
+  /**
+   * Toggles a step's marking state between unmarked (0) and the current active mark mode.
+   * Implements the core toggle logic for step interactions in mark mode.
+   * 
+   * If the step is currently marked with the active mode, it becomes unmarked (0).
+   * If the step is unmarked or marked with a different mode, it gets marked with the current active mode.
+   *
+   * @param rowIndex - Zero-based index of the row containing the step
+   * @param stepIndex - Zero-based index of the step within the row
+   * @returns Promise resolving to the new mark mode value that was applied
+   *
+   * @example
+   * ```typescript
+   * // User clicks step in mark mode
+   * const newMarkMode = await this.markModeService.toggleStepMark(0, 3);
+   * console.log(`Step is now marked with mode: ${newMarkMode}`);
+   * 
+   * // Toggle sequence with current mark mode = 2:
+   * await this.toggleStepMark(0, 3); // Step unmarked → marked with 2, returns 2
+   * await this.toggleStepMark(0, 3); // Step marked with 2 → unmarked, returns 0
+   * await this.toggleStepMark(0, 3); // Step unmarked → marked with 2, returns 2
+   * ```
+   */
+  async toggleStepMark(rowIndex: number, stepIndex: number): Promise<number> {
+    try {
+      const currentState = this.store.getState();
+      const currentMarkMode = currentState.markMode.currentMode;
+      
+      // Don't toggle if not in an active mark mode
+      if (currentMarkMode === 0) {
+        return 0;
+      }
+      
+      const currentStepMark = this.getStepMark(rowIndex, stepIndex);
+      const newMarkMode = currentStepMark === currentMarkMode ? 0 : currentMarkMode;
+      
+      await this.markStep(rowIndex, stepIndex, newMarkMode);
+      
+      this.logger.debug(`Step toggle completed: row ${rowIndex}, step ${stepIndex}, ${currentStepMark} → ${newMarkMode}`);
+      return newMarkMode;
+    } catch (error) {
+      this.logger.error('Error toggling step mark:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'toggleStepMark',
+          details: 'Failed to toggle step marking',
+          rowIndex,
+          stepIndex,
+        },
+        'Unable to toggle step marking. Changes may not persist.',
+        'medium'
+      );
+      return this.getStepMark(rowIndex, stepIndex); // Return current state on error
+    }
   }
 
   /**
@@ -484,6 +580,63 @@ export class MarkModeService {
         'Unable to clear step markings. Some markings may persist.',
         'medium'
       );
+    }
+  }
+
+  /**
+   * Marks multiple steps with the current active mark mode in a single operation.
+   * Efficient for batch marking operations like marking an entire row or range.
+   *
+   * @param steps - Array of step coordinates to mark
+   * @returns Promise resolving to the number of successfully marked steps
+   *
+   * @example
+   * ```typescript
+   * // Mark multiple steps at once
+   * const stepsToMark = [
+   *   { rowIndex: 0, stepIndex: 1 },
+   *   { rowIndex: 0, stepIndex: 2 },
+   *   { rowIndex: 1, stepIndex: 0 }
+   * ];
+   * const markedCount = await this.markModeService.markMultipleSteps(stepsToMark);
+   * console.log(`Successfully marked ${markedCount} steps`);
+   * ```
+   */
+  async markMultipleSteps(steps: Array<{ rowIndex: number; stepIndex: number }>): Promise<number> {
+    try {
+      const currentState = this.store.getState();
+      const currentMarkMode = currentState.markMode.currentMode;
+      
+      if (currentMarkMode === 0) {
+        this.logger.debug('Cannot batch mark steps: not in active mark mode');
+        return 0;
+      }
+
+      let successCount = 0;
+      for (const { rowIndex, stepIndex } of steps) {
+        try {
+          await this.markStep(rowIndex, stepIndex, currentMarkMode);
+          successCount++;
+        } catch (error) {
+          this.logger.warn(`Failed to mark step ${rowIndex}-${stepIndex}:`, error);
+        }
+      }
+
+      this.logger.debug(`Batch marking completed: ${successCount}/${steps.length} steps marked`);
+      return successCount;
+    } catch (error) {
+      this.logger.error('Error in batch marking operation:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'markMultipleSteps',
+          details: 'Failed to mark multiple steps',
+          stepCount: steps.length,
+        },
+        'Unable to complete batch marking. Some steps may not be marked.',
+        'medium'
+      );
+      return 0;
     }
   }
 
