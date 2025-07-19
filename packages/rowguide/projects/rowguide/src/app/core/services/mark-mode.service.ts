@@ -416,37 +416,21 @@ export class MarkModeService {
    * ```
    */
   async toggleStepMark(rowIndex: number, stepIndex: number): Promise<number> {
-    try {
-      const currentState = this.store.getState();
-      const currentMarkMode = currentState.markMode.currentMode;
-      
-      // Don't toggle if not in an active mark mode
-      if (currentMarkMode === 0) {
-        return 0;
-      }
-      
-      const currentStepMark = this.getStepMark(rowIndex, stepIndex);
-      const newMarkMode = currentStepMark === currentMarkMode ? 0 : currentMarkMode;
-      
-      await this.markStep(rowIndex, stepIndex, newMarkMode);
-      
-      this.logger.debug(`Step toggle completed: row ${rowIndex}, step ${stepIndex}, ${currentStepMark} → ${newMarkMode}`);
-      return newMarkMode;
-    } catch (error) {
-      this.logger.error('Error toggling step mark:', error);
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'toggleStepMark',
-          details: 'Failed to toggle step marking',
-          rowIndex,
-          stepIndex,
-        },
-        'Unable to toggle step marking. Changes may not persist.',
-        'medium'
-      );
-      return this.getStepMark(rowIndex, stepIndex); // Return current state on error
+    const currentState = this.store.getState();
+    const currentMarkMode = currentState.markMode.currentMode;
+    
+    // Don't toggle if not in an active mark mode
+    if (currentMarkMode === 0) {
+      return 0;
     }
+    
+    const currentStepMark = this.getStepMark(rowIndex, stepIndex);
+    const newMarkMode = currentStepMark === currentMarkMode ? 0 : currentMarkMode;
+    
+    await this.markStep(rowIndex, stepIndex, newMarkMode);
+    
+    this.logger.debug(`Step toggle completed: row ${rowIndex}, step ${stepIndex}, ${currentStepMark} → ${newMarkMode}`);
+    return newMarkMode;
   }
 
   /**
@@ -603,41 +587,22 @@ export class MarkModeService {
    * ```
    */
   async markMultipleSteps(steps: Array<{ rowIndex: number; stepIndex: number }>): Promise<number> {
-    try {
-      const currentState = this.store.getState();
-      const currentMarkMode = currentState.markMode.currentMode;
-      
-      if (currentMarkMode === 0) {
-        this.logger.debug('Cannot batch mark steps: not in active mark mode');
-        return 0;
-      }
-
-      let successCount = 0;
-      for (const { rowIndex, stepIndex } of steps) {
-        try {
-          await this.markStep(rowIndex, stepIndex, currentMarkMode);
-          successCount++;
-        } catch (error) {
-          this.logger.warn(`Failed to mark step ${rowIndex}-${stepIndex}:`, error);
-        }
-      }
-
-      this.logger.debug(`Batch marking completed: ${successCount}/${steps.length} steps marked`);
-      return successCount;
-    } catch (error) {
-      this.logger.error('Error in batch marking operation:', error);
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'markMultipleSteps',
-          details: 'Failed to mark multiple steps',
-          stepCount: steps.length,
-        },
-        'Unable to complete batch marking. Some steps may not be marked.',
-        'medium'
-      );
+    const currentState = this.store.getState();
+    const currentMarkMode = currentState.markMode.currentMode;
+    
+    if (currentMarkMode === 0) {
+      this.logger.debug('Cannot batch mark steps: not in active mark mode');
       return 0;
     }
+
+    let successCount = 0;
+    for (const { rowIndex, stepIndex } of steps) {
+      await this.markStep(rowIndex, stepIndex, currentMarkMode);
+      successCount++;
+    }
+
+    this.logger.debug(`Batch marking completed: ${successCount}/${steps.length} steps marked`);
+    return successCount;
   }
 
   /**

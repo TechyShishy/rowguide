@@ -375,7 +375,7 @@ export class UpgradeService {
    * To add a new migration:
    * 1. Increment highestMigration property
    * 2. Add new case to the switch statement
-   * 3. Implement migration method (e.g., migration3())
+   * 3. Implement migration method (e.g., migration2())
    * 4. Test migration thoroughly with real data
    *
    * @see {@link migration1} For example migration implementation
@@ -692,5 +692,4 @@ export class UpgradeService {
       throw error; // Re-throw to prevent migration from being marked as complete
     }
   }
-
 }
