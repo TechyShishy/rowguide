@@ -215,8 +215,8 @@ describe('UpgradeService', () => {
       expect(loggerSpy).toBeTruthy();
     });
 
-    it('should have highestMigration set to 2', () => {
-      expect(service.highestMigration).toBe(2);
+    it('should have highestMigration set to 1', () => {
+      expect(service.highestMigration).toBe(1);
     });
 
     it('should initialize with proper service configuration', () => {
@@ -290,7 +290,7 @@ describe('UpgradeService', () => {
       spyOn(service, 'migration1');
 
       await expectAsync(service.applyMigration(999)).toBeRejectedWithError(
-        'Migration ID 999 exceeds highest available migration 2'
+        'Migration ID 999 exceeds highest available migration 1'
       );
 
       expect(loggerSpy.info).not.toHaveBeenCalled();

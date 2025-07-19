@@ -91,7 +91,7 @@ export class UpgradeService {
    *
    * @since 1.0.0
    */
-  highestMigration: number = 2;
+  highestMigration: number = 1;
 
   /**
    * Constructs UpgradeService with comprehensive migration execution capabilities.
@@ -375,7 +375,7 @@ export class UpgradeService {
    * To add a new migration:
    * 1. Increment highestMigration property
    * 2. Add new case to the switch statement
-   * 3. Implement migration method (e.g., migration2())
+   * 3. Implement migration method (e.g., migration3())
    * 4. Test migration thoroughly with real data
    *
    * @see {@link migration1} For example migration implementation
@@ -435,9 +435,6 @@ export class UpgradeService {
       switch (id) {
         case 1:
           await this.migration1();
-          break;
-        case 2:
-          await this.migration2();
           break;
         default:
           throw new Error(`Unknown migration ID: ${id}`);
@@ -696,176 +693,4 @@ export class UpgradeService {
     }
   }
 
-  /**
-   * Migration 2: Marked Steps Data Structure Transformation
-   *
-   * This migration transforms marked steps data from string-key format to structured
-   * object format for improved performance and type safety. It processes projects
-   * with existing marked steps and converts them to the new hierarchical structure.
-   *
-   * @returns Promise that resolves when migration is complete
-   * @throws Error for data validation failures or transformation errors
-   *
-   * @example
-   * ```typescript
-   * // Migration 2 transforms marked steps like this:
-   * // Before: { "0-3": 2, "1-5": 1, "2-7": 3 }
-   * // After:  { 0: { 3: 2 }, 1: { 5: 1 }, 2: { 7: 3 } }
-   * ```
-   *
-   * **Migration Logic:**
-   * 1. **Project Loading**: Retrieve all projects from IndexedDB
-   * 2. **Data Validation**: Verify project structure and marked steps format
-   * 3. **Format Detection**: Check if project uses old string-key format
-   * 4. **Data Transformation**: Convert string keys to structured object format
-   * 5. **Data Persistence**: Save transformed projects back to database
-   *
-   * **Transformation Process:**
-   * ```
-   * Original markedSteps: { "0-3": 2, "1-5": 1, "2-7": 3 }
-   * 
-   * Parsed keys:
-   * "0-3" → rowIndex: 0, stepIndex: 3, markMode: 2
-   * "1-5" → rowIndex: 1, stepIndex: 5, markMode: 1
-   * "2-7" → rowIndex: 2, stepIndex: 7, markMode: 3
-   * 
-   * New structure: {
-   *   0: { 3: 2 },
-   *   1: { 5: 1 },
-   *   2: { 7: 3 }
-   * }
-   * ```
-   *
-   * **Migration Safety:**
-   * - Only processes projects with old string-key format
-   * - Validates all string keys can be parsed as "rowIndex-stepIndex"
-   * - Ensures row and step indices are valid positive integers
-   * - Preserves mark mode values exactly as they were
-   * - Skips projects that already use new format
-   *
-   * @see {@link Project.markedSteps} For new structured format documentation
-   * @since 1.1.0
-   */
-  async migration2() {
-    let projectCount = 0;
-    try {
-      const projects = await this.indexedDBService.loadProjects();
-      projectCount = projects.length;
-
-      // Validate projects data integrity
-      if (!Array.isArray(projects)) {
-        const error = new Error('Projects data is not a valid array');
-        this.errorHandler.handleError(
-          error,
-          {
-            operation: 'migration2',
-            details: 'Invalid projects data structure detected',
-            actualType: typeof projects,
-            expectedType: 'array',
-          },
-          'Project data is corrupted. Migration cannot proceed safely.',
-          'critical'
-        );
-        throw error;
-      }
-
-      for (const project of projects) {
-        // Validate each project structure before migration
-        if (!project || typeof project !== 'object') {
-          this.errorHandler.handleError(
-            new Error('Invalid project structure in migration'),
-            {
-              operation: 'migration2',
-              details: 'Corrupted project data encountered during migration',
-              projectData: project,
-              expectedStructure: 'object with markedSteps property',
-            },
-            'Some project data is corrupted and will be skipped.',
-            'high'
-          );
-          continue; // Skip corrupted project rather than failing entire migration
-        }
-
-        // Check if project has marked steps in old format
-        if (project.markedSteps && typeof project.markedSteps === 'object') {
-          // Check if this is the old string-key format by examining keys
-          const keys = Object.keys(project.markedSteps);
-          const hasStringKeys = keys.some(key => typeof key === 'string' && key.includes('-'));
-          
-          if (hasStringKeys) {
-            // Convert old format to new format
-            const newMarkedSteps: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
-            
-            for (const [stepKey, markMode] of Object.entries(project.markedSteps)) {
-              // Parse the old string format "rowIndex-stepIndex"
-              if (typeof stepKey === 'string' && stepKey.includes('-')) {
-                const parts = stepKey.split('-');
-                if (parts.length === 2) {
-                  const rowIndex = parseInt(parts[0], 10);
-                  const stepIndex = parseInt(parts[1], 10);
-                  
-                  // Validate parsed indices
-                  if (!isNaN(rowIndex) && !isNaN(stepIndex) && rowIndex >= 0 && stepIndex >= 0 && typeof markMode === 'number') {
-                    if (!newMarkedSteps[rowIndex]) {
-                      newMarkedSteps[rowIndex] = {};
-                    }
-                    newMarkedSteps[rowIndex][stepIndex] = markMode;
-                  } else {
-                    this.errorHandler.handleError(
-                      new Error(`Invalid step key format: ${stepKey}`),
-                      {
-                        operation: 'migration2',
-                        details: 'Failed to parse step key indices',
-                        projectId: project.id,
-                        stepKey: stepKey,
-                        parsedRowIndex: rowIndex,
-                        parsedStepIndex: stepIndex,
-                      },
-                      'Some step markings have invalid format and will be skipped.',
-                      'medium'
-                    );
-                  }
-                } else {
-                  this.errorHandler.handleError(
-                    new Error(`Malformed step key: ${stepKey}`),
-                    {
-                      operation: 'migration2',
-                      details: 'Step key does not match expected format',
-                      projectId: project.id,
-                      stepKey: stepKey,
-                      expectedFormat: 'rowIndex-stepIndex',
-                      actualParts: parts.length,
-                    },
-                    'Some step markings have invalid format and will be skipped.',
-                    'medium'
-                  );
-                }
-              }
-            }
-            
-            // Update project with new format
-            project.markedSteps = newMarkedSteps;
-            await this.indexedDBService.updateProject(project);
-            
-            this.logger.debug(`Migrated marked steps for project ${project.id}: ${keys.length} markings converted`);
-          }
-          // If no string keys found, project already uses new format, no action needed
-        }
-        // If no markedSteps property, no action needed
-      }
-    } catch (error) {
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'migration2',
-          details: 'Failed to execute marked steps data structure migration',
-          projectCount: projectCount,
-          migrationScope: 'Convert marked steps from string keys to structured format',
-        },
-        'Marked steps migration failed. Step markings may not display correctly.',
-        'critical'
-      );
-      throw error; // Re-throw to prevent migration from being marked as complete
-    }
-  }
 }
