@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { NGXLogger } from 'ngx-logger';
 
 import { MarkModeService } from './mark-mode.service';
 import { ReactiveStateStore } from '../store/reactive-state-store';
 import { MarkModeActions } from '../store/actions/mark-mode-actions';
+import { ProjectActions } from '../store/actions/project-actions';
 import {
   selectCurrentMarkMode,
   selectPreviousMarkMode,
@@ -12,32 +14,46 @@ import {
   selectCanUndoMarkMode,
   selectIsDefaultMarkMode
 } from '../store/selectors/mark-mode-selectors';
+import { selectCurrentProject } from '../store/selectors/project-selectors';
+import { ErrorHandlerService } from './error-handler.service';
+import { ProjectDbService } from '../../data/services/project-db.service';
+import { Project } from '../models';
 
 /**
  * Comprehensive Test Suite for MarkModeService
  *
  * This test suite validates all aspects of the MarkModeService functionality
  * with ReactiveStateStore integration, including mark mode state management,
- * history tracking, undo functionality, and store action dispatching.
+ * history tracking, undo functionality, store action dispatching, and
+ * individual step marking persistence capabilities.
  *
  * Test Categories:
  * - Service Initialization: Basic service creation and store integration
  * - Mark Mode Management: Setting, updating, and resetting mark modes
  * - History Tracking: Mark mode change history and undo functionality
  * - Store Integration: Action dispatching and selector behavior
+ * - Step Marking: Individual step marking persistence and retrieval
  * - Edge Cases: Boundary values, invalid inputs, state consistency
  */
 
 describe('MarkModeService', () => {
   let service: MarkModeService;
   let storeSpy: jasmine.SpyObj<ReactiveStateStore>;
+  let loggerSpy: jasmine.SpyObj<NGXLogger>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let projectDbSpy: jasmine.SpyObj<ProjectDbService>;
 
   beforeEach(() => {
     // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
     const storeSpyObj = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch', 'getState']);
+    
+    // Create spies for logger, error handler, and project database
+    const loggerSpyObj = jasmine.createSpyObj('NGXLogger', ['debug', 'warn', 'error']);
+    const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
+    const projectDbSpyObj = jasmine.createSpyObj('ProjectDbService', ['updateProject']);
 
-    // Create a BehaviorSubject to hold the mock state
-    const mockStateSubject = new BehaviorSubject({
+    // Create a BehaviorSubject to hold the mock mark mode state
+    const mockMarkModeState = new BehaviorSubject({
       currentMode: 0,
       previousMode: undefined as number | undefined,
       history: [] as number[],
@@ -45,9 +61,18 @@ describe('MarkModeService', () => {
       changeCount: 0,
     });
 
+    // Create a BehaviorSubject to hold the mock project state
+    const mockProject: Project = {
+      id: 1,
+      name: 'Test Project',
+      rows: [],
+      markedSteps: {}
+    };
+    const mockProjectState = new BehaviorSubject(mockProject);
+
     // Mock store dispatch to update BehaviorSubject state
     storeSpyObj.dispatch.and.callFake((action: any) => {
-      const currentState = mockStateSubject.value;
+      const currentState = mockMarkModeState.value;
 
       if (action.type === '[MarkMode] Set Mark Mode') {
         const newState = {
@@ -57,7 +82,7 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       } else if (action.type === '[MarkMode] Update Mark Mode') {
         const newState = {
           currentMode: action.payload.mode,
@@ -66,7 +91,7 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       } else if (action.type === '[MarkMode] Reset Mark Mode') {
         const newState = {
           currentMode: 0,
@@ -75,13 +100,17 @@ describe('MarkModeService', () => {
           lastUpdated: action.payload.timestamp || Date.now(),
           changeCount: currentState.changeCount + 1,
         };
-        mockStateSubject.next(newState);
+        mockMarkModeState.next(newState);
       }
     });
 
     // Mock store selectors to return from BehaviorSubject with selector applied
     storeSpyObj.select.and.callFake((selector: any) => {
-      return mockStateSubject.pipe(
+      if (selector === selectCurrentProject) {
+        return mockProjectState.asObservable();
+      }
+      
+      return mockMarkModeState.pipe(
         map(state => {
           // Apply selector function to current state
           if (selector === selectCurrentMarkMode) return state.currentMode;
@@ -96,23 +125,34 @@ describe('MarkModeService', () => {
 
     // Mock getState to return current state
     storeSpyObj.getState.and.callFake(() => ({
-      markMode: mockStateSubject.value,
-      projects: null,
+      markMode: mockMarkModeState.value,
+      projects: {
+        currentProjectId: mockProjectState.value.id,
+        entities: {
+          [mockProjectState.value.id!]: mockProjectState.value
+        }
+      },
       ui: null,
       system: null,
       settings: null,
       notifications: null,
     }));
 
+    // Make projectDbSpy return a resolved promise
+    projectDbSpyObj.updateProject.and.returnValue(Promise.resolve(true));
+
     TestBed.configureTestingModule({
       providers: [
         MarkModeService,
         { provide: ReactiveStateStore, useValue: storeSpyObj },
+        { provide: NGXLogger, useValue: loggerSpyObj },
+        { provide: ErrorHandlerService, useValue: errorHandlerSpyObj },
+        { provide: ProjectDbService, useValue: projectDbSpyObj },
       ],
     });
 
     // Reset mock state for each test
-    mockStateSubject.next({
+    mockMarkModeState.next({
       currentMode: 0,
       previousMode: undefined as number | undefined,
       history: [] as number[],
@@ -122,6 +162,9 @@ describe('MarkModeService', () => {
 
     service = TestBed.inject(MarkModeService);
     storeSpy = TestBed.inject(ReactiveStateStore) as jasmine.SpyObj<ReactiveStateStore>;
+    loggerSpy = TestBed.inject(NGXLogger) as jasmine.SpyObj<NGXLogger>;
+    errorHandlerSpy = TestBed.inject(ErrorHandlerService) as jasmine.SpyObj<ErrorHandlerService>;
+    projectDbSpy = TestBed.inject(ProjectDbService) as jasmine.SpyObj<ProjectDbService>;
   });
 
   describe('Service Initialization', () => {
@@ -291,6 +334,367 @@ describe('MarkModeService', () => {
     it('should not error when undoing with no previous mode', () => {
       // No previous mode should exist initially
       expect(() => service.undoMarkMode()).not.toThrow();
+    });
+  });
+
+  describe('Step Marking Functionality', () => {
+    it('should mark a step and save to project', async () => {
+      await service.markStep(0, 3, 2);
+
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Projects] Update Project Success',
+          payload: jasmine.objectContaining({
+            project: jasmine.objectContaining({
+              markedSteps: { 0: { 3: 2 } }
+            })
+          })
+        })
+      );
+
+      expect(projectDbSpy.updateProject).toHaveBeenCalled();
+    });
+
+    it('should unmark a step when mark mode is 0', async () => {
+      // First mark a step
+      await service.markStep(0, 3, 2);
+      storeSpy.dispatch.calls.reset();
+      projectDbSpy.updateProject.calls.reset();
+
+      // Then unmark it
+      await service.markStep(0, 3, 0);
+
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Projects] Update Project Success',
+          payload: jasmine.objectContaining({
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
+          })
+        })
+      );
+
+      expect(projectDbSpy.updateProject).toHaveBeenCalled();
+    });
+
+    it('should unmark a step using unmarkStep method', async () => {
+      // First mark a step
+      await service.markStep(0, 3, 2);
+      storeSpy.dispatch.calls.reset();
+      projectDbSpy.updateProject.calls.reset();
+
+      // Then unmark it using convenience method
+      await service.unmarkStep(0, 3);
+
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Projects] Update Project Success',
+          payload: jasmine.objectContaining({
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
+          })
+        })
+      );
+
+      expect(projectDbSpy.updateProject).toHaveBeenCalled();
+    });
+
+    it('should get step mark value correctly', () => {
+      // Initially unmarked
+      expect(service.getStepMark(0, 3)).toBe(0);
+
+      // Update mock project state to have marked steps using new structured format
+      const mockProjectWithMarks: Project = {
+        id: 1,
+        name: 'Test Project',
+        rows: [],
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 } }
+      };
+
+      storeSpy.getState.and.returnValue({
+        markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
+        projects: {
+          currentProjectId: 1,
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
+        },
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
+      });
+
+      expect(service.getStepMark(0, 3)).toBe(2);
+      expect(service.getStepMark(1, 5)).toBe(1);
+      expect(service.getStepMark(2, 1)).toBe(0); // Unmarked step
+    });
+
+    it('should get all marked steps correctly', () => {
+      // Update mock project state to have marked steps using new structured format
+      const mockProjectWithMarks: Project = {
+        id: 1,
+        name: 'Test Project',
+        rows: [],
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 }, 2: { 7: 3 } }
+      };
+
+      storeSpy.getState.and.returnValue({
+        markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
+        projects: {
+          currentProjectId: 1,
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
+        },
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
+      });
+
+      const markedSteps = service.getAllMarkedSteps();
+
+      expect(markedSteps).toEqual({ 0: { 3: 2 }, 1: { 5: 1 }, 2: { 7: 3 } });
+    });
+
+    it('should clear all marked steps', async () => {
+      // Update mock project state to have marked steps using new structured format
+      const mockProjectWithMarks: Project = {
+        id: 1,
+        name: 'Test Project',
+        rows: [],
+        markedSteps: { 0: { 3: 2 }, 1: { 5: 1 } }
+      };
+
+      storeSpy.getState.and.returnValue({
+        markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
+        projects: {
+          currentProjectId: 1,
+          entities: { 1: mockProjectWithMarks },
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
+        },
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
+      });
+
+      await service.clearAllMarkedSteps();
+
+      expect(storeSpy.dispatch).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: '[Projects] Update Project Success',
+          payload: jasmine.objectContaining({
+            project: jasmine.objectContaining({
+              markedSteps: {}
+            })
+          })
+        })
+      );
+
+      expect(projectDbSpy.updateProject).toHaveBeenCalled();
+    });
+
+    it('should handle no active project gracefully', async () => {
+      storeSpy.getState.and.returnValue({
+        markMode: { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
+        projects: {
+          currentProjectId: null,
+          entities: {},
+          loading: false,
+          error: null,
+          lastSaved: null,
+          isDirty: false
+        },
+        ui: {
+          currentPosition: null,
+          selectedStepId: null,
+          zoomLevel: 1.0,
+          sidebarOpen: true,
+          beadCountVisible: false,
+          darkMode: false,
+          notifications: []
+        },
+        system: {
+          isOnline: true,
+          storageQuota: null,
+          performanceMetrics: {
+            renderTime: 0,
+            memoryUsage: 0,
+            errorCount: 0,
+            lastUpdate: new Date()
+          },
+          featureFlags: {
+            virtualScrolling: true,
+            advancedPatterns: false,
+            exportFeatures: true,
+            betaFeatures: false
+          }
+        },
+        settings: {
+          combine12: false,
+          lrdesignators: false,
+          flammarkers: false,
+          ppinspector: false,
+          zoom: false,
+          scrolloffset: -1,
+          multiadvance: 3,
+          flamsort: 'keyAsc',
+          projectsort: 'dateAsc',
+          ready: true
+        },
+        notifications: {
+          current: null,
+          queue: [],
+          lastId: 0
+        }
+      });
+
+      // Should not throw errors
+      await service.markStep(0, 3, 2);
+      await service.unmarkStep(0, 3);
+      await service.clearAllMarkedSteps();
+
+      expect(service.getStepMark(0, 3)).toBe(0);
+      expect(service.getAllMarkedSteps()).toEqual({});
+
+      // Should not have called dispatch or database update
+      expect(storeSpy.dispatch).not.toHaveBeenCalled();
+      expect(projectDbSpy.updateProject).not.toHaveBeenCalled();
+    });
+
+    it('should handle database errors gracefully', async () => {
+      projectDbSpy.updateProject.and.returnValue(Promise.reject(new Error('Database error')));
+
+      // Should not throw but should log error
+      await service.markStep(0, 3, 2);
+
+      expect(loggerSpy.error).toHaveBeenCalledWith('Error marking step:', jasmine.any(Error));
+      expect(errorHandlerSpy.handleError).toHaveBeenCalled();
     });
   });
 });

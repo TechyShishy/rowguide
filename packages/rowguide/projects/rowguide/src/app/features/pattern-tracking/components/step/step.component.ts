@@ -11,7 +11,7 @@ import { Observable, combineLatest, firstValueFrom, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Step } from '../../../../core/models/step';
-import { FlamService, SettingsService } from '../../../../core/services';
+import { FlamService, SettingsService, MarkModeService } from '../../../../core/services';
 import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { ZipperService } from '../../../file-import/services';
 import { ProjectService } from '../../../project-management/services';
@@ -441,6 +441,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * @param {ProjectService} projectService - Project-level data access for bead count calculations
    * @param {NGXLogger} logger - Structured logging for debugging and monitoring
    * @param {ZipperService} zipperService - Step processing utilities for data transformation
+   * @param {MarkModeService} markModeService - Service for managing step markings and mark mode state
    *
    * Initializes the step component with dependency injection for:
    * - FLAM service for analyzing first/last appearance markers in pattern analysis
@@ -448,6 +449,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * - Project service for accessing zipped rows data for bead count calculations
    * - Logger service for debugging step interactions and state changes
    * - Zipper service for step expansion and processing utilities
+   * - Mark mode service for persistent step marking management
    *
    * The constructor establishes the foundation for reactive property management,
    * pattern analysis integration, and user preference synchronization.
@@ -461,7 +463,8 @@ export class StepComponent implements HierarchicalList, OnInit {
    *   private settingsService: SettingsService,
    *   private projectService: ProjectService,
    *   private logger: NGXLogger,
-   *   private zipperService: ZipperService
+   *   private zipperService: ZipperService,
+   *   private markModeService: MarkModeService
    * ) {
    *   // Initialization handled by Angular framework
    * }
@@ -474,7 +477,8 @@ export class StepComponent implements HierarchicalList, OnInit {
     private settingsService: SettingsService,
     private projectService: ProjectService,
     private logger: NGXLogger,
-    private zipperService: ZipperService
+    private zipperService: ZipperService,
+    private markModeService: MarkModeService
   ) {}
 
   /**
@@ -488,6 +492,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    *    markers, zoom level, and FLAM analysis results to update visual state
    * 2. **Bead Count Observable**: Creates reactive stream for cumulative bead
    *    count calculation based on project data
+   * 3. **Step Mark Observable**: Reactive monitoring of step marking state changes
    *
    * The method uses combineLatest to efficiently manage multiple observable
    * sources, ensuring consistent state updates when any dependency changes.
@@ -515,6 +520,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * @see {@link SettingsService.flammarkers$} For FLAM marker settings
    * @see {@link SettingsService.zoom$} For zoom level settings
    * @see {@link ProjectService.zippedRows$} For bead count data source
+   * @see {@link MarkModeService.getStepMark$} For reactive step marking
    * @since 1.0.0
    */
   ngOnInit() {
@@ -534,21 +540,10 @@ export class StepComponent implements HierarchicalList, OnInit {
       this._isZoomed = zoom;
     });
 
-    /*if (this.settingsService.flammarkers$.value) {
-      this.isFirstStep = this.flamService.isFirstStep(
-        this.row.index,
-        this.step
-      );
-      this.isLastStep = this.flamService.isLastStep(this.row.index, this.step);
-    } else {
-      this.isFirstStep = false;
-      this.isLastStep = false;
-    }
-
-    this.settingsService.zoom$.subscribe((value) => {
-      this.isZoomed = value;
+    // Set up reactive step marking that updates when project marked steps change
+    this.markModeService.getStepMark$(this.row.index, this.index).subscribe(markMode => {
+      this.marked = markMode;
     });
-    this.isZoomed = this.settingsService.zoom$.value;*/
 
     this.beadCount$ = this.projectService.zippedRows$.pipe(
       map((rows) => rows[this.row.index]),
@@ -573,7 +568,8 @@ export class StepComponent implements HierarchicalList, OnInit {
    *
    * **Mark Mode Behavior**: When the project is in mark mode, toggles the
    * marking state between unmarked (0) and the current mark mode value.
-   * Provides intuitive toggle behavior for pattern progress tracking.
+   * Uses MarkModeService for persistent step marking that survives sessions.
+   * All toggle logic and validation is handled by the service layer.
    *
    * **Selection Mode Behavior**: When not in mark mode, performs current
    * step selection with coordinated state management:
@@ -582,19 +578,20 @@ export class StepComponent implements HierarchicalList, OnInit {
    * 3. Persists the position to project storage
    * 4. Updates the project's current step observable
    *
-   * The method uses async/await pattern for safe observable value access
-   * and ensures proper state transitions between different steps.
+   * The method delegates all business logic to appropriate services,
+   * maintaining clean separation of concerns between UI and business logic.
+   * Component state updates automatically via reactive subscriptions.
    *
    * @example
    * ```typescript
-   * // Automatic click handling via @HostListener
-   * // User clicks step in mark mode
+   * // User clicks step - behavior determined by service state
    * async onClick(event): Promise<void> {
-   *   if (this.row.project.markMode) {
-   *     // Toggle marking: 0 ↔ current mark mode
-   *     this.marked = this.marked === markMode ? 0 : markMode;
+   *   if (this.markModeService.canMarkSteps()) {
+   *     // Service handles all toggle logic and persistence
+   *     await this.markModeService.toggleStepMark(this.row.index, this.index);
+   *     // Component state updates automatically via reactive subscription
    *   } else {
-   *     // Set as current step with state coordination
+   *     // Handle navigation mode
    *     await this.selectAsCurrentStep();
    *   }
    * }
@@ -602,26 +599,31 @@ export class StepComponent implements HierarchicalList, OnInit {
    *
    * @example
    * ```typescript
-   * // Mark mode interaction flow
-   * // If step is unmarked (marked = 0) and mark mode = 3:
-   * onClick() // → marked becomes 3
-   * onClick() // → marked becomes 0 (toggle off)
-   * onClick() // → marked becomes 3 (toggle on)
+   * // Mark mode interaction flow with service delegation
+   * // Component just calls service - all logic centralized
+   * onClick() // → Service toggles step, component reacts to state change
+   * onClick() // → Service toggles step, component reacts to state change
    * ```
    *
    * @see {@link ProjectService.saveCurrentPosition} For position persistence
+   * @see {@link MarkModeService.toggleStepMark} For step marking toggle logic
+   * @see {@link MarkModeService.canMarkSteps} For marking mode validation
    * @since 1.0.0
    */
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
-    if (this.row.project.markMode) {
-      if (this.marked === this.row.project.markMode) {
-        this.marked = 0;
-      } else {
-        this.marked = this.row.project.markMode;
-      }
+    // Use service method to check if marking is enabled
+    if (this.markModeService.canMarkSteps()) {
+      // Delegate toggle logic to service - no business logic in component
+      await this.markModeService.toggleStepMark(this.row.index, this.index);
+      
+      // Note: Component state (this.marked) automatically updates via reactive subscription
+      // No manual state synchronization needed
+      
       return;
     }
+    
+    // Handle navigation mode (when not in mark mode)
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
     if (currentStep) {
       currentStep.isCurrentStep = false;

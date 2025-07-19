@@ -10,7 +10,7 @@ import { QueryList } from '@angular/core';
 
 import { StepComponent } from './step.component';
 import { Step } from '../../../../core/models/step';
-import { FlamService, SettingsService } from '../../../../core/services';
+import { FlamService, SettingsService, MarkModeService } from '../../../../core/services';
 import { ProjectService } from '../../../project-management/services';
 import { ZipperService } from '../../../file-import/services';
 import { RowComponent } from '../row/row.component';
@@ -23,6 +23,7 @@ describe('StepComponent', () => {
   let mockSettingsService: jasmine.SpyObj<SettingsService>;
   let mockProjectService: jasmine.SpyObj<ProjectService>;
   let mockZipperService: jasmine.SpyObj<ZipperService>;
+  let mockMarkModeService: jasmine.SpyObj<MarkModeService>;
   let mockRowComponent: jasmine.SpyObj<RowComponent>;
   let mockProject: any;
 
@@ -32,11 +33,13 @@ describe('StepComponent', () => {
   let zippedRows$: BehaviorSubject<any[]>;
   let isFirstStep$: BehaviorSubject<boolean>;
   let isLastStep$: BehaviorSubject<boolean>;
+  let markModeChanged$: BehaviorSubject<number>;
 
   beforeEach(async () => {
     // Initialize mock observables
     flammarkers$ = new BehaviorSubject<boolean>(true);
     zoom$ = new BehaviorSubject<boolean>(false);
+    markModeChanged$ = new BehaviorSubject<number>(0);
     zippedRows$ = new BehaviorSubject<any[]>([
       { steps: [{ count: 5 }, { count: 3 }, { count: 2 }] },
       { steps: [{ count: 1 }, { count: 4 }] },
@@ -70,6 +73,73 @@ describe('StepComponent', () => {
       }
     );
     mockZipperService = jasmine.createSpyObj('ZipperService', ['expandSteps']);
+    
+    // Create a more realistic mock that tracks marked steps with new structured format
+    const markedStepsStorage: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
+    const stepMarkSubjects: { [key: string]: BehaviorSubject<number> } = {};
+    
+    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$', 'toggleStepMark', 'canMarkSteps', 'markMultipleSteps'], {
+      markModeChanged$: markModeChanged$,
+      canMarkSteps$: new BehaviorSubject<boolean>(true),
+    });
+    
+    mockMarkModeService.getStepMark.and.callFake((rowIndex: number, stepIndex: number) => {
+      return markedStepsStorage[rowIndex]?.[stepIndex] || 0;
+    });
+    
+    mockMarkModeService.getStepMark$.and.callFake((rowIndex: number, stepIndex: number) => {
+      const key = `${rowIndex}-${stepIndex}`;
+      if (!stepMarkSubjects[key]) {
+        stepMarkSubjects[key] = new BehaviorSubject<number>(markedStepsStorage[rowIndex]?.[stepIndex] || 0);
+      }
+      return stepMarkSubjects[key].asObservable();
+    });
+    
+    mockMarkModeService.markStep.and.callFake((rowIndex: number, stepIndex: number, markMode: number) => {
+      if (!markedStepsStorage[rowIndex]) {
+        markedStepsStorage[rowIndex] = {};
+      }
+      
+      if (markMode === 0) {
+        delete markedStepsStorage[rowIndex][stepIndex];
+        if (Object.keys(markedStepsStorage[rowIndex]).length === 0) {
+          delete markedStepsStorage[rowIndex];
+        }
+      } else {
+        markedStepsStorage[rowIndex][stepIndex] = markMode;
+      }
+      
+      // Update the subject for reactive updates
+      const key = `${rowIndex}-${stepIndex}`;
+      if (stepMarkSubjects[key]) {
+        stepMarkSubjects[key].next(markMode);
+      }
+      
+      return Promise.resolve();
+    });
+
+    // Mock the new enterprise service methods
+    mockMarkModeService.toggleStepMark.and.callFake(async (rowIndex: number, stepIndex: number) => {
+      const currentMark = mockMarkModeService.getStepMark(rowIndex, stepIndex);
+      const currentMarkMode = markModeChanged$.value;
+      const newMarkMode = currentMark === currentMarkMode ? 0 : currentMarkMode;
+      await mockMarkModeService.markStep(rowIndex, stepIndex, newMarkMode);
+      return newMarkMode;
+    });
+
+    mockMarkModeService.canMarkSteps.and.callFake(() => {
+      return markModeChanged$.value > 0;
+    });
+
+    mockMarkModeService.markMultipleSteps.and.callFake(async (steps: Array<{ rowIndex: number, stepIndex: number }>) => {
+      const currentMarkMode = markModeChanged$.value;
+      let markedCount = 0;
+      for (const step of steps) {
+        await mockMarkModeService.markStep(step.rowIndex, step.stepIndex, currentMarkMode);
+        markedCount++;
+      }
+      return markedCount;
+    });
 
     // Mock RowComponent
     mockRowComponent = jasmine.createSpyObj('RowComponent', [], {
@@ -84,6 +154,7 @@ describe('StepComponent', () => {
         { provide: SettingsService, useValue: mockSettingsService },
         { provide: ProjectService, useValue: mockProjectService },
         { provide: ZipperService, useValue: mockZipperService },
+        { provide: MarkModeService, useValue: mockMarkModeService },
       ],
     }).compileComponents();
 
@@ -157,7 +228,7 @@ describe('StepComponent', () => {
 
     describe('when in mark mode', () => {
       beforeEach(() => {
-        mockProject.markMode = 3;
+        markModeChanged$.next(3);
       });
 
       it('should set marked to markMode when marked is 0', fakeAsync(() => {
@@ -170,6 +241,8 @@ describe('StepComponent', () => {
       }));
 
       it('should reset marked to 0 when marked equals markMode', fakeAsync(() => {
+        // Set up the initial mark in the mock service storage
+        mockMarkModeService.markStep(0, 1, 3);
         component.marked = 3;
 
         component.onClick({});
@@ -197,7 +270,7 @@ describe('StepComponent', () => {
 
     describe('when not in mark mode', () => {
       beforeEach(() => {
-        mockProject.markMode = 0;
+        markModeChanged$.next(0);
       });
 
       it('should set isCurrentStep to true and save position', fakeAsync(() => {
@@ -308,10 +381,14 @@ describe('StepComponent', () => {
       expect(fixture.nativeElement.classList.contains('zoom')).toBe(false);
     }));
 
-    it('should bind marked values to marked-X classes', () => {
-      // marked property is only set via onClick mark mode, test direct manipulation
+    it('should bind marked values to marked-X classes', async () => {
+      component.ngOnInit(); // Ensure component is initialized
+      
+      // marked property is only set via onClick mark mode, test the real workflow
       for (let i = 1; i <= 6; i++) {
-        component.marked = i;
+        // Use the service to mark the step, which is how it works in the real component
+        await mockMarkModeService.markStep(component.row.index, component.index, i);
+        component.marked = i; // Also set the property directly for immediate feedback
         fixture.detectChanges();
 
         expect(fixture.nativeElement.classList.contains(`marked-${i}`)).toBe(
@@ -319,6 +396,7 @@ describe('StepComponent', () => {
         );
 
         // Reset for next iteration
+        await mockMarkModeService.markStep(component.row.index, component.index, 0);
         component.marked = 0;
         fixture.detectChanges();
         expect(fixture.nativeElement.classList.contains(`marked-${i}`)).toBe(
