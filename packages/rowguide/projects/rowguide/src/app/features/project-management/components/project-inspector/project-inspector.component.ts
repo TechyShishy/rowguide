@@ -24,9 +24,10 @@ import {
 import { ngfModule } from 'angular-file';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, firstValueFrom, from, of } from 'rxjs';
-import { map, switchMap, take } from 'rxjs/operators';
+import { map, switchMap, take, distinctUntilChanged, shareReplay } from 'rxjs/operators';
 
 import { FLAMRow } from '../../../../core/models/flamrow';
+import { Position } from '../../../../core/models/position';
 import { Project } from '../../../../core/models/project';
 import { FlamService, SettingsService } from '../../../../core/services';
 import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
@@ -692,35 +693,44 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Current position observable from store.
+   *
+   * Provides reactive access to the current project position for display.
+   * Automatically converts from 0-based internal coordinates to 1-based
+   * user-friendly display coordinates.
+   */
+  currentPosition$ = this.store.select(selectCurrentProject).pipe(
+    map((project: Project | null) => project?.position || null),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
    * Gets current display row for position indicator.
    *
-   * Simplified position display for current row tracking.
-   * Currently returns static value pending migration to
-   * reactive approach with proper store integration.
+   * Reactive position display using store integration for real-time updates.
+   * Converts 0-based internal row index to 1-based user display format.
    *
    * @returns Current row number for display (1-based)
-   * TODO: Migrate to reactive approach with combineLatest
    */
-  getDisplayRow(): number {
-    // Using synchronous access for display purposes
-    // TODO: Consider migrating to reactive approach with combineLatest
-    return 1; // Simplified for now
+  getDisplayRow(): Observable<number> {
+    return this.currentPosition$.pipe(
+      map((position: Position | null) => (position?.row ?? 0) + 1)
+    );
   }
 
   /**
    * Gets current display step for position indicator.
    *
-   * Simplified position display for current step tracking.
-   * Currently returns static value pending migration to
-   * reactive approach with proper store integration.
+   * Reactive position display using store integration for real-time updates.
+   * Converts 0-based internal step index to 1-based user display format.
    *
    * @returns Current step number for display (1-based)
-   * TODO: Migrate to reactive approach with combineLatest
    */
-  getDisplayStep(): number {
-    // Using synchronous access for display purposes
-    // TODO: Consider migrating to reactive approach with combineLatest
-    return 1; // Simplified for now
+  getDisplayStep(): Observable<number> {
+    return this.currentPosition$.pipe(
+      map((position: Position | null) => (position?.step ?? 0) + 1)
+    );
   }
 
   /**

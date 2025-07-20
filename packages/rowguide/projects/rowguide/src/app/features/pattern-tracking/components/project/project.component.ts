@@ -16,6 +16,7 @@ import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
 import {
   combineLatestWith,
+  debounceTime,
   distinctUntilChanged,
   filter,
   map,
@@ -351,40 +352,7 @@ export class ProjectComponent implements HierarchicalList {
     // Position observable is now handled by the store selector
     // No need to manually subscribe and update zippedRows since store manages state
 
-    this.children$
-      .pipe(
-        combineLatestWith(this.position$),
-        skipWhile(([children, _position]) => {
-          return (
-            children === null ||
-            children === undefined ||
-            children.get === undefined
-          );
-        }),
-        map(([children, position]) => {
-          const row = children?.get(position.row);
-          if (!row) {
-            return null;
-          }
-          row.show();
-          const step = row.children.get(position.step);
-          if (!step) {
-            return null;
-          }
-          return step;
-        }),
-        filter((step): step is StepComponent => step !== null),
-        skipWhile(
-          (step) =>
-            step === null || step === undefined || step.index === undefined
-        )
-      )
-      .subscribe((step) => {
-        step.row.project.project$
-          .pipe(take(1))
-          .subscribe((project: Project) => {});
-        this.currentStep$.next(step);
-      });
+    // NOTE: Position restoration moved to ngAfterViewInit to ensure ViewChildren are ready
   }
 
   /**
@@ -407,13 +375,8 @@ export class ProjectComponent implements HierarchicalList {
    *   this.cdr.detectChanges(); // Ensure view consistency
    * });
    *
-   * // Automatic step activation based on position
-   * this.currentStep$.pipe(
-   *   filter(step => step !== null),
-   *   distinctUntilChanged()
-   * ).subscribe(step => {
-   *   step.onClick(new Event('click')); // Activate current step
-   * });
+   * // Note: Step activation is handled by position restoration in ngOnInit
+   * // No need for additional onClick triggers here to avoid double activation
    * ```
    */
   ngAfterViewInit() {
@@ -421,17 +384,52 @@ export class ProjectComponent implements HierarchicalList {
       this.children$.next(children);
       this.cdr.detectChanges();
     });
-    this.currentStep$
+
+    // Initial population of children$ - this is critical!
+    this.children$.next(this.children);
+
+    // NOW set up position restoration after ViewChildren are ready
+    this.children$
       .pipe(
-        filter(
-          (step): step is StepComponent =>
-            step !== null && step.index !== undefined
+        combineLatestWith(this.position$),
+        skipWhile(([children, _position]) => {
+          return (
+            children === null ||
+            children === undefined ||
+            children.get === undefined
+          );
+        }),
+        map(([children, position]) => {
+          const row = children?.get(position.row);
+          if (!row) {
+            return null;
+          }
+
+          // Ensure the row is open
+          row.show();
+
+          // Get the step - if children aren't ready yet, this will return null
+          // and the filter/skipWhile will handle it
+          const step = row.children?.get(position.step);
+          if (!step) {
+            return null;
+          }
+          return step;
+        }),
+        filter((step): step is StepComponent => step !== null),
+        skipWhile(
+          (step) =>
+            step === null || step === undefined || step.index === undefined
         ),
-        distinctUntilChanged((prev, curr) => prev === curr)
+        // Add delay to ensure DOM is ready
+        debounceTime(50)
       )
-      .subscribe((step) => {
+      .subscribe((step: StepComponent) => {
+        // Use onClick to ensure all step activation logic is handled consistently
         step.onClick(new Event('click'));
       });
+
+    // Note: Position restoration now handled above after ViewChildren are ready
   }
 
   /**

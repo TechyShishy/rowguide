@@ -245,16 +245,16 @@ describe('ProjectComponent', () => {
   });
 
   it('should update currentStep$ on children$ and position$ change', async () => {
-    const mockStep = jasmine.createSpyObj('StepComponent', ['onClick'], {
-      index: 1,
-      row: {
-        children: new QueryList<StepComponent>(),
-        project: component,
-      } as RowComponent,
-    });
     const mockRow = jasmine.createSpyObj('RowComponent', ['show'], {
       children: new QueryList<StepComponent>(),
     });
+
+    const mockStep = jasmine.createSpyObj('StepComponent', ['onClick'], {
+      index: 1,
+      row: mockRow,
+      isCurrentStep: false
+    });
+
     mockRow.children.reset([mockStep]);
     mockRow.show.and.callFake(() => {});
     const mockChildren = new QueryList<RowComponent>();
