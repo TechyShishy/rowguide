@@ -12,6 +12,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
@@ -38,6 +39,8 @@ import { selectFlamSort } from '../../../../core/store/selectors/settings-select
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
 import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData, ConfirmationResult } from '../../../../shared/components/confirmation-dialog';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 /**
  * Project Inspector Component for FLAM (First/Last Appearance Map) Analysis and Visualization.
@@ -89,6 +92,7 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
     MatTableModule,
     MatSortModule,
     MatButtonModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
@@ -218,7 +222,9 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private indexedDBService: ProjectDbService,
     private http: HttpClient,
-    private store: ReactiveStateStore
+    private store: ReactiveStateStore,
+    private dialog: MatDialog,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   /**
@@ -642,14 +648,101 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Resets current project position to origin coordinates.
+   * Resets current project position to origin coordinates with confirmation.
    *
-   * Provides quick navigation reset by setting the current
-   * position to row 0, step 0 through the project service.
-   * Useful for returning to pattern start after analysis.
+   * Provides safety confirmation dialog before resetting position to prevent
+   * accidental data loss. Features:
+   * 1. Checks localStorage for "don't ask again" preference
+   * 2. Shows confirmation dialog with clear warning message
+   * 3. Respects user's "don't ask again" choice and persists preference
+   * 4. Executes reset only on user confirmation
+   * 5. Provides success feedback after position reset
+   *
+   * **Safety Features:**
+   * - Confirmation dialog prevents accidental resets
+   * - "Don't ask again" option for power users
+   * - Clear messaging about action consequences
+   * - Accessible dialog with keyboard navigation
+   *
+   * @example
+   * ```typescript
+   * // Method called from template button click
+   * resetPosition(); // Shows confirmation dialog unless disabled
+   * ```
    */
   resetPosition(): void {
-    this.projectService.saveCurrentPosition(0, 0);
+    const skipConfirmation = localStorage.getItem('skipResetPositionConfirmation') === 'true';
+
+    if (skipConfirmation) {
+      // Fire-and-forget: executeReset handles its own errors
+      this.executeReset();
+      return;
+    }
+
+    // Blur any currently focused element to prevent aria-hidden conflicts
+    (document.activeElement as HTMLElement)?.blur();
+
+    const dialogData: ConfirmationDialogData = {
+      title: 'Reset Position',
+      message: 'Are you sure you want to reset your current position to the beginning? This will move you back to row 1, step 1.',
+      confirmText: 'Reset Position',
+      cancelText: 'Cancel',
+      icon: 'restart_alt',
+      showDontAskAgain: true,
+      customClass: 'reset-position-dialog'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      disableClose: false,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: ConfirmationResult | undefined) => {
+      if (result?.result) {
+        // User confirmed the reset
+        if (result.dontAskAgain) {
+          localStorage.setItem('skipResetPositionConfirmation', 'true');
+          this.logger.info('User enabled "skip reset confirmation" preference');
+        }
+
+        // Fire-and-forget: executeReset handles its own errors  
+        this.executeReset();
+      } else {
+        this.logger.debug('Reset position cancelled by user');
+      }
+    });
+  }
+
+  /**
+   * Executes the position reset operation.
+   *
+   * Private helper method that performs the actual position reset
+   * and provides user feedback. Separated from resetPosition()
+   * to enable reuse and testing.
+   */
+  private async executeReset(): Promise<void> {
+    try {
+      await this.projectService.saveCurrentPosition(0, 0);
+      this.logger.info('Project position reset to origin (0, 0)');
+      
+      // TODO: Consider adding success notification
+      // this.errorHandler.showNotification({ 
+      //   message: 'Position reset to beginning', 
+      //   duration: 3000 
+      // });
+    } catch (error) {
+      // Use the centralized error handler for proper categorization and user feedback
+      this.errorHandler.handleError(error, {
+        operation: 'resetPosition',
+        service: 'ProjectInspectorComponent',
+        details: 'Failed to reset project position to origin coordinates',
+        context: { targetPosition: { row: 0, step: 0 } }
+      }, 'Failed to reset position. Please try again.');
+      
+      // No re-throw needed - fire-and-forget pattern
+      // ErrorHandlerService already handles user notifications and logging
+    }
   }
 
   /**

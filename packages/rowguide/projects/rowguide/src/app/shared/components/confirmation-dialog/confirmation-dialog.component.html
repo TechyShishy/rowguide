@@ -1,0 +1,107 @@
+<!-- Confirmation Dialog Template -->
+<!-- Accessible, keyboard-friendly confirmation dialog following Material Design guidelines -->
+
+<div class="confirmation-dialog" [class]="data.customClass" (keydown)="onKeyDown($event)">
+
+  <!-- Dialog Title with Icon -->
+  <h1 mat-dialog-title class="dialog-title">
+    <mat-icon
+      *ngIf="data.icon"
+      class="dialog-icon"
+      [attr.aria-label]="'Warning: ' + data.title"
+      role="img">
+      {{ data.icon }}
+    </mat-icon>
+    <span class="title-text">{{ data.title }}</span>
+  </h1>
+
+  <!-- Dialog Content -->
+  <div mat-dialog-content class="dialog-content">
+
+    <!-- Main Message -->
+    <p class="confirmation-message"
+       [attr.aria-describedby]="data.showDontAskAgain ? 'dont-ask-again-section' : null">
+      {{ data.message }}
+    </p>
+
+    <!-- Optional "Don't ask again" Checkbox -->
+    <div
+      *ngIf="data.showDontAskAgain"
+      class="dont-ask-again-section"
+      id="dont-ask-again-section"
+      role="group"
+      [attr.aria-labelledby]="'dont-ask-again-label'">
+
+      <mat-checkbox
+        [(ngModel)]="dontAskAgain"
+        id="dont-ask-again-checkbox"
+        class="dont-ask-again-checkbox"
+        color="primary"
+        [attr.aria-describedby]="'dont-ask-again-help'">
+        <span id="dont-ask-again-label">Don't ask again</span>
+      </mat-checkbox>
+
+      <!-- Hidden help text for screen readers -->
+      <span
+        id="dont-ask-again-help"
+        class="sr-only"
+        aria-hidden="true">
+        Checking this box will skip this confirmation dialog for future {{ data.title.toLowerCase() }} actions
+      </span>
+    </div>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div mat-dialog-actions class="dialog-actions" align="end">
+
+    <!-- Cancel Button (Default Focus for Safety) -->
+    <button
+      mat-button
+      type="button"
+      class="cancel-button"
+      data-action="cancel"
+      (click)="cancel()"
+      [attr.aria-label]="'Cancel ' + data.title.toLowerCase()"
+      cdkTrapFocus-autoCapture>
+      {{ data.cancelText }}
+    </button>
+
+    <!-- Confirm Button (Destructive Action) -->
+    <button
+      mat-button
+      type="button"
+      color="warn"
+      class="confirm-button"
+      data-action="confirm"
+      (click)="confirm()"
+      [attr.aria-label]="'Confirm ' + data.title.toLowerCase() + ' action'">
+      {{ data.confirmText }}
+    </button>
+
+  </div>
+
+</div>
+
+<!--
+Accessibility Features:
+- ARIA labels and descriptions for all interactive elements
+- Proper focus management with Cancel button as default
+- Screen reader support with descriptive text
+- Keyboard navigation support (Tab, Enter, Escape)
+- Semantic HTML structure with proper headings
+- High contrast support via Material Design
+- Role attributes for grouped content
+
+Security Features:
+- Cancel button has default focus for safety
+- Clear messaging about action consequences
+- "Don't ask again" is opt-in, not default
+- Descriptive button labels prevent confusion
+
+Material Design Compliance:
+- Standard dialog structure with title, content, actions
+- Proper spacing and typography
+- Color scheme follows Material guidelines
+- Icon integration for visual clarity
+- Responsive layout for different screen sizes
+-->

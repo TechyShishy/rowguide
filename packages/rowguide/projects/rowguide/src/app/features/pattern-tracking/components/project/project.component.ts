@@ -16,7 +16,6 @@ import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
 import {
   combineLatestWith,
-  debounceTime,
   distinctUntilChanged,
   filter,
   map,
@@ -128,10 +127,9 @@ export class ProjectComponent implements HierarchicalList {
   /**
    * Observable stream of current position coordinates within the pattern.
    * Provides fallback to origin position (0,0) for null safety and consistent state.
+   * Initialized in constructor to ensure store dependency is available.
    */
-  position$: Observable<Position> = this.store
-    .select(selectCurrentPosition)
-    .pipe(map((position) => position ?? { row: 0, step: 0 }));
+  position$!: Observable<Position>;
 
   /**
    * Project observable stream initialized in ngOnInit for route-based project loading.
@@ -246,7 +244,12 @@ export class ProjectComponent implements HierarchicalList {
     private bottomSheet: MatBottomSheet,
     private markModeService: MarkModeService,
     private store: ReactiveStateStore
-  ) {}
+  ) {
+    // Initialize position$ after store injection is complete
+    this.position$ = this.store
+      .select(selectCurrentPosition)
+      .pipe(map((position) => position ?? { row: 0, step: 0 }));
+  }
 
   /**
    * Initializes component lifecycle with route parameter handling and project loading.
@@ -421,12 +424,40 @@ export class ProjectComponent implements HierarchicalList {
           (step) =>
             step === null || step === undefined || step.index === undefined
         ),
-        // Add delay to ensure DOM is ready
-        debounceTime(50)
+        // Prevent infinite loops by filtering duplicate step objects
+        // distinctUntilChanged ensures the same step isn't processed multiple times
+        distinctUntilChanged((a, b) => {
+          // Allow null -> step transitions
+          if (a === null || b === null) {
+            return a === b;
+          }
+          // Compare step identity by position
+          return a?.index === b?.index && a?.row?.index === b?.row?.index;
+        })
       )
-      .subscribe((step: StepComponent) => {
-        // Use onClick to ensure all step activation logic is handled consistently
-        step.onClick(new Event('click'));
+      .subscribe(async (step: StepComponent) => {
+        try {
+          // Clear previous current step
+          const currentStep = await firstValueFrom(this.currentStep$);
+          if (currentStep && currentStep !== step) {
+            currentStep.isCurrentStep = false;
+          }
+
+          // Set new current step
+          step.isCurrentStep = true;
+          step.row.show();
+
+          // Update observables and persist position
+          this.currentStep$.next(step);
+          
+          // Trigger change detection after state update
+          this.cdr.detectChanges();
+          
+          // Fire-and-forget position save (don't await to avoid blocking)
+          this.projectService.saveCurrentPosition(step.row.index, step.index);
+        } catch (error) {
+          console.warn('Failed to set current step:', error);
+        }
       });
 
     // Note: Position restoration now handled above after ViewChildren are ready

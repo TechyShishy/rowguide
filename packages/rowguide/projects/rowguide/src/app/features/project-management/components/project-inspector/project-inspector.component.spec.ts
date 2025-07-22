@@ -1,17 +1,10 @@
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  tick,
-  flush,
-} from '@angular/core/testing';
-import {
-  HttpClientTestingModule,
-  HttpTestingController,
-} from '@angular/common/http/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DebugElement, EventEmitter } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialogModule } from '@angular/material/dialog';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { ProjectInspectorComponent } from './project-inspector.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../../services';
@@ -24,8 +17,10 @@ import { Row } from '../../../../core/models/row';
 import { FLAM } from '../../../../core/models/flam';
 import { FLAMRow } from '../../../../core/models/flamrow';
 import { Sort } from '@angular/material/sort';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ReactiveStateStore } from '../../../../core/store/reactive-state-store';
 import { selectCurrentProject } from '../../../../core/store/selectors/project-selectors';
+import { ConfirmationDialogComponent } from '../../../../shared/components/confirmation-dialog';
 
 describe('ProjectInspectorComponent', () => {
   let component: ProjectInspectorComponent;
@@ -37,6 +32,7 @@ describe('ProjectInspectorComponent', () => {
   let mockIndexedDBService: Partial<ProjectDbService>;
   let mockImage$: BehaviorSubject<string>;
   let mockStoreSpy: jasmine.SpyObj<ReactiveStateStore>;
+  let dialog: MatDialog;
 
   const mockProject: Project = {
     id: 1,
@@ -130,6 +126,8 @@ describe('ProjectInspectorComponent', () => {
         LoggerTestingModule,
         HttpClientTestingModule,
         NoopAnimationsModule,
+        MatDialogModule,
+        OverlayModule,
       ],
       providers: [
         { provide: ProjectService, useValue: mockProjectService },
@@ -144,6 +142,9 @@ describe('ProjectInspectorComponent', () => {
     httpTestingController = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ProjectInspectorComponent);
     component = fixture.componentInstance;
+
+    // Get the real dialog service and create spies
+    dialog = TestBed.inject(MatDialog);
 
     // Get the real FlamService and spy on its methods for testing
     const realFlamService = TestBed.inject(FlamService);
@@ -627,10 +628,35 @@ describe('ProjectInspectorComponent', () => {
   });
 
   describe('Position Management', () => {
-    it('should reset position to origin', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+    });
+
+    it('should skip dialog and reset position when "don\'t ask again" is set', async () => {
+      // Set the localStorage flag to skip confirmation
+      localStorage.setItem('skipResetPositionConfirmation', 'true');
+
       component.resetPosition();
 
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // Position should be reset directly without dialog using new separated architecture
       expect(mockProjectService.saveCurrentPosition).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('should test executeReset method directly', async () => {
+      // Test the private method directly
+      await (component as any).executeReset();
+
+      expect(mockProjectService.saveCurrentPosition).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('should have dialog service available for testing', () => {
+      // Simple test to verify dialog service is available
+      expect(dialog).toBeDefined();
+      expect(typeof dialog.open).toBe('function');
     });
   });
 
