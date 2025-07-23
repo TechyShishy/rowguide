@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Advanced Patterns
-permalink: /code-examples/advanced-patterns/
+permalink: /architecture/advanced-patterns/
 ---
 
 # Advanced Patterns

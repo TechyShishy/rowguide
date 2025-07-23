@@ -58,9 +58,10 @@ Row 2:
 
 ### Developer Resources
 
-- **[API Documentation](api/)** - Complete TypeScript API documentation
-- **[Architecture Guide](architecture/)** - System architecture and design patterns
-- **[Code Examples](code-examples/)** - Working examples and best practices
+- **[API Documentation](api/)** - Complete TypeScript API documentation with comprehensive JSDoc examples
+- **[Architecture Guide](architecture/)** - System architecture and advanced implementation patterns
+- **[Developer Guides](guides/)** - Comprehensive development and integration guides
+- **[Testing Documentation](testing/)** - Testing strategies and patterns
 - **[Implementation Checklist](implementation-checklist/)** - Development progress and task tracking
 - **[Code Quality Plan](code-quality-improvement-plan/)** - Code quality improvement roadmap
 

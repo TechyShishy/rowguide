@@ -97,7 +97,7 @@ Session reports are part of the broader development documentation:
 - **[Implementation Checklist](../implementation-checklist.markdown)** - Overall project progress
 - **[Code Quality Plan](../code-quality-improvement-plan.markdown)** - Quality improvement roadmap
 - **[Architecture Guide](../architecture/)** - Technical architecture decisions
-- **[Code Examples](../code-examples/)** - Implementation patterns and examples
+- **[API Documentation](../api/)** - Complete JSDoc examples and implementation patterns
 
 ## Metrics and Tracking
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Testing Strategy
-permalink: /code-examples/testing-strategy/
+permalink: /testing/testing-strategy/
 ---
 
 # Testing Strategy

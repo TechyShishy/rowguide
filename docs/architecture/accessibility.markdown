@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Accessibility Implementation Guide
-permalink: /code-examples/accessibility/
+permalink: /architecture/accessibility/
 ---
 
 # Accessibility Implementation Guide

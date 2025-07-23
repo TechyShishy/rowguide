@@ -777,4 +777,4 @@ export class ProjectManagementService {
 - [Service Contracts]({{ site.baseurl }}/architecture/service-contracts) - API definitions
 - [Architectural Decision Records]({{ site.baseurl }}/architecture/adrs) - Decision context
 - [Component Patterns]({{ site.baseurl }}/architecture/component-patterns) - Angular-specific patterns
-- [Code Examples]({{ site.baseurl }}/code-examples/) - Working implementations
+- [API Documentation]({{ site.baseurl }}/api/) - Complete JSDoc examples

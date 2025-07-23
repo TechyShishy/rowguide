@@ -40,7 +40,7 @@ Detailed Angular CLI build configuration documentation covering:
 ## Related Documentation
 
 - [Architecture Documentation](../architecture/) - Architectural patterns and design principles
-- [Code Examples](../code-examples/) - Implementation guides and code examples
+- [API Documentation](../api/) - Complete JSDoc examples and working implementations
 - [Implementation Checklist](../implementation-checklist/) - Development progress tracking
 
 ## Future Additions

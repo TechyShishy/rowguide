@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Developer Onboarding Guide
-permalink: /code-examples/developer-onboarding/
+permalink: /guides/developer-onboarding/
 ---
 
 # Developer Onboarding Guide
@@ -440,9 +440,9 @@ console.log('State history:', history);
 ## Additional Resources
 
 - [Code Quality Standards](/code-quality-improvement-plan/)
-- [Testing Strategy](/code-examples/testing-strategy/)
-- [Type Guards & Utilities](/code-examples/type-guards-utilities/)
-- [Error Handling Patterns](/code-examples/error-handling/)
+- [Testing Strategy](/testing/testing-strategy/)
+- [Architecture: Advanced Patterns](/architecture/advanced-patterns/)
+- [Architecture: Error Handling](/architecture/error-handling/)
 - [Architecture Documentation](/architecture/)
 
 ---

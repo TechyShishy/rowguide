@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Error Handling Implementation
-permalink: /code-examples/error-handling/
+permalink: /architecture/error-handling/
 ---
 
 # Error Handling Service Implementation

@@ -27,6 +27,13 @@ Rowguide follows a modern Angular architecture with:
 - [Error Recovery Patterns]({{ site.baseurl }}/architecture/error-recovery-patterns) - Error handling strategies
 - [Performance Optimization]({{ site.baseurl }}/architecture/performance-optimization) - Performance best practices
 
+### Implementation Patterns
+
+- [Advanced Patterns]({{ site.baseurl }}/architecture/advanced-patterns) - CQRS, Event Sourcing, and advanced architectural patterns
+- [Error Handling Implementation]({{ site.baseurl }}/architecture/error-handling) - Centralized error handling system
+- [State Management Implementation]({{ site.baseurl }}/architecture/state-management) - Redux-style state management with ReactiveStateStore
+- [Accessibility Implementation]({{ site.baseurl }}/architecture/accessibility) - WCAG compliance and accessibility patterns
+
 ### System Design
 
 - [Architectural Decision Records]({{ site.baseurl }}/architecture/adrs) - Key architectural decisions and rationale
@@ -35,8 +42,9 @@ Rowguide follows a modern Angular architecture with:
 
 ### Technical References
 
-- [API Documentation]({{ site.baseurl }}/api/portal.html) - Complete TypeScript API reference
-- [Code Examples]({{ site.baseurl }}/code-examples/) - Working implementation examples
+- [API Documentation]({{ site.baseurl }}/api/portal.html) - Complete TypeScript API reference with comprehensive JSDoc examples
+- [Developer Guides]({{ site.baseurl }}/guides/) - Comprehensive development guides
+- [Testing Documentation]({{ site.baseurl }}/testing/) - Testing strategies and patterns
 - [Implementation Status]({{ site.baseurl }}/implementation-checklist) - Current development progress
 
 ## Key Design Principles

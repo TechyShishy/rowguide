@@ -1,7 +1,7 @@
 ---
 layout: page
 title: State Management Implementation
-permalink: /code-examples/state-management/
+permalink: /architecture/state-management/
 ---
 
 # State Management Implementation

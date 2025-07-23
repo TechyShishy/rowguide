@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Component Integration Guide
-permalink: /code-examples/component-integration/
+permalink: /guides/component-integration/
 ---
 
 # Component Integration Guide
@@ -781,6 +781,6 @@ export class OptimizedComponent implements OnInit, OnDestroy {
 
 ## See Also
 
-- [ReactiveStateStore Examples]({{ site.baseurl }}/code-examples/reactive-state-store) - State management patterns
-- [ErrorHandlerService Examples]({{ site.baseurl }}/code-examples/error-handler-service) - Error handling integration
-- [Testing Strategy]({{ site.baseurl }}/code-examples/testing-strategy) - Component testing patterns
+- [Architecture: State Management]({{ site.baseurl }}/architecture/state-management) - State management patterns
+- [Architecture: Error Handling]({{ site.baseurl }}/architecture/error-handling) - Error handling integration
+- [Testing Strategy]({{ site.baseurl }}/testing/testing-strategy) - Component testing patterns
