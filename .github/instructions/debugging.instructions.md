@@ -2,28 +2,34 @@
 applyTo: "**"
 ---
 
-# Rowguide Debugging & Testing Workflow Guide
+# Rowguide Debugging & Testing - LLM Agent Instructions
 
-## Manual Testing Requirements
+## Testing Protocol (Critical)
 
-- When debugging or making changes, remember to ask me to test the application with specific steps to verify the changes. We don't have E2E tests, so manual testing is essential.
-- I will confirm the intent of a change while manual testing and provide feedback on whether it meets the requirements, so please provide clear and concise explanations of your assumptions about the intent behind a change or feature.
+### Manual Testing Requirements
+- **ALWAYS request manual testing** after code changes (no E2E tests available)
+- **Provide specific testing steps** for user to validate changes
+- **Explain assumptions and intent** clearly before requesting tests
+- **No change is complete** without manual testing validation
 
-## Debugging Workflow
+### Testing Workflow
+1. Make code modifications
+2. Explain expected behavior and assumptions
+3. Request specific testing steps from user
+4. Iterate based on feedback
+5. Confirm requirements met before completion
 
-- If you encounter any issues or have questions, feel free to ask for clarification or assistance.
-- If you need to see what state the code was in before your changes, you can use the `git diff` command to compare the current state with the previous commit. This will help you understand what has changed and ensure that your modifications are correct.
+## Debugging Tools
 
-## Collaborative Testing Process
+### Git Analysis
+```bash
+git diff                    # Current changes vs last commit
+git diff main              # All changes since main branch
+git stash                  # Separate changes into focused commits
+```
 
-1. **Code Changes**: Make necessary code modifications
-2. **Explain Intent**: Provide clear explanations of assumptions and expected behavior
-3. **Manual Testing**: Request specific testing steps for validation
-4. **Feedback Loop**: Iterate based on testing results and user feedback
-5. **Verification**: Confirm changes meet requirements before completion
-
-## Git-Based Debugging
-
-- Use `git diff` to understand changes between current state and previous commits
-- Use `git diff main` to see all changes since the main branch
-- Use git stash strategically to separate different types of changes into focused commits
+### When to Ask for Help
+- Encountering issues or unclear requirements
+- Need clarification on expected behavior
+- Require validation of assumptions before proceeding
+- Changes didn't have the intended effect

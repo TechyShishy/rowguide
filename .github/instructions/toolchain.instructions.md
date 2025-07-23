@@ -2,99 +2,57 @@
 applyTo: "**"
 ---
 
-# Rowguide Development Toolchain Guide
+# Rowguide Development Toolchain - LLM Agent Instructions
 
-**Rowguide** is a sophisticated Angular 20+ pattern tracking application with multi-platform deployment (web, Electron desktop, Android via Capacitor). The project uses a **yarn workspace monorepo** structure.
-
-## Monorepo Structure
+## Project Structure
+**Angular 20+ monorepo** with multi-platform deployment (web, Electron, Android). Use **yarn workspace** commands.
 
 ```
-rowguide/                           # Root monorepo
-├── packages/rowguide/              # Angular app (primary workspace)
-├── packages/electron/              # Electron desktop wrapper
-├── android/                        # Capacitor Android build
-└── docs/                          # GitHub Pages documentation
+rowguide/
+├── packages/rowguide/              # Main Angular app
+├── packages/electron/              # Desktop wrapper  
+├── android/                        # Mobile build
+└── docs/                          # Documentation
 ```
 
-### Primary Workflows (use yarn workspace commands)
+## Essential Commands
 
+### Development & Testing
 ```bash
-# Development server (Angular)
-yarn run start                     # Starts dev server at localhost:4200
+# NEVER start dev server - always already running
+yarn workspace rowguide test --browsers=ChromeHeadless --watch=false
 
-# Build and run platforms
-yarn electron:start                # Launch Electron desktop app
-yarn electron:build               # Build Electron app for Linux
-yarn capacitor:assembleDebug      # Build Android APK
-
-# Testing
-yarn workspace rowguide test      # Run Angular unit tests via Karma
+# Component generation
+yarn workspace rowguide run ng generate component features/[domain]/components/[name]
 ```
 
-### Angular CLI Commands (from packages/rowguide/)
-
+### Platform Builds (require web build first)
 ```bash
-# Component generation (use full workspace command)
-yarn workspace rowguide run ng generate component component-name
-
-# Preferred directory structure for new components:
-yarn workspace rowguide run ng generate component features/[domain]/components/[component-name]
+yarn workspace rowguide build      # Web → dist/rowguide/
+yarn electron:start               # Desktop app
+yarn capacitor:assembleDebug      # Android APK
 ```
 
-## Critical Dependencies & Tools
+## Key Dependencies
+- **Angular 20.0.6** + **Angular Material 20.0.5** (standalone components)
+- **TypeScript 5.8.3** (strict mode), **RxJS 7.8.0**, **Yarn 4.9.2**
+- **Capacitor 7.0.0**, **Electron 37.2.0**, **PDF.js 4.10.38**
+- **IndexedDB** via `idb`, **Karma** testing, **ngx-logger**
 
-### Core Stack
+## LLM Agent Guidelines
 
-- **Angular 20.0.6**: Latest with standalone components pattern
-- **Angular Material 20.0.5**: UI component library
-- **Yarn 4.9.2**: Package manager (configured with workspaces)
-- **TypeScript 5.8.3**: Strict type checking enabled
-- **RxJS 7.8.0**: Reactive programming patterns
+### File Operations
+- **Test files**: Co-locate `.spec.ts` with source files
+- **Styling**: Use SCSS (not CSS)
+- **Assets**: PDF.js worker auto-copies to `/assets/`
 
-### Platform Tools
+### Testing Protocol
+1. **NEVER start dev server** (already running)
+2. **Always run tests** before completion: `yarn workspace rowguide test`
+3. **Ask user to test** builds instead of starting servers
+4. **100% test pass rate** required before code changes complete
 
-- **Capacitor 7.0.0**: Native mobile deployment
-- **Electron 37.2.0**: Desktop application wrapper
-- **PDF.js 4.10.38**: PDF pattern import functionality
-- **IndexedDB**: Client-side data persistence via `idb` library
-
-### Build & Test Tools
-
-- **Angular CLI 20.0.5**: Build system and dev tools
-- **Karma**: Unit test runner
-- **ngx-logger**: Structured logging with levels
-
-## Platform-Specific Build Requirements
-
-### Multi-Platform Build Sequence
-
-- **Web build**: `yarn workspace rowguide build` → `dist/rowguide/`
-- **Electron**: Requires web build first, then `yarn workspace rowguide-electron build`
-- **Android**: Requires web build + `npx cap sync` before Gradle commands
-
-### Asset Management
-
-- **PDF.js worker**: Automatically copied to `/assets/` during build
-- **Angular Material theme**: Uses `indigo-pink` prebuilt theme
-- **SCSS**: Project uses SCSS for styling (not plain CSS)
-
-## Testing Tools
-
-- **Unit tests**: All services must have `.spec.ts` files
-- **Test location**: Co-located with source files
-- **Test runner**: Use `yarn workspace rowguide test --browsers=ChromeHeadless` for Karma-based testing
-- **Headless mode**: Default for AI agents - runs tests without opening browser window
-- **Headed mode**: Use `yarn workspace rowguide test` if browser debugging is needed
-- **Watch mode**: Use `yarn workspace rowguide test --watch --browsers=ChromeHeadless` for continuous testing
-
-## Build Verification Commands
-
-- Run `yarn run start` to verify web build works
-- Check that tests pass with `yarn workspace rowguide test`
-- Verify TypeScript compilation with no errors
-
-## Key Configuration Files
-
-- **`packages/rowguide/angular.json`**: Build configuration and asset handling
-- **`capacitor.config.ts`**: Mobile platform configuration
-- **`package.json`**: Workspace configuration and script definitions
+### Build Dependencies
+- **Android/Electron**: Require web build + `npx cap sync` first
+- **TypeScript**: Must compile without errors
+- **Configuration files**: `angular.json`, `capacitor.config.ts`, `package.json`
