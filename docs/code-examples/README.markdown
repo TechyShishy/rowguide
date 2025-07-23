@@ -16,7 +16,16 @@ The main strategic document outlining all recommendations and implementation app
 
 ## Code Examples & Implementation Guides
 
-### 🛠️ [Error Handling Implementation](error-handling.markdown)
+### � [Developer Onboarding Guide](developer-onboarding.markdown)
+
+**NEW!** Comprehensive guide for new developers including:
+
+- Quick start setup and project overview
+- Essential architectural patterns and utilities
+- Development workflow and testing guidelines
+- Common development tasks and debugging
+
+### �🛠️ [Error Handling Implementation](error-handling.markdown)
 
 Complete implementation of centralized error handling system including:
 

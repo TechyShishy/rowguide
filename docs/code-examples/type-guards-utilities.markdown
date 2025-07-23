@@ -697,6 +697,551 @@ export class MemoizedTypeGuards {
 }
 ```
 
+## Advanced Type Guard Scenarios
+
+### Complex Validation Patterns
+
+#### 1. Nested Object Validation with Deep Checking
+
+```typescript
+// Advanced nested validation for complex project structures
+function isComplexProject(obj: unknown): obj is ComplexProject {
+  if (!isProject(obj)) return false;
+  
+  const project = obj as Project;
+  
+  // Validate FLAM structure if present
+  if (project.firstLastAppearanceMap) {
+    if (!isValidFLAM(project.firstLastAppearanceMap)) {
+      return false;
+    }
+  }
+  
+  // Validate color mappings
+  if (project.colorMapping) {
+    if (!isValidColorMapping(project.colorMapping)) {
+      return false;
+    }
+  }
+  
+  // Validate nested row and step structures
+  return project.rows.every(row => 
+    isRow(row) && 
+    row.steps.every(step => 
+      isStep(step) && 
+      isValidStepContent(step)
+    )
+  );
+}
+
+function isValidFLAM(flam: unknown): flam is FLAM {
+  if (typeof flam !== 'object' || flam === null) return false;
+  
+  return Object.entries(flam).every(([key, value]) => {
+    return typeof key === 'string' && 
+           isFLAMRow(value) &&
+           value.key === key;
+  });
+}
+
+function isFLAMRow(obj: unknown): obj is FLAMRow {
+  return typeof obj === 'object' && obj !== null &&
+         'key' in obj && typeof (obj as any).key === 'string' &&
+         'firstAppearance' in obj && isPosition((obj as any).firstAppearance) &&
+         'lastAppearance' in obj && isPosition((obj as any).lastAppearance) &&
+         'count' in obj && typeof (obj as any).count === 'number' &&
+         (obj as any).count >= 0;
+}
+
+function isValidColorMapping(mapping: unknown): mapping is Record<string, string> {
+  if (typeof mapping !== 'object' || mapping === null) return false;
+  
+  return Object.entries(mapping).every(([key, value]) => {
+    return typeof key === 'string' && 
+           typeof value === 'string' &&
+           isValidHexColor(value);
+  });
+}
+
+function isValidHexColor(color: string): boolean {
+  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
+}
+```
+
+#### 2. Runtime Type Validation with Error Context
+
+```typescript
+// Enhanced type guards with detailed error reporting
+interface ValidationResult<T> {
+  isValid: boolean;
+  data?: T;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+interface ValidationError {
+  path: string;
+  expectedType: string;
+  actualType: string;
+  message: string;
+}
+
+interface ValidationWarning {
+  path: string;
+  message: string;
+  suggestion?: string;
+}
+
+function validateProjectWithContext(obj: unknown): ValidationResult<Project> {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+  
+  // Root level validation
+  if (typeof obj !== 'object' || obj === null) {
+    return {
+      isValid: false,
+      errors: [{
+        path: 'root',
+        expectedType: 'object',
+        actualType: typeof obj,
+        message: 'Project must be an object'
+      }],
+      warnings: []
+    };
+  }
+  
+  const project = obj as any;
+  
+  // ID validation
+  if (!('id' in project)) {
+    errors.push({
+      path: 'id',
+      expectedType: 'number',
+      actualType: 'missing',
+      message: 'Project ID is required'
+    });
+  } else if (typeof project.id !== 'number' || project.id <= 0) {
+    errors.push({
+      path: 'id',
+      expectedType: 'positive number',
+      actualType: typeof project.id,
+      message: 'Project ID must be a positive number'
+    });
+  }
+  
+  // Name validation with suggestions
+  if (!('name' in project)) {
+    warnings.push({
+      path: 'name',
+      message: 'Project name is missing',
+      suggestion: 'Consider adding a descriptive name for better organization'
+    });
+  } else if (typeof project.name !== 'string') {
+    errors.push({
+      path: 'name',
+      expectedType: 'string',
+      actualType: typeof project.name,
+      message: 'Project name must be a string'
+    });
+  } else if (project.name.length > 100) {
+    warnings.push({
+      path: 'name',
+      message: 'Project name is very long',
+      suggestion: 'Consider shortening to improve readability'
+    });
+  }
+  
+  // Rows validation with path tracking
+  if (!('rows' in project)) {
+    errors.push({
+      path: 'rows',
+      expectedType: 'array',
+      actualType: 'missing',
+      message: 'Project rows array is required'
+    });
+  } else if (!Array.isArray(project.rows)) {
+    errors.push({
+      path: 'rows',
+      expectedType: 'array',
+      actualType: typeof project.rows,
+      message: 'Project rows must be an array'
+    });
+  } else {
+    // Validate each row
+    project.rows.forEach((row: unknown, rowIndex: number) => {
+      const rowResult = validateRowWithPath(row, `rows[${rowIndex}]`);
+      errors.push(...rowResult.errors);
+      warnings.push(...rowResult.warnings);
+    });
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    data: errors.length === 0 ? project as Project : undefined,
+    errors,
+    warnings
+  };
+}
+
+function validateRowWithPath(obj: unknown, basePath: string): ValidationResult<Row> {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+  
+  if (typeof obj !== 'object' || obj === null) {
+    errors.push({
+      path: basePath,
+      expectedType: 'object',
+      actualType: typeof obj,
+      message: 'Row must be an object'
+    });
+    return { isValid: false, errors, warnings };
+  }
+  
+  const row = obj as any;
+  
+  // Validate row ID
+  if (!('id' in row) || typeof row.id !== 'number') {
+    errors.push({
+      path: `${basePath}.id`,
+      expectedType: 'number',
+      actualType: typeof row.id,
+      message: 'Row ID must be a number'
+    });
+  }
+  
+  // Validate steps array
+  if (!Array.isArray(row.steps)) {
+    errors.push({
+      path: `${basePath}.steps`,
+      expectedType: 'array',
+      actualType: typeof row.steps,
+      message: 'Row steps must be an array'
+    });
+  } else if (row.steps.length === 0) {
+    warnings.push({
+      path: `${basePath}.steps`,
+      message: 'Row has no steps',
+      suggestion: 'Empty rows may indicate incomplete pattern data'
+    });
+  } else {
+    // Validate each step
+    row.steps.forEach((step: unknown, stepIndex: number) => {
+      const stepResult = validateStepWithPath(step, `${basePath}.steps[${stepIndex}]`);
+      errors.push(...stepResult.errors);
+      warnings.push(...stepResult.warnings);
+    });
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    data: errors.length === 0 ? row as Row : undefined,
+    errors,
+    warnings
+  };
+}
+```
+
+#### 3. Advanced Safe Access Patterns
+
+```typescript
+// Advanced safe access with path-based property extraction
+class AdvancedSafeAccess {
+  /**
+   * Extract nested properties using dot notation path
+   */
+  static getNestedProperty<T>(obj: unknown, path: string, defaultValue: T): T {
+    if (!obj || typeof obj !== 'object') {
+      return defaultValue;
+    }
+    
+    const keys = path.split('.');
+    let current: any = obj;
+    
+    for (const key of keys) {
+      if (current == null || typeof current !== 'object' || !(key in current)) {
+        return defaultValue;
+      }
+      current = current[key];
+    }
+    
+    return current !== undefined ? current : defaultValue;
+  }
+  
+  /**
+   * Safe array access with bounds checking
+   */
+  static getArrayElement<T>(arr: unknown, index: number, defaultValue: T): T {
+    if (!Array.isArray(arr) || index < 0 || index >= arr.length) {
+      return defaultValue;
+    }
+    
+    const element = arr[index];
+    return element !== undefined ? element : defaultValue;
+  }
+  
+  /**
+   * Extract project statistics safely
+   */
+  static getProjectStatistics(project: unknown): ProjectStatistics {
+    if (!ModelTypeGuards.isValidProject(project)) {
+      return {
+        totalRows: 0,
+        totalSteps: 0,
+        uniqueColors: 0,
+        completionPercentage: 0
+      };
+    }
+    
+    const rows = SafeAccess.getProjectRows(project);
+    const totalSteps = rows.reduce((sum, row) => {
+      const steps = SafeAccess.getRowSteps(row);
+      return sum + steps.length;
+    }, 0);
+    
+    const uniqueColors = new Set(
+      rows.flatMap(row => 
+        SafeAccess.getRowSteps(row).map(step => 
+          SafeAccess.getStepDescription(step)
+        )
+      ).filter(desc => desc.length > 0)
+    ).size;
+    
+    const position = SafeAccess.getProjectPosition(project);
+    const currentStepIndex = rows.slice(0, position.row + 1)
+      .reduce((sum, row, index) => {
+        const steps = SafeAccess.getRowSteps(row);
+        if (index === position.row) {
+          return sum + Math.min(position.step + 1, steps.length);
+        }
+        return sum + steps.length;
+      }, 0);
+    
+    const completionPercentage = totalSteps > 0 
+      ? Math.round((currentStepIndex / totalSteps) * 100)
+      : 0;
+    
+    return {
+      totalRows: rows.length,
+      totalSteps,
+      uniqueColors,
+      completionPercentage
+    };
+  }
+  
+  /**
+   * Safe access to step at specific position
+   */
+  static getStepAtPosition(project: unknown, position: Position): Step | null {
+    if (!ModelTypeGuards.isValidProject(project) || !ModelTypeGuards.isPosition(position)) {
+      return null;
+    }
+    
+    const rows = SafeAccess.getProjectRows(project);
+    const row = this.getArrayElement(rows, position.row, null);
+    
+    if (!row) return null;
+    
+    const steps = SafeAccess.getRowSteps(row);
+    return this.getArrayElement(steps, position.step, null);
+  }
+  
+  /**
+   * Safe navigation with position boundaries
+   */
+  static getNextPosition(project: unknown, currentPosition: Position): Position | null {
+    if (!ModelTypeGuards.isValidProject(project) || !ModelTypeGuards.isPosition(currentPosition)) {
+      return null;
+    }
+    
+    const rows = SafeAccess.getProjectRows(project);
+    const currentRow = this.getArrayElement(rows, currentPosition.row, null);
+    
+    if (!currentRow) return null;
+    
+    const currentSteps = SafeAccess.getRowSteps(currentRow);
+    
+    // Try next step in current row
+    if (currentPosition.step + 1 < currentSteps.length) {
+      return {
+        row: currentPosition.row,
+        step: currentPosition.step + 1
+      };
+    }
+    
+    // Try first step of next row
+    if (currentPosition.row + 1 < rows.length) {
+      const nextRow = rows[currentPosition.row + 1];
+      const nextSteps = SafeAccess.getRowSteps(nextRow);
+      
+      if (nextSteps.length > 0) {
+        return {
+          row: currentPosition.row + 1,
+          step: 0
+        };
+      }
+    }
+    
+    return null; // End of project
+  }
+}
+
+interface ProjectStatistics {
+  totalRows: number;
+  totalSteps: number;
+  uniqueColors: number;
+  completionPercentage: number;
+}
+```
+
+#### 4. High-Performance Type Guards with Caching
+
+```typescript
+// Memoized type guards for performance-critical operations
+class MemoizedTypeGuards {
+  private static validationCache = new Map<string, boolean>();
+  private static cacheSize = 1000; // Prevent memory leaks
+  
+  /**
+   * Cached project validation for frequently accessed projects
+   */
+  static isValidProjectCached(obj: unknown): obj is Project {
+    if (obj == null) return false;
+    
+    // Generate cache key (simplified - in production use better hashing)
+    const cacheKey = JSON.stringify({
+      id: (obj as any)?.id,
+      hasRows: Array.isArray((obj as any)?.rows),
+      rowCount: (obj as any)?.rows?.length || 0
+    });
+    
+    if (this.validationCache.has(cacheKey)) {
+      return this.validationCache.get(cacheKey)!;
+    }
+    
+    const isValid = ModelTypeGuards.isValidProject(obj);
+    
+    // Manage cache size
+    if (this.validationCache.size >= this.cacheSize) {
+      const firstKey = this.validationCache.keys().next().value;
+      this.validationCache.delete(firstKey);
+    }
+    
+    this.validationCache.set(cacheKey, isValid);
+    return isValid;
+  }
+  
+  /**
+   * Bulk validation with early termination
+   */
+  static validateProjectArray(projects: unknown[]): Project[] {
+    const validProjects: Project[] = [];
+    
+    for (const project of projects) {
+      // Fast rejection for obvious non-projects
+      if (typeof project !== 'object' || project === null) {
+        continue;
+      }
+      
+      // Quick structural check before full validation
+      if (!('id' in project) || !('rows' in project)) {
+        continue;
+      }
+      
+      // Full validation only for candidates
+      if (this.isValidProjectCached(project)) {
+        validProjects.push(project);
+      }
+    }
+    
+    return validProjects;
+  }
+  
+  /**
+   * Clear validation cache (call when project structure changes)
+   */
+  static clearValidationCache(): void {
+    this.validationCache.clear();
+  }
+}
+```
+
+#### 5. Type Guard Composition and Chaining
+
+```typescript
+// Composable type guards for complex validation scenarios
+type TypeGuard<T> = (obj: unknown) => obj is T;
+type ValidationPredicate = (obj: unknown) => boolean;
+
+class ComposableTypeGuards {
+  /**
+   * Combine multiple type guards with AND logic
+   */
+  static and<T>(...guards: TypeGuard<T>[]): TypeGuard<T> {
+    return (obj: unknown): obj is T => {
+      return guards.every(guard => guard(obj));
+    };
+  }
+  
+  /**
+   * Combine multiple type guards with OR logic
+   */
+  static or<T>(...guards: TypeGuard<T>[]): TypeGuard<T> {
+    return (obj: unknown): obj is T => {
+      return guards.some(guard => guard(obj));
+    };
+  }
+  
+  /**
+   * Negate a type guard
+   */
+  static not<T>(guard: TypeGuard<T>): ValidationPredicate {
+    return (obj: unknown): boolean => {
+      return !guard(obj);
+    };
+  }
+  
+  /**
+   * Create array type guard from element type guard
+   */
+  static arrayOf<T>(elementGuard: TypeGuard<T>): TypeGuard<T[]> {
+    return (obj: unknown): obj is T[] => {
+      return Array.isArray(obj) && obj.every(elementGuard);
+    };
+  }
+  
+  /**
+   * Create optional property type guard
+   */
+  static optional<T>(guard: TypeGuard<T>): TypeGuard<T | undefined> {
+    return (obj: unknown): obj is T | undefined => {
+      return obj === undefined || guard(obj);
+    };
+  }
+}
+
+// Usage examples of composed type guards
+const isValidProjectArray = ComposableTypeGuards.arrayOf(ModelTypeGuards.isValidProject);
+
+const isProjectWithOptionalImage = ComposableTypeGuards.and(
+  ModelTypeGuards.isValidProject,
+  (obj: unknown): obj is Project => {
+    const project = obj as Project;
+    return ComposableTypeGuards.optional(
+      (img): img is ArrayBuffer => img instanceof ArrayBuffer
+    )(project.image);
+  }
+);
+
+const isCompleteProject = ComposableTypeGuards.and(
+  ModelTypeGuards.isValidProject,
+  (obj: unknown): obj is Project => {
+    const project = obj as Project;
+    return project.rows.length > 0 && 
+           project.rows.every(row => SafeAccess.getRowSteps(row).length > 0);
+  }
+);
+```
+
 ## Best Practices Summary
 
 ### Type Safety Checklist
@@ -709,6 +1254,15 @@ export class MemoizedTypeGuards {
 - ✅ **Handle edge cases** - Plan for null, undefined, and malformed data
 - ✅ **Use TypeScript strict mode** - Enable all strict type checking
 - ✅ **Document type contracts** - Clear JSDoc for all type guards
+
+### Advanced Patterns
+
+1. **Contextual Validation** - Provide detailed error information for debugging
+2. **Path-Based Access** - Navigate nested structures safely with dot notation
+3. **Performance Optimization** - Cache validation results for frequently accessed data
+4. **Composable Guards** - Build complex validators from simple building blocks
+5. **Early Termination** - Fail fast for obvious invalid data
+6. **Statistical Analysis** - Extract meaningful metrics from validated data
 
 ### Common Patterns
 
@@ -725,3 +1279,7 @@ export class MemoizedTypeGuards {
 - [ReactiveStateStore Examples]({{ site.baseurl }}/code-examples/reactive-state-store) - Type-safe state management
 - [DataIntegrityService Examples]({{ site.baseurl }}/code-examples/data-integrity-service) - Data validation patterns
 - [Component Integration Guide]({{ site.baseurl }}/code-examples/component-integration) - Type-safe component patterns
+- [Developer Onboarding Guide]({{ site.baseurl }}/code-examples/developer-onboarding) - Getting started with type safety
+- [Testing Strategy]({{ site.baseurl }}/code-examples/testing-strategy) - Testing type guards and utilities
+
+```

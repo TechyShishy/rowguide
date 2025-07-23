@@ -1031,6 +1031,8 @@ export class ComponentContractValidator {
 }
 ```
 
+```
+
 This comprehensive testing strategy provides:
 
 1. **Advanced Test Data Management**: Realistic and edge-case data generation
@@ -1041,3 +1043,453 @@ This comprehensive testing strategy provides:
 6. **Contract Testing**: API and component interface validation
 
 These patterns ensure enterprise-grade quality assurance with comprehensive coverage of functional, performance, accessibility, and visual requirements.
+
+## Utilities Testing Patterns
+
+### Testing ModelFactory and SafeAccess
+
+```typescript
+describe('ModelFactory Testing Patterns', () => {
+  describe('createProject()', () => {
+    it('should create valid project with defaults', () => {
+      const project = ModelFactory.createProject();
+      
+      expect(ModelTypeGuards.isValidProject(project)).toBe(true);
+      expect(project.id).toBeGreaterThan(0);
+      expect(project.name).toBe('');
+      expect(project.rows).toEqual([]);
+      expect(project.position).toEqual(DEFAULT_VALUES.position());
+    });
+
+    it('should merge provided data with defaults', () => {
+      const customData = {
+        name: 'Test Project',
+        rows: [ModelFactory.createRow()]
+      };
+      
+      const project = ModelFactory.createProject(customData);
+      
+      expect(project.name).toBe('Test Project');
+      expect(project.rows).toHaveLength(1);
+      expect(ModelTypeGuards.isValidProject(project)).toBe(true);
+    });
+
+    it('should handle null/undefined input gracefully', () => {
+      const nullProject = ModelFactory.createProject(null as any);
+      const undefinedProject = ModelFactory.createProject(undefined as any);
+      
+      expect(ModelTypeGuards.isValidProject(nullProject)).toBe(true);
+      expect(ModelTypeGuards.isValidProject(undefinedProject)).toBe(true);
+    });
+
+    it('should sanitize invalid properties', () => {
+      const invalidData = {
+        id: 'not-a-number',
+        name: null,
+        rows: 'not-an-array',
+        position: { invalid: 'position' }
+      };
+      
+      const project = ModelFactory.createProject(invalidData as any);
+      
+      expect(typeof project.id).toBe('number');
+      expect(typeof project.name).toBe('string');
+      expect(Array.isArray(project.rows)).toBe(true);
+      expect(ModelTypeGuards.isPosition(project.position)).toBe(true);
+    });
+  });
+
+  describe('SafeAccess patterns', () => {
+    it('should handle null project safely', () => {
+      const nullProject = null;
+      
+      expect(SafeAccess.getProjectId(nullProject)).toBe(0);
+      expect(SafeAccess.getProjectName(nullProject)).toBe('');
+      expect(SafeAccess.getProjectRows(nullProject)).toEqual([]);
+      expect(SafeAccess.getProjectPosition(nullProject)).toEqual(DEFAULT_VALUES.position());
+    });
+
+    it('should extract valid properties from valid project', () => {
+      const project = ModelFactory.createProject({
+        id: 42,
+        name: 'Test Project',
+        rows: [ModelFactory.createRow()],
+        position: ModelFactory.createPosition({ row: 1, step: 2 })
+      });
+      
+      expect(SafeAccess.getProjectId(project)).toBe(42);
+      expect(SafeAccess.getProjectName(project)).toBe('Test Project');
+      expect(SafeAccess.getProjectRows(project)).toHaveLength(1);
+      expect(SafeAccess.getProjectPosition(project)).toEqual({ row: 1, step: 2 });
+    });
+
+    it('should provide fallbacks for malformed projects', () => {
+      const malformedProject = {
+        id: null,
+        name: undefined,
+        rows: 'not-an-array',
+        position: null
+      };
+      
+      expect(SafeAccess.getProjectId(malformedProject as any)).toBe(0);
+      expect(SafeAccess.getProjectName(malformedProject as any)).toBe('');
+      expect(SafeAccess.getProjectRows(malformedProject as any)).toEqual([]);
+      expect(SafeAccess.getProjectPosition(malformedProject as any)).toEqual(DEFAULT_VALUES.position());
+    });
+  });
+});
+
+describe('Type Guards Testing Patterns', () => {
+  describe('ModelTypeGuards.isValidProject()', () => {
+    it('should validate complete project objects', () => {
+      const validProject = ModelFactory.createProject({
+        name: 'Valid Project',
+        rows: [ModelFactory.createRow()]
+      });
+      
+      expect(ModelTypeGuards.isValidProject(validProject)).toBe(true);
+    });
+
+    it('should reject invalid data types', () => {
+      expect(ModelTypeGuards.isValidProject(null)).toBe(false);
+      expect(ModelTypeGuards.isValidProject(undefined)).toBe(false);
+      expect(ModelTypeGuards.isValidProject('string')).toBe(false);
+      expect(ModelTypeGuards.isValidProject(42)).toBe(false);
+      expect(ModelTypeGuards.isValidProject([])).toBe(false);
+    });
+
+    it('should reject objects missing required properties', () => {
+      expect(ModelTypeGuards.isValidProject({})).toBe(false);
+      expect(ModelTypeGuards.isValidProject({ id: 1 })).toBe(false);
+      expect(ModelTypeGuards.isValidProject({ id: 1, name: 'test' })).toBe(false);
+    });
+
+    it('should validate nested row structure', () => {
+      const projectWithInvalidRows = {
+        id: 1,
+        name: 'Test',
+        rows: ['not', 'valid', 'rows'],
+        position: DEFAULT_VALUES.position()
+      };
+      
+      expect(ModelTypeGuards.isValidProject(projectWithInvalidRows)).toBe(false);
+    });
+  });
+
+  describe('Complex validation scenarios', () => {
+    it('should handle circular references safely', () => {
+      const circular: any = { id: 1, name: 'test' };
+      circular.self = circular;
+      
+      expect(() => ModelTypeGuards.isValidProject(circular)).not.toThrow();
+      expect(ModelTypeGuards.isValidProject(circular)).toBe(false);
+    });
+
+    it('should validate deeply nested structures', () => {
+      const deepProject = ModelFactory.createProject({
+        rows: Array.from({ length: 100 }, (_, i) => 
+          ModelFactory.createRow({
+            steps: Array.from({ length: 50 }, (_, j) =>
+              ModelFactory.createStep({ 
+                id: j, 
+                count: Math.floor(Math.random() * 10) + 1,
+                description: `Color ${j}` 
+              })
+            )
+          })
+        )
+      });
+      
+      expect(ModelTypeGuards.isValidProject(deepProject)).toBe(true);
+    });
+  });
+});
+
+describe('DataIntegrityService Testing Patterns', () => {
+  let service: DataIntegrityService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [DataIntegrityService]
+    });
+    service = TestBed.inject(DataIntegrityService);
+  });
+
+  describe('validateProjectName()', () => {
+    it('should accept valid project names', () => {
+      expect(service.validateProjectName('Valid Name')).toBe(true);
+      expect(service.validateProjectName('Project123')).toBe(true);
+      expect(service.validateProjectName('My-Project_2024')).toBe(true);
+    });
+
+    it('should reject invalid names', () => {
+      expect(service.validateProjectName('')).toBe(false);
+      expect(service.validateProjectName(null as any)).toBe(false);
+      expect(service.validateProjectName('   ')).toBe(false);
+      expect(service.validateProjectName('a'.repeat(1000))).toBe(false);
+    });
+
+    it('should sanitize and validate dangerous content', () => {
+      expect(service.validateProjectName('<script>alert("xss")</script>')).toBe(false);
+      expect(service.validateProjectName('../../etc/passwd')).toBe(false);
+      expect(service.validateProjectName('DROP TABLE projects;')).toBe(false);
+    });
+  });
+
+  describe('validatePositionData()', () => {
+    it('should validate position coordinates within bounds', () => {
+      const project = ModelFactory.createProject({
+        rows: [
+          ModelFactory.createRow({
+            steps: [
+              ModelFactory.createStep(),
+              ModelFactory.createStep()
+            ]
+          })
+        ]
+      });
+      
+      expect(service.validatePositionData({ row: 0, step: 0 }, project)).toBe(true);
+      expect(service.validatePositionData({ row: 0, step: 1 }, project)).toBe(true);
+    });
+
+    it('should reject out-of-bounds positions', () => {
+      const project = ModelFactory.createProject({
+        rows: [ModelFactory.createRow({ steps: [ModelFactory.createStep()] })]
+      });
+      
+      expect(service.validatePositionData({ row: 1, step: 0 }, project)).toBe(false);
+      expect(service.validatePositionData({ row: 0, step: 1 }, project)).toBe(false);
+      expect(service.validatePositionData({ row: -1, step: 0 }, project)).toBe(false);
+    });
+  });
+
+  describe('integrity event logging', () => {
+    it('should log validation failures', () => {
+      const invalidName = '<script>alert("xss")</script>';
+      
+      service.validateProjectName(invalidName);
+      
+      const events = service.getRecentEvents();
+      expect(events).toContainEqual(jasmine.objectContaining({
+        type: 'validation-failure',
+        operation: 'validateProjectName',
+        details: jasmine.objectContaining({
+          input: invalidName,
+          reason: 'contains-dangerous-content'
+        })
+      }));
+    });
+
+    it('should track integrity violations over time', () => {
+      service.validateProjectName('');
+      service.validateProjectName(null as any);
+      service.validatePositionData({ row: -1, step: 0 }, ModelFactory.createProject());
+      
+      const events = service.getRecentEvents();
+      expect(events).toHaveLength(3);
+      expect(events.every(e => e.timestamp)).toBe(true);
+    });
+  });
+});
+
+describe('ErrorHandlerService Utilities Testing', () => {
+  let service: ErrorHandlerService;
+  let mockNotificationService: jasmine.SpyObj<NotificationService>;
+
+  beforeEach(() => {
+    const notificationSpy = jasmine.createSpyObj('NotificationService', 
+      ['error', 'warning', 'info']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        ErrorHandlerService,
+        { provide: NotificationService, useValue: notificationSpy }
+      ]
+    });
+
+    service = TestBed.inject(ErrorHandlerService);
+    mockNotificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
+  });
+
+  describe('extractErrorMessage()', () => {
+    it('should extract messages from various error types', () => {
+      const standardError = new Error('Standard error message');
+      const stringError = 'String error';
+      const objectError = { message: 'Object error message' };
+      const nullError = null;
+
+      expect(service.extractErrorMessage(standardError)).toBe('Standard error message');
+      expect(service.extractErrorMessage(stringError)).toBe('String error');
+      expect(service.extractErrorMessage(objectError)).toBe('Object error message');
+      expect(service.extractErrorMessage(nullError)).toBe('Unknown error occurred');
+    });
+
+    it('should handle nested error structures', () => {
+      const nestedError = {
+        error: {
+          message: 'Nested error message',
+          details: 'Additional details'
+        }
+      };
+
+      expect(service.extractErrorMessage(nestedError)).toBe('Nested error message');
+    });
+  });
+
+  describe('categorizeError()', () => {
+    it('should categorize errors by severity', () => {
+      const criticalError = { name: 'DatabaseConnectionError' };
+      const userError = { name: 'ValidationError' };
+      const networkError = { name: 'NetworkError' };
+
+      expect(service.categorizeError(criticalError).severity).toBe('critical');
+      expect(service.categorizeError(userError).severity).toBe('user');
+      expect(service.categorizeError(networkError).severity).toBe('recoverable');
+    });
+
+    it('should provide appropriate recovery strategies', () => {
+      const networkError = { name: 'NetworkError', message: 'Failed to fetch' };
+      
+      const categorized = service.categorizeError(networkError);
+      
+      expect(categorized.recovery).toEqual(jasmine.objectContaining({
+        strategy: 'retry',
+        retryable: true,
+        maxRetries: jasmine.any(Number)
+      }));
+    });
+  });
+
+  describe('error notification integration', () => {
+    it('should emit notifications for handled errors', () => {
+      const error = new Error('Test error');
+      const context = { operation: 'test-operation', component: 'TestComponent' };
+
+      service.handleError(error, context);
+
+      expect(mockNotificationService.error).toHaveBeenCalledWith(
+        jasmine.any(String),
+        jasmine.objectContaining({
+          actions: jasmine.any(Array)
+        })
+      );
+    });
+
+    it('should provide retry actions for recoverable errors', (done) => {
+      const error = { name: 'NetworkError', message: 'Connection failed' };
+      
+      service.handleError(error, { operation: 'network-request' });
+
+      service.getNotifications().subscribe(notification => {
+        expect(notification.actions).toContainEqual(jasmine.objectContaining({
+          label: 'Retry',
+          action: jasmine.any(Function)
+        }));
+        done();
+      });
+    });
+  });
+});
+```
+
+### Testing ReactiveStateStore Integration
+
+```typescript
+describe('ReactiveStateStore Testing Patterns', () => {
+  let store: ReactiveStateStore;
+  let initialState: AppState;
+
+  beforeEach(() => {
+    initialState = createInitialState();
+    TestBed.configureTestingModule({
+      providers: [ReactiveStateStore]
+    });
+    store = TestBed.inject(ReactiveStateStore);
+  });
+
+  describe('state management utilities', () => {
+    it('should provide immutable state snapshots', () => {
+      const state1 = store.getState();
+      const state2 = store.getState();
+      
+      expect(state1).not.toBe(state2); // Different objects
+      expect(state1).toEqual(state2); // Same content
+    });
+
+    it('should support time-travel debugging', () => {
+      const action1 = { type: 'TEST_ACTION_1' };
+      const action2 = { type: 'TEST_ACTION_2' };
+      
+      store.dispatch(action1);
+      store.dispatch(action2);
+      
+      const history = store.getStateHistory();
+      expect(history).toHaveLength(3); // initial + 2 actions
+      
+      // Restore to previous state
+      store.restoreStateFromHistory(1);
+      expect(store.getActions$().pipe(take(1))).toEmit([action1]);
+    });
+
+    it('should handle selector caching correctly', () => {
+      const expensiveSelector = jasmine.createSpy('expensiveSelector')
+        .and.returnValue('computed-value');
+      
+      // First call should execute
+      const result1 = store.select(expensiveSelector);
+      expect(expensiveSelector).toHaveBeenCalledTimes(1);
+      
+      // Second call should use cache
+      const result2 = store.select(expensiveSelector);
+      expect(expensiveSelector).toHaveBeenCalledTimes(1);
+      
+      // Cache should clear after state change
+      store.dispatch({ type: 'CHANGE_STATE' });
+      const result3 = store.select(expensiveSelector);
+      expect(expensiveSelector).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('middleware integration testing', () => {
+    it('should process actions through middleware pipeline', () => {
+      const middleware1 = jasmine.createSpy('middleware1')
+        .and.callFake((action, next) => next(action));
+      const middleware2 = jasmine.createSpy('middleware2')
+        .and.callFake((action, next) => next(action));
+      
+      store.addMiddleware(middleware1);
+      store.addMiddleware(middleware2);
+      
+      const action = { type: 'TEST_ACTION' };
+      store.dispatch(action);
+      
+      expect(middleware1).toHaveBeenCalledWith(action, jasmine.any(Function));
+      expect(middleware2).toHaveBeenCalledWith(action, jasmine.any(Function));
+    });
+
+    it('should handle middleware errors gracefully', () => {
+      const errorMiddleware = jasmine.createSpy('errorMiddleware')
+        .and.throwError('Middleware error');
+      
+      store.addMiddleware(errorMiddleware);
+      
+      expect(() => store.dispatch({ type: 'TEST' })).not.toThrow();
+      // Should still update state despite middleware error
+      expect(store.getState()).toBeDefined();
+    });
+  });
+});
+```
+
+These utilities testing patterns demonstrate:
+
+1. **ModelFactory & SafeAccess**: Comprehensive null-safety testing
+2. **Type Guards**: Runtime validation and edge case handling
+3. **DataIntegrityService**: Input validation and sanitization testing
+4. **ErrorHandlerService**: Error categorization and recovery testing
+5. **ReactiveStateStore**: State management and middleware testing
+
+Each pattern includes realistic test scenarios that validate the utility functions work correctly under both normal and edge-case conditions.
+
+````
