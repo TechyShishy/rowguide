@@ -28,6 +28,18 @@ git diff main              # All changes since main branch
 git stash                  # Separate changes into focused commits
 ```
 
+### Command Output Management
+- **NEVER use head, tail, or pipes** to limit command output length
+- **If output might be long**, save to temporary file and read back:
+```bash
+# ❌ Don't do this:
+yarn test | head -50
+
+# ✅ Do this instead:
+yarn test > /tmp/test-output.txt
+# Then use read_file tool to examine /tmp/test-output.txt
+```
+
 ### When to Ask for Help
 - Encountering issues or unclear requirements
 - Need clarification on expected behavior
