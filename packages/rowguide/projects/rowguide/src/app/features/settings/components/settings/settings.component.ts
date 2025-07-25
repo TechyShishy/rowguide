@@ -7,6 +7,8 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { NGXLogger } from 'ngx-logger';
@@ -28,10 +30,12 @@ import {
   selectScrollOffset,
   selectMultiAdvance,
   selectFlamSort,
-  selectProjectSort
+  selectProjectSort,
+  selectColorModel
 } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectService } from '../../../project-management/services';
 import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
+import { ColorModel } from '../../../../shared/models/color-model.enum';
 
 /**
  * Settings component for comprehensive application configuration management
@@ -70,6 +74,8 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
     ReactiveFormsModule,
     MatCardModule,
     MatSliderModule,
+    MatSelectModule,
+    MatFormFieldModule,
     CommonModule,
     ErrorBoundaryComponent,
   ],
@@ -77,6 +83,11 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
+  /**
+   * Make ColorModel enum available to template
+   */
+  readonly ColorModel = ColorModel;
+
   /**
    * Controls whether rows 1 and 2 are combined in pattern display.
    * Used with Material slide toggle for visual pattern optimization.
@@ -120,6 +131,12 @@ export class SettingsComponent {
   multiadvanceControl = new FormControl(3);
 
   /**
+   * Controls automatic color prefix based on selected color model.
+   * Enables automatic prefixing of empty color inputs (e.g., "DB" for Miyuki Delica).
+   */
+  colorModelControl = new FormControl(ColorModel.NONE);
+
+  /**
    * Reactive form group containing all user-configurable settings.
    *
    * Provides centralized form state management with automatic validation
@@ -146,6 +163,7 @@ export class SettingsComponent {
     zoom: this.zoomControl,
     scrolloffset: this.scrolloffsetControl,
     multiadvance: this.multiadvanceControl,
+    colorModel: this.colorModelControl,
   });
 
   /**
@@ -229,6 +247,7 @@ export class SettingsComponent {
         multiadvance: value.multiadvance,
         flamsort: currentFlamsort, // Preserve current value
         projectsort: currentProjectsort, // Preserve current value
+        colorModel: value.colorModel, // Use form value directly
       });
     });
   }
@@ -274,6 +293,9 @@ export class SettingsComponent {
     const multiadvance = await firstValueFrom(
       this.store.select(selectMultiAdvance)
     );
+    const colorModel = await firstValueFrom(
+      this.store.select(selectColorModel)
+    );
 
     this.combine12Control.setValue(combine12);
     this.lrdesignatorsControl.setValue(lrdesignators);
@@ -282,6 +304,7 @@ export class SettingsComponent {
     this.zoomControl.setValue(zoom);
     this.scrolloffsetControl.setValue(scrolloffset);
     this.multiadvanceControl.setValue(multiadvance);
+    this.colorModelControl.setValue(colorModel as ColorModel);
   }
 
   /**
@@ -311,5 +334,21 @@ export class SettingsComponent {
   onRetry(): void {
     // Re-initialize form controls when retrying after an error
     this.initializeFormControls();
+  }
+
+  /**
+   * Handles color model selection changes and dispatches update action.
+   *
+   * Called by Material Select component when user changes the color model setting.
+   * Immediately updates the application state to enable/disable auto-prefix functionality.
+   *
+   * @param value - Selected color model value
+   * @example
+   * ```html
+   * <mat-select (selectionChange)="onColorModelChange($event.value)">
+   * ```
+   */
+  onColorModelChange(value: ColorModel): void {
+    this.store.dispatch(SettingsActions.updateColorModel(value));
   }
 }

@@ -25,7 +25,7 @@ import {
 import { ngfModule } from 'angular-file';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, firstValueFrom, from, of } from 'rxjs';
-import { map, switchMap, take, distinctUntilChanged, shareReplay } from 'rxjs/operators';
+import { map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs/operators';
 
 import { FLAMRow } from '../../../../core/models/flamrow';
 import { Position } from '../../../../core/models/position';
@@ -35,7 +35,7 @@ import { ReactiveStateStore } from '../../../../core/store/reactive-state-store'
 import { ProjectActions } from '../../../../core/store/actions/project-actions';
 import { SettingsActions } from '../../../../core/store/actions/settings-actions';
 import { selectCurrentProject } from '../../../../core/store/selectors/project-selectors';
-import { selectFlamSort } from '../../../../core/store/selectors/settings-selectors';
+import { selectFlamSort, selectColorModelPrefix } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
 import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
@@ -175,6 +175,15 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
    * Null when no row is being edited.
    */
   editingColorKey: string | null = null;
+
+  /**
+   * Tracks whether auto-prefix was applied to the current editing session.
+   *
+   * Used to determine cursor positioning behavior:
+   * - true: Position cursor after prefix (for auto-prefixed values)
+   * - false: Select all text (for manually entered values)
+   */
+  private autoPrefixApplied: boolean = false;
 
   /**
    * Delica color system mapping loaded from JSON configuration.
@@ -446,8 +455,29 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
    */
   private focusColorInput(): void {
     if (this.colorInput?.nativeElement) {
-      this.colorInput.nativeElement.focus();
-      this.colorInput.nativeElement.select();
+      const input = this.colorInput.nativeElement;
+      
+      // Get the current FLAM row data to determine actual value
+      const currentFlam = this.flamService.flam$.value;
+      const currentRow = currentFlam[this.editingColorKey || ''];
+      const actualValue = currentRow?.color || '';
+      
+      // Ensure input value matches the FLAM data
+      if (input.value !== actualValue) {
+        input.value = actualValue;
+      }
+      
+      input.focus();
+      
+      // Determine cursor behavior based on whether auto-prefix was applied
+      if (this.autoPrefixApplied) {
+        // For auto-prefixed values, position cursor at end to allow immediate typing
+        const value = input.value || '';
+        input.setSelectionRange(value.length, value.length);
+      } else {
+        // For manually entered values, select all text (existing behavior)
+        input.select();
+      }
     }
   }
 
@@ -614,6 +644,11 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
    * @param flamRow - FLAM row to enter color editing mode
    */
   startEditingColor(flamRow: FLAMRow): void {
+    // Apply auto-prefix for empty color fields and track result (fire-and-forget)
+    this.applyAutoPrefixIfNeeded(flamRow).then(applied => {
+      this.autoPrefixApplied = applied;
+    });
+    
     this.editingColorKey = flamRow.key;
     this.cdr.detectChanges();
 
@@ -630,6 +665,7 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
    */
   stopEditingColor(): void {
     this.editingColorKey = null;
+    this.autoPrefixApplied = false; // Reset auto-prefix flag
     this.cdr.markForCheck();
   }
 
@@ -840,5 +876,38 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
     // Refresh the project inspector data when retrying after an error
     this.refreshTableData();
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Applies auto-prefix to empty color fields based on color model setting.
+   *
+   * Checks if the color field is empty (or whitespace-only) and applies the
+   * appropriate prefix based on the current color model selection.
+   *
+   * @param flamRow - FLAM row to potentially apply prefix to
+   * @returns Promise<boolean> indicating whether a prefix was applied
+   * @private
+   */
+  private async applyAutoPrefixIfNeeded(flamRow: FLAMRow): Promise<boolean> {
+    try {
+      const currentColor = flamRow.color || '';
+      
+      if (currentColor.trim()) {
+        return false; // Already has content
+      }
+      
+      // Get current prefix from store
+      const prefix = await firstValueFrom(this.store.select(selectColorModelPrefix));
+      
+      if (prefix) {
+        flamRow.color = prefix;
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error applying auto-prefix:', error);
+      return false;
+    }
   }
 }

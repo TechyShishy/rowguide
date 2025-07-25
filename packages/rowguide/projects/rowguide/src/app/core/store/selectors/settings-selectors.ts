@@ -67,6 +67,34 @@
  */
 
 import { AppState, SettingsState } from '../app-state.interface';
+import { COLOR_MODEL_PREFIXES } from '../../../shared/models/color-model.enum';
+
+/**
+ * Memoized Selector Factory
+ *
+ * Simple memoization utility for creating performant selectors that cache
+ * their results and only recompute when dependencies change.
+ */
+const createSelector = <T, R>(
+  dependency: (state: AppState) => T,
+  transform: (dep: T) => R
+) => {
+  let lastDependency: T;
+  let lastResult: R;
+  let hasComputed = false;
+
+  return (state: AppState): R => {
+    const currentDependency = dependency(state);
+    
+    if (!hasComputed || currentDependency !== lastDependency) {
+      lastDependency = currentDependency;
+      lastResult = transform(currentDependency);
+      hasComputed = true;
+    }
+    
+    return lastResult;
+  };
+};
 
 /**
  * Base Settings State Selector
@@ -203,6 +231,75 @@ export const selectProjectSort = (state: AppState): string => state.settings.pro
 export const selectSettingsReady = (state: AppState): boolean => state.settings.ready;
 
 /**
+ * Color Model Auto-Prefix Setting Selector
+ *
+ * Selects the current color model setting for automatic prefix application.
+ * Controls whether empty color inputs receive automatic prefixes on focus.
+ *
+ * @param state - Application state tree
+ * @returns Color model setting ('MIYUKI_DELICA' | 'NONE')
+ * @example
+ * ```typescript
+ * // Component subscription
+ * this.colorModel$ = this.store.select(selectColorModel);
+ * 
+ * // Usage in component
+ * this.colorModel$.subscribe(model => {
+ *   this.autoPrefix = model !== 'NONE';
+ * });
+ * ```
+ */
+export const selectColorModel = (state: AppState): 'MIYUKI_DELICA' | 'NONE' => 
+  state.settings.colorModel;
+
+/**
+ * Delica Color Model Check Selector
+ *
+ * Efficiently determines if the current color model is set to Miyuki Delica.
+ * Useful for conditional logic in components and services.
+ * Memoized for performance optimization.
+ *
+ * @param state - Application state tree
+ * @returns Boolean indicating if Delica model is active
+ * @example
+ * ```typescript
+ * // Conditional UI rendering
+ * isDelicaModel$ = this.store.select(selectIsDelicaColorModel);
+ * ```
+ */
+export const selectIsDelicaColorModel = createSelector(
+  selectColorModel,
+  (colorModel: 'MIYUKI_DELICA' | 'NONE'): boolean => colorModel === 'MIYUKI_DELICA'
+);
+
+/**
+ * Color Model Prefix Selector
+ *
+ * Computes the appropriate color prefix string based on the selected color model.
+ * Uses centralized mapping for maintainability and consistency.
+ * Memoized for performance optimization.
+ *
+ * @param state - Application state tree
+ * @returns String prefix for the current color model
+ * @example
+ * ```typescript
+ * // Component usage for input prefixing
+ * class ColorComponent {
+ *   onInputFocus() {
+ *     const prefix = this.store.selectSnapshot(selectColorModelPrefix);
+ *     if (prefix && this.input.value === '') {
+ *       this.input.value = prefix;
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export const selectColorModelPrefix = createSelector(
+  selectColorModel,
+  (colorModel: 'MIYUKI_DELICA' | 'NONE'): string => COLOR_MODEL_PREFIXES[colorModel]
+);
+
+/**
  * Computed Selectors - Derived State Combinations
  *
  * Complex selectors that combine multiple settings into computed objects
@@ -228,6 +325,25 @@ export const selectSettingsReady = (state: AppState): boolean => state.settings.
  * }
  * ```
  */
+/**
+ * All Settings Composite Selector
+ *
+ * Combines all user-configurable settings into a single object for components
+ * that need comprehensive settings access. Includes all persistable settings.
+ *
+ * @param state - Application state tree
+ * @returns Object containing all user settings including colorModel
+ * @example
+ * ```typescript
+ * // Component receiving all settings
+ * @Component({
+ *   template: `<app-settings-panel [settings]="settings$ | async"></app-settings-panel>`
+ * })
+ * class SettingsComponent {
+ *   settings$ = this.store.select(selectAllSettings);
+ * }
+ * ```
+ */
 export const selectAllSettings = (state: AppState) => ({
   combine12: state.settings.combine12,
   lrdesignators: state.settings.lrdesignators,
@@ -238,7 +354,19 @@ export const selectAllSettings = (state: AppState) => ({
   multiadvance: state.settings.multiadvance,
   flamsort: state.settings.flamsort,
   projectsort: state.settings.projectsort,
+  colorModel: state.settings.colorModel,
 });
+
+/**
+ * Settings Persistence Selector
+ *
+ * Alias for selectAllSettings - all settings are persistable.
+ * Maintains API compatibility for automatic persistence functionality.
+ *
+ * @param state - Application state tree
+ * @returns Complete settings object for persistence (same as selectAllSettings)
+ */
+export const selectSettingsForPersistence = selectAllSettings;
 
 /**
  * Settings Count Selector
@@ -298,9 +426,11 @@ export const selectHasValidSettings = (state: AppState): boolean => {
     typeof settings.multiadvance === 'number' &&
     typeof settings.flamsort === 'string' &&
     typeof settings.projectsort === 'string' &&
+    typeof settings.colorModel === 'string' &&
     settings.scrolloffset >= -1 &&
     settings.multiadvance >= 1 &&
     ['keyAsc', 'keyDesc', 'nameAsc', 'nameDesc', 'dateAsc', 'dateDesc'].includes(settings.flamsort) &&
-    ['keyAsc', 'keyDesc', 'nameAsc', 'nameDesc', 'dateAsc', 'dateDesc'].includes(settings.projectsort)
+    ['keyAsc', 'keyDesc', 'nameAsc', 'nameDesc', 'dateAsc', 'dateDesc'].includes(settings.projectsort) &&
+    ['MIYUKI_DELICA', 'NONE'].includes(settings.colorModel)
   );
 };

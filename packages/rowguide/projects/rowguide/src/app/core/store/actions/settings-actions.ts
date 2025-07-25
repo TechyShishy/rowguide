@@ -65,6 +65,8 @@ export enum SettingsActionTypes {
   RESET_SETTINGS = '[Settings] Reset Settings',
   /** Set settings readiness state for application initialization */
   SET_SETTINGS_READY = '[Settings] Set Settings Ready',
+  /** Update color model setting for auto-prefix functionality */
+  UPDATE_COLOR_MODEL = '[Settings] Update Color Model',
 }
 
 /**
@@ -94,6 +96,8 @@ export interface SettingsConfiguration {
   readonly flamsort: string;
   /** Sorting method for project list ('name', 'modified', 'created') */
   readonly projectsort: string;
+  /** Color model for auto-prefix functionality ('MIYUKI_DELICA' | 'NONE') */
+  readonly colorModel: 'MIYUKI_DELICA' | 'NONE';
 }
 
 /**
@@ -202,6 +206,23 @@ export interface SetSettingsReadyAction extends StateAction {
 }
 
 /**
+ * Action to update color model setting for auto-prefix functionality
+ *
+ * Used when user changes their preferred color model in settings.
+ * Enables/disables automatic prefix application for color input fields.
+ *
+ * @interface UpdateColorModelAction
+ * @extends StateAction
+ */
+export interface UpdateColorModelAction extends StateAction {
+  readonly type: SettingsActionTypes.UPDATE_COLOR_MODEL;
+  readonly payload: {
+    /** The color model setting to apply */
+    readonly colorModel: 'MIYUKI_DELICA' | 'NONE';
+  };
+}
+
+/**
  * Union type for all settings actions
  *
  * Type-safe union for Redux reducer and middleware processing.
@@ -215,7 +236,8 @@ export type SettingsAction =
   | LoadSettingsSuccessAction
   | LoadSettingsFailureAction
   | ResetSettingsAction
-  | SetSettingsReadyAction;
+  | SetSettingsReadyAction
+  | UpdateColorModelAction;
 
 /**
  * Settings action creators
@@ -382,5 +404,31 @@ export const SettingsActions = {
   setSettingsReady: (ready: boolean): SetSettingsReadyAction => ({
     type: SettingsActionTypes.SET_SETTINGS_READY,
     payload: { ready },
+  }),
+
+  /**
+   * Create action to update color model setting for auto-prefix functionality
+   *
+   * @param {('MIYUKI_DELICA' | 'NONE')} colorModel - The color model setting
+   * @returns {UpdateColorModelAction} Action to update color model
+   *
+   * @example
+   * ```typescript
+   * // Enable Miyuki Delica auto-prefix
+   * store.dispatch(SettingsActions.updateColorModel('MIYUKI_DELICA'));
+   *
+   * // Disable auto-prefix
+   * store.dispatch(SettingsActions.updateColorModel('NONE'));
+   *
+   * // Usage in component
+   * onColorModelChange(model: string) {
+   *   const colorModel = model as 'MIYUKI_DELICA' | 'NONE';
+   *   this.store.dispatch(SettingsActions.updateColorModel(colorModel));
+   * }
+   * ```
+   */  
+  updateColorModel: (colorModel: 'MIYUKI_DELICA' | 'NONE'): UpdateColorModelAction => ({
+    type: SettingsActionTypes.UPDATE_COLOR_MODEL,
+    payload: { colorModel },
   }),
 };

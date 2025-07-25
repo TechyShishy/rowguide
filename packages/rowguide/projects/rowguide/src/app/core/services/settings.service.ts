@@ -16,6 +16,7 @@ import {
   selectFlamSort,
   selectProjectSort,
   selectSettingsReady,
+  selectSettingsForPersistence,
 } from '../store/selectors/settings-selectors';
 
 /**
@@ -145,7 +146,46 @@ export class SettingsService {
     private store: ReactiveStateStore
   ) {
     this.loadSettings();
+    
+    // Automatically persist settings changes to localStorage
+    this.store.select(selectSettingsForPersistence).subscribe(settings => {
+      this.persistToStorage(settings);
+    });
   }
+
+  /**
+   * Persists settings to localStorage only (no Redux dispatch).
+   * Used internally for automatic persistence subscription.
+   * 
+   * @private
+   * @param settings - Settings object to persist
+   */
+  private persistToStorage(settings: any): void {
+    try {
+      // Guard against null/undefined settings
+      if (!settings) {
+        return;
+      }
+      
+      // Persist complete settings object to localStorage
+      localStorage.setItem('settings', JSON.stringify(settings));
+    } catch (error) {
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'persistToStorage',
+          details: 'Failed to persist settings to localStorage',
+          settingsKeys: settings ? Object.keys(settings) : [],
+          settingsCount: settings ? Object.keys(settings).length : 0,
+          storageType: 'localStorage',
+          settings: settings,
+        },
+        'Unable to save your settings. They may not persist after refreshing.',
+        'medium'
+      );
+    }
+  }
+
   /**
    * Persists settings to localStorage and updates the global state.
    * Handles serialization, storage errors, and state synchronization.
@@ -172,8 +212,8 @@ export class SettingsService {
    */
   saveSettings(settings: Settings) {
     try {
+      // Persist settings and update store
       localStorage.setItem('settings', JSON.stringify(settings));
-      // Use the settings object directly instead of manual mapping
       this.store.dispatch(SettingsActions.setSettings(settings));
     } catch (error) {
       this.errorHandler.handleError(
@@ -184,12 +224,12 @@ export class SettingsService {
           settingsKeys: Object.keys(settings),
           settingsCount: Object.keys(settings).length,
           storageType: 'localStorage',
-          settings: settings, // Restore: useful for debugging, minimal risk in local app
+          settings: settings,
         },
         'Unable to save your settings. They may not persist after refreshing.',
         'medium'
       );
-      this.store.dispatch(SettingsActions.setSettingsReady(true)); // Still emit ready even if save failed
+      this.store.dispatch(SettingsActions.setSettingsReady(true));
     }
   }
 
@@ -225,8 +265,9 @@ export class SettingsService {
 
         // Handle null or invalid parsed objects
         if (s && typeof s === 'object') {
-          // Create settings object with proper defaults
-          const settingsData = {
+          // Migration: Add colorModel if missing (default to 'NONE')
+          const colorModel: 'MIYUKI_DELICA' | 'NONE' = s.colorModel === 'MIYUKI_DELICA' ? 'MIYUKI_DELICA' : 'NONE';
+          const settingsData: Settings = {
             combine12: s.combine12 ?? false,
             lrdesignators: s.lrdesignators ?? false,
             flammarkers: s.flammarkers ?? false,
@@ -236,6 +277,7 @@ export class SettingsService {
             multiadvance: s.multiadvance ?? 3,
             flamsort: s.flamsort ?? 'keyAsc',
             projectsort: s.projectsort ?? 'dateAsc',
+            colorModel,
           };
           this.store.dispatch(
             SettingsActions.loadSettingsSuccess(settingsData)
@@ -379,4 +421,19 @@ export class Settings {
    * Default: 'dateAsc' (oldest projects first)
    */
   projectsort: string = 'dateAsc';
+
+  /**
+   * Color Model for Auto-Prefix feature.
+   * Controls whether empty color inputs receive automatic prefixes on focus.
+   *
+   * Valid values:
+   * - 'MIYUKI_DELICA': Use Miyuki Delica DB prefix for color inputs
+   * - 'NONE': No automatic prefixing (default)
+   *
+   * Default: 'NONE'
+   *
+   * @example
+   * settings.colorModel = 'MIYUKI_DELICA';
+   */
+  colorModel: 'MIYUKI_DELICA' | 'NONE' = 'NONE';
 }

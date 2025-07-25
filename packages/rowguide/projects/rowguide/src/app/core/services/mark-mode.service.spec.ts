@@ -458,7 +458,8 @@ describe('MarkModeService', () => {
           multiadvance: 3,
           flamsort: 'keyAsc',
           projectsort: 'dateAsc',
-          ready: true
+          ready: true,
+          colorModel: 'NONE'
         },
         notifications: {
           current: null,
@@ -526,7 +527,8 @@ describe('MarkModeService', () => {
           multiadvance: 3,
           flamsort: 'keyAsc',
           projectsort: 'dateAsc',
-          ready: true
+          ready: true,
+          colorModel: 'NONE'
         },
         notifications: {
           current: null,
@@ -594,7 +596,8 @@ describe('MarkModeService', () => {
           multiadvance: 3,
           flamsort: 'keyAsc',
           projectsort: 'dateAsc',
-          ready: true
+          ready: true,
+          colorModel: 'NONE'
         },
         notifications: {
           current: null,
@@ -665,7 +668,8 @@ describe('MarkModeService', () => {
           multiadvance: 3,
           flamsort: 'keyAsc',
           projectsort: 'dateAsc',
-          ready: true
+          ready: true,
+          colorModel: 'NONE'
         },
         notifications: {
           current: null,

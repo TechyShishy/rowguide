@@ -875,6 +875,50 @@ export interface SettingsState {
   readonly projectsort: string;
 
   /**
+   * Color Model Auto-Prefix Setting
+   *
+   * Controls automatic prefix application for color code inputs based on
+   * selected color model system. When enabled, empty color input fields
+   * automatically receive the appropriate prefix on focus.
+   *
+   * **Supported Values:**
+   * - `'NONE'`: No automatic prefix (default, user control)
+   * - `'MIYUKI_DELICA'`: Miyuki Delica beads prefix "DB"
+   *
+   * **Future Extensibility:**
+   * - `'TOHO'`: Toho beads prefix "T" (planned)
+   * - `'CZECH'`: Czech beads prefix "C" (planned)  
+   * - `'DMC'`: DMC thread system (planned)
+   *
+   * @example
+   * ```typescript
+   * // Color input behavior based on setting
+   * const getAutoPrefix = (colorModel: string): string => {
+   *   switch (colorModel) {
+   *     case 'MIYUKI_DELICA': return 'DB';
+   *     case 'TOHO': return 'T';
+   *     case 'CZECH': return 'C';
+   *     default: return '';
+   *   }
+   * };
+   *
+   * // Input focus handler
+   * onColorInputFocus(input: HTMLInputElement, colorModel: string): void {
+   *   if (input.value === '' && colorModel !== 'NONE') {
+   *     input.value = getAutoPrefix(colorModel);
+   *   }
+   * }
+   * ```
+   *
+   * **Design Principles:**
+   * - **Opt-in**: Defaults to 'NONE' for user control
+   * - **Non-intrusive**: Only applies to empty input fields
+   * - **Extensible**: Architecture supports additional color model systems
+   * - **Workflow Enhancement**: Reduces repetitive typing for power users
+   */
+  readonly colorModel: 'MIYUKI_DELICA' | 'NONE';
+
+  /**
    * Application Ready State
    *
    * Indicates whether the application has completed initialization and
@@ -1430,6 +1474,7 @@ export const createInitialState = (): AppState => ({
     multiadvance: 3,
     flamsort: 'keyAsc',
     projectsort: 'dateAsc',
+    colorModel: 'NONE' as const,
     ready: false,
   },
   notifications: {

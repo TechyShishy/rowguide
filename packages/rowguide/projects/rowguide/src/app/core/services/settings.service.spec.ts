@@ -58,6 +58,7 @@ describe('SettingsService', () => {
       multiadvance: 3,
       flamsort: 'keyAsc',
       projectsort: 'dateAsc',
+      colorModel: 'NONE',
       ...overrides,
     };
   };

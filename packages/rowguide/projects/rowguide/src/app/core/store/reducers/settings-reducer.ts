@@ -59,6 +59,7 @@ import { SettingsAction, SettingsActionTypes } from '../actions/settings-actions
  *   multiadvance: 3,         // Multi-step advance count
  *   flamsort: 'keyAsc',      // FLAM sorting method
  *   projectsort: 'dateAsc',  // Project sorting method
+ *   colorModel: 'NONE',      // Color model auto-prefix setting
  *   ready: false             // Settings loaded and ready
  * };
  * ```
@@ -73,6 +74,7 @@ const initialSettingsState: SettingsState = {
   multiadvance: 3,
   flamsort: 'keyAsc',
   projectsort: 'dateAsc',
+  colorModel: 'NONE',
   ready: false,
 };
 
@@ -183,6 +185,32 @@ export function settingsReducer(
       return {
         ...state,
         ready: action.payload.ready,
+      };
+
+    case SettingsActionTypes.UPDATE_COLOR_MODEL:
+      /**
+       * Update Color Model Handler
+       *
+       * Updates the color model setting for auto-prefix functionality.
+       * Validates the setting value and ensures state immutability.
+       * Used when user changes their preferred color model in settings.
+       *
+       * @example
+       * ```typescript
+       * // Action payload structure
+       * const action = {
+       *   type: 'UPDATE_COLOR_MODEL',
+       *   payload: { colorModel: 'MIYUKI_DELICA' }
+       * };
+       * 
+       * // State transition
+       * const newState = settingsReducer(state, action);
+       * // newState.colorModel === 'MIYUKI_DELICA'
+       * ```
+       */
+      return {
+        ...state,
+        colorModel: action.payload.colorModel,
       };
 
     default:
