@@ -3,17 +3,23 @@ import { RowComponent } from './row.component';
 import { LoggerTestingModule, NGXLoggerMock } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NGXLogger } from 'ngx-logger';
-import { QueryList } from '@angular/core';
+import { QueryList, ChangeDetectorRef } from '@angular/core';
 import { StepComponent } from '../step/step.component';
 
 describe('RowComponent', () => {
   let component: RowComponent;
   let fixture: ComponentFixture<RowComponent>;
+  let mockChangeDetectorRef: jasmine.SpyObj<ChangeDetectorRef>;
 
   beforeEach(async () => {
+    mockChangeDetectorRef = jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck', 'detectChanges']);
+
     await TestBed.configureTestingModule({
       imports: [RowComponent, LoggerTestingModule, BrowserAnimationsModule],
-      providers: [{ provide: NGXLogger, useClass: NGXLoggerMock }],
+      providers: [
+        { provide: NGXLogger, useClass: NGXLoggerMock },
+        { provide: ChangeDetectorRef, useValue: mockChangeDetectorRef },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RowComponent);

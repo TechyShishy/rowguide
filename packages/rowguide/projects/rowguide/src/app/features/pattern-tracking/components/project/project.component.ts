@@ -1,5 +1,6 @@
 import { CommonModule, NgFor } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   HostBinding,
@@ -112,6 +113,7 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
   ],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectComponent implements HierarchicalList {
   /**
@@ -283,6 +285,7 @@ export class ProjectComponent implements HierarchicalList {
     // Subscribe to real-time mark mode changes
     this.markModeService.markModeChanged$.subscribe((markMode) => {
       this.setMarkMode(markMode);
+      this.cdr.markForCheck(); // Trigger change detection for OnPush
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -332,25 +335,7 @@ export class ProjectComponent implements HierarchicalList {
       })
     );
 
-    this.rows$ = this.project$.pipe(
-      filter((project): project is Project => isValidProject(project)),
-      map((project: Project) => SafeAccess.getProjectRows(project)),
-      combineLatestWith(this.settingsService.combine12$),
-      map(([rows, combine12]) => {
-        const newRows = deepCopy(rows);
-        if (combine12 && newRows.length >= 2) {
-          const zipperSteps = this.zipperService.zipperSteps(
-            newRows[0]?.steps ?? [],
-            newRows[1]?.steps ?? []
-          );
-          if (zipperSteps.length > 0) {
-            newRows[0].steps = zipperSteps;
-            newRows.splice(1, 1);
-          }
-        }
-        return newRows;
-      })
-    );
+    this.rows$ = this.store.select(selectZippedRows);
 
     // Position observable is now handled by the store selector
     // No need to manually subscribe and update zippedRows since store manages state
@@ -518,6 +503,7 @@ export class ProjectComponent implements HierarchicalList {
           const finalMarkMode = bottomSheetRef.instance.data.markMode;
           if (finalMarkMode !== this.markMode) {
             this.setMarkMode(finalMarkMode);
+            this.cdr.markForCheck();
           }
         });
       });

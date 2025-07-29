@@ -6,7 +6,7 @@ import {
 } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { LoggerTestingModule } from 'ngx-logger/testing';
-import { QueryList } from '@angular/core';
+import { QueryList, ChangeDetectorRef } from '@angular/core';
 
 import { StepComponent } from './step.component';
 import { Step } from '../../../../core/models/step';
@@ -25,6 +25,7 @@ describe('StepComponent', () => {
   let mockZipperService: jasmine.SpyObj<ZipperService>;
   let mockMarkModeService: jasmine.SpyObj<MarkModeService>;
   let mockRowComponent: jasmine.SpyObj<RowComponent>;
+  let mockChangeDetectorRef: jasmine.SpyObj<ChangeDetectorRef>;
   let mockProject: any;
 
   // Mock observables
@@ -141,6 +142,9 @@ describe('StepComponent', () => {
       return markedCount;
     });
 
+    // Mock ChangeDetectorRef
+    mockChangeDetectorRef = jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck', 'detectChanges']);
+
     // Mock RowComponent
     mockRowComponent = jasmine.createSpyObj('RowComponent', [], {
       index: 0,
@@ -155,6 +159,7 @@ describe('StepComponent', () => {
         { provide: ProjectService, useValue: mockProjectService },
         { provide: ZipperService, useValue: mockZipperService },
         { provide: MarkModeService, useValue: mockMarkModeService },
+        { provide: ChangeDetectorRef, useValue: mockChangeDetectorRef },
       ],
     }).compileComponents();
 
@@ -287,7 +292,10 @@ describe('StepComponent', () => {
       }));
 
       it('should unset previous current step when one exists', fakeAsync(() => {
-        const previousStep = { isCurrentStep: true };
+        const previousStep = { 
+          isCurrentStep: true,
+          cdr: mockChangeDetectorRef
+        };
         mockProject.currentStep$.next(previousStep);
 
         component.onClick({});
@@ -295,6 +303,7 @@ describe('StepComponent', () => {
 
         expect(previousStep.isCurrentStep).toBe(false);
         expect(component.isCurrentStep).toBe(true);
+        expect(mockChangeDetectorRef.markForCheck).toHaveBeenCalled();
       }));
 
       it('should emit this component as new current step', fakeAsync(() => {

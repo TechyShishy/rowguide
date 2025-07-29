@@ -37,6 +37,66 @@ import { Position } from '../../models/position';
 import { Row } from '../../models/row';
 import { SafeAccess } from '../../models/model-factory';
 import { NullProject } from '../../../features/project-management/models/null-project';
+import { selectCombine12 } from './settings-selectors';
+import { applyCombine12Transformation } from '../../../shared/utils/row-transformation';
+
+/**
+ * Memoized Selector Factory
+ *
+ * Simple memoization utility for creating performant selectors that cache
+ * their results and only recompute when dependencies change.
+ */
+const createSelector = <T, R>(
+  dependency: (state: AppState) => T,
+  transform: (dep: T) => R
+) => {
+  let lastDependency: T;
+  let lastResult: R;
+  let hasComputed = false;
+
+  return (state: AppState): R => {
+    const currentDependency = dependency(state);
+    
+    if (!hasComputed || currentDependency !== lastDependency) {
+      lastDependency = currentDependency;
+      lastResult = transform(currentDependency);
+      hasComputed = true;
+    }
+    
+    return lastResult;
+  };
+};
+
+/**
+ * Memoized Selector Factory for Multiple Dependencies
+ *
+ * Creates a memoized selector that depends on multiple state dependencies
+ * and only recomputes when any dependency changes.
+ */
+const createSelector2 = <T1, T2, R>(
+  dependency1: (state: AppState) => T1,
+  dependency2: (state: AppState) => T2,
+  transform: (dep1: T1, dep2: T2) => R
+) => {
+  let lastDependency1: T1;
+  let lastDependency2: T2;
+  let lastResult: R;
+  let hasComputed = false;
+
+  return (state: AppState): R => {
+    const currentDependency1 = dependency1(state);
+    const currentDependency2 = dependency2(state);
+    
+    if (!hasComputed || currentDependency1 !== lastDependency1 || currentDependency2 !== lastDependency2) {
+      lastDependency1 = currentDependency1;
+      lastDependency2 = currentDependency2;
+      lastResult = transform(currentDependency1, currentDependency2);
+      hasComputed = true;
+    }
+    
+    return lastResult;
+  };
+};
 
 /**
  * Project State Selectors
@@ -236,16 +296,21 @@ export const ProjectSelectors = {
   /**
    * Select Zipped Rows
    *
-   * Returns rows processed through the zipper service for combined patterns.
-   * This selector will be enhanced with actual zipping logic when the
-   * zipper service integration is completed.
+   * Returns the rows for the current project with combine12 transformation applied.
+   * This provides a single source of truth for transformed rows used by both
+   * the UI display and FLAM marker generation.
+   *
+   * **Transformation Logic:**
+   * - If combine12 is disabled: Returns original rows
+   * - If combine12 is enabled and 2+ rows exist: Combines first two rows using zipper pattern
+   * - If combine12 is enabled but <2 rows: Returns original rows
    *
    * @param {AppState} state - Application state
-   * @returns {Row[]} Array of zipped rows
+   * @returns {Row[]} Transformed rows array
    *
    * @example
    * ```typescript
-   * // Access zipped rows for pattern display
+   * // Service usage for consistent row data
    * const zippedRows$ = store.select(ProjectSelectors.selectZippedRows);
    * zippedRows$.subscribe(rows => {
    *   this.renderPattern(rows);
@@ -256,15 +321,18 @@ export const ProjectSelectors = {
    * // <app-pattern-grid [rows]="zippedRows$ | async"></app-pattern-grid>
    * ```
    */
-  selectZippedRows: (state: AppState): Row[] => {
-    const currentProject = ProjectSelectors.selectCurrentProject(state);
-    const rows = SafeAccess.getProjectRows(currentProject);
-
-    // For now, return rows as-is. This can be enhanced with actual zipping logic
-    // when the zipper service integration is completed
-    return rows;
-  },
-
+  selectZippedRows: createSelector2(
+    (state: AppState): Row[] => {
+      const currentProject = state.projects.currentProjectId 
+        ? state.projects.entities[state.projects.currentProjectId] || new NullProject()
+        : new NullProject();
+      return SafeAccess.getProjectRows(currentProject);
+    },
+    selectCombine12,
+    (rows: Row[], combine12: boolean): Row[] => {
+      return applyCombine12Transformation(rows, combine12);
+    }
+  ),
   /**
    * Select Current Position
    *

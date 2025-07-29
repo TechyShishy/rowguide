@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
@@ -104,6 +105,7 @@ import { StepComponent } from '../step/step.component';
   ],
   templateUrl: './row.component.html',
   styleUrls: ['./row.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RowComponent implements HierarchicalList, AfterViewInit {
   /**
@@ -317,7 +319,10 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
    * @since 1.0.0
    */
   ngAfterViewInit() {
-    this.panel.afterExpand.subscribe(() => this.handlePanelExpand());
+    this.panel.afterExpand.subscribe(() => {
+      this.handlePanelExpand();
+      this.cdr.markForCheck();
+    });
   }
 
   /**

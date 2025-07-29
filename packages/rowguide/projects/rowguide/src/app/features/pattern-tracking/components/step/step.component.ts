@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   HostListener,
   Input,
@@ -119,6 +121,7 @@ import { RowComponent } from '../row/row.component';
   imports: [MatChipsModule],
   templateUrl: './step.component.html',
   styleUrl: './step.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.current]': 'isCurrentStep',
     '[class.first]': 'isFirstStep',
@@ -478,7 +481,8 @@ export class StepComponent implements HierarchicalList, OnInit {
     private projectService: ProjectService,
     private logger: NGXLogger,
     private zipperService: ZipperService,
-    private markModeService: MarkModeService
+    private markModeService: MarkModeService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   /**
@@ -538,11 +542,13 @@ export class StepComponent implements HierarchicalList, OnInit {
         this._isLastStep = false;
       }
       this._isZoomed = zoom;
+      this.cdr.markForCheck(); // Trigger change detection for OnPush
     });
 
     // Set up reactive step marking that updates when project marked steps change
     this.markModeService.getStepMark$(this.row.index, this.index).subscribe(markMode => {
       this.marked = markMode;
+      this.cdr.markForCheck(); // Trigger change detection for OnPush
     });
 
     this.beadCount$ = this.projectService.zippedRows$.pipe(
@@ -627,8 +633,12 @@ export class StepComponent implements HierarchicalList, OnInit {
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
     if (currentStep) {
       currentStep.isCurrentStep = false;
+      // Trigger change detection on previous step for OnPush
+      currentStep.cdr.markForCheck();
     }
+    
     this.isCurrentStep = true;
+    
     this.projectService.saveCurrentPosition(this.row.index, this.index);
     this.row.project.currentStep$.next(this);
   }

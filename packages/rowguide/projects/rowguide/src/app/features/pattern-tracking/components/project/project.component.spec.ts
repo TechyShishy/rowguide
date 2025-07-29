@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input, QueryList, NO_ERRORS_SCHEMA, Output, EventEmitter } from '@angular/core';
+import { Component, Input, QueryList, NO_ERRORS_SCHEMA, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { BehaviorSubject, Subject, firstValueFrom, of, Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { provideRouter } from '@angular/router';
@@ -103,6 +103,7 @@ describe('ProjectComponent', () => {
   let matBottomSheetSpy: jasmine.SpyObj<MatBottomSheet>;
   let peyoteShorthandServiceSpy: jasmine.SpyObj<PeyoteShorthandService>;
   let storeSpy: jasmine.SpyObj<ReactiveStateStore>;
+  let mockChangeDetectorRef: jasmine.SpyObj<ChangeDetectorRef>;
 
   beforeEach(async () => {
     projectServiceSpy = jasmine.createSpyObj(
@@ -131,6 +132,7 @@ describe('ProjectComponent', () => {
       'toProject',
     ]);
     storeSpy = createStoreSelectMock();
+    mockChangeDetectorRef = jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck', 'detectChanges']);
 
     // Mock ActivatedRoute with paramMap
     activatedRouteStub = {
@@ -159,6 +161,7 @@ describe('ProjectComponent', () => {
           useValue: peyoteShorthandServiceSpy,
         },
         { provide: ReactiveStateStore, useValue: storeSpy },
+        { provide: ChangeDetectorRef, useValue: mockChangeDetectorRef },
         provideRouter(routes),
       ],
       schemas: [NO_ERRORS_SCHEMA]
@@ -233,8 +236,21 @@ describe('ProjectComponent', () => {
       position: { row: 0, step: 0 },
     } as Project;
 
-    // Set up store to return mock project when selectCurrentProject is called
-    storeSpy.select.and.returnValue(of(mockProject));
+    // Set up store to return different data based on selector
+    storeSpy.select.and.callFake(<T>(selector: any): Observable<T> => {
+      // For the actual selector imports
+      if (selector.name === 'selectCurrentProject' || selector === 'selectCurrentProject') {
+        return of(mockProject) as Observable<T>;
+      }
+      if (selector === selectZippedRows) {
+        return of(mockProject.rows) as Observable<T>;
+      }
+      if (selector === selectCurrentPosition) {
+        return of(mockProject.position) as Observable<T>;
+      }
+      // Default to return the appropriate data for any other selectors
+      return of([]) as Observable<T>;
+    });
 
     component.ngOnInit();
     fixture.detectChanges();
