@@ -18,6 +18,91 @@ import { selectCurrentProject } from '../store/selectors/project-selectors';
 import { ErrorHandlerService } from './error-handler.service';
 import { ProjectDbService } from '../../data/services/project-db.service';
 import { Project } from '../models';
+import { AppState, ProjectState, UiState, SystemState, SettingsState } from '../store/app-state.interface';
+
+/**
+ * Test helper function to create properly typed mock AppState
+ */
+function createMockAppState(overrides: {
+  markModeState?: any;
+  projectState?: Partial<ProjectState>;
+  project?: Project;
+}): AppState {
+  const defaultProject: Project = {
+    id: 1,
+    name: 'Test Project',
+    rows: [],
+    markedSteps: {},
+    markedRows: {}
+  };
+
+  const project = overrides.project || defaultProject;
+
+  const defaultProjectState: ProjectState = {
+    currentProjectId: project.id || null,
+    entities: project.id ? { [project.id]: project } : {},
+    loading: false,
+    error: null,
+    lastSaved: null,
+    isDirty: false
+  };
+
+  const projectState = { ...defaultProjectState, ...overrides.projectState };
+
+  const defaultUiState: UiState = {
+    currentPosition: null,
+    selectedStepId: null,
+    zoomLevel: 1.0,
+    sidebarOpen: true,
+    beadCountVisible: false,
+    darkMode: false,
+    notifications: []
+  };
+
+  const defaultSystemState: SystemState = {
+    isOnline: true,
+    storageQuota: null,
+    performanceMetrics: {
+      renderTime: 0,
+      memoryUsage: 0,
+      errorCount: 0,
+      lastUpdate: new Date()
+    },
+    featureFlags: {
+      virtualScrolling: true,
+      advancedPatterns: false,
+      exportFeatures: true,
+      betaFeatures: false
+    }
+  };
+
+  const defaultSettingsState: SettingsState = {
+    combine12: false,
+    lrdesignators: false,
+    flammarkers: false,
+    ppinspector: false,
+    zoom: false,
+    scrolloffset: -1,
+    multiadvance: 3,
+    flamsort: 'keyAsc',
+    projectsort: 'dateAsc',
+    ready: true,
+    colorModel: 'NONE'
+  };
+
+  return {
+    markMode: overrides.markModeState || { currentMode: 0, previousMode: undefined, history: [], lastUpdated: Date.now(), changeCount: 0 },
+    projects: projectState,
+    ui: defaultUiState,
+    system: defaultSystemState,
+    settings: defaultSettingsState,
+    notifications: {
+      current: null,
+      queue: [],
+      lastId: 0
+    }
+  };
+}
 
 /**
  * Comprehensive Test Suite for MarkModeService
@@ -42,6 +127,8 @@ describe('MarkModeService', () => {
   let loggerSpy: jasmine.SpyObj<NGXLogger>;
   let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
   let projectDbSpy: jasmine.SpyObj<ProjectDbService>;
+  let mockMarkModeState: BehaviorSubject<any>;
+  let mockProjectState: BehaviorSubject<Project>;
 
   beforeEach(() => {
     // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
@@ -53,7 +140,7 @@ describe('MarkModeService', () => {
     const projectDbSpyObj = jasmine.createSpyObj('ProjectDbService', ['updateProject']);
 
     // Create a BehaviorSubject to hold the mock mark mode state
-    const mockMarkModeState = new BehaviorSubject({
+    mockMarkModeState = new BehaviorSubject({
       currentMode: 0,
       previousMode: undefined as number | undefined,
       history: [] as number[],
@@ -68,7 +155,7 @@ describe('MarkModeService', () => {
       rows: [],
       markedSteps: {}
     };
-    const mockProjectState = new BehaviorSubject(mockProject);
+    mockProjectState = new BehaviorSubject(mockProject);
 
     // Mock store dispatch to update BehaviorSubject state
     storeSpyObj.dispatch.and.callFake((action: any) => {
@@ -124,18 +211,9 @@ describe('MarkModeService', () => {
     });
 
     // Mock getState to return current state
-    storeSpyObj.getState.and.callFake(() => ({
-      markMode: mockMarkModeState.value,
-      projects: {
-        currentProjectId: mockProjectState.value.id,
-        entities: {
-          [mockProjectState.value.id!]: mockProjectState.value
-        }
-      },
-      ui: null,
-      system: null,
-      settings: null,
-      notifications: null,
+    storeSpyObj.getState.and.callFake(() => createMockAppState({
+      markModeState: mockMarkModeState.value,
+      project: mockProjectState.value
     }));
 
     // Make projectDbSpy return a resolved promise
@@ -699,6 +777,492 @@ describe('MarkModeService', () => {
 
       expect(loggerSpy.error).toHaveBeenCalledWith('Error marking step:', jasmine.any(Error));
       expect(errorHandlerSpy.handleError).toHaveBeenCalled();
+    });
+  });
+
+  // ================================
+  // ROW MARKING TESTS
+  // ================================
+
+  describe('Row Marking Functionality', () => {
+    beforeEach(() => {
+      // Reset state to default
+      mockMarkModeState.next({
+        currentMode: 2,
+        previousMode: 1,
+        history: [1, 2],
+        lastUpdated: Date.now(),
+        changeCount: 2,
+      });
+
+      // Reset project state
+      mockProjectState.next({
+        id: 1,
+        name: 'Test Project',
+        rows: [],
+        markedSteps: {},
+        markedRows: {}
+      });
+    });
+
+    describe('markRow()', () => {
+      it('should mark a row with specified mode', async () => {
+        await service.markRow(2, 3);
+
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: { 2: 3 }
+              })
+            })
+          })
+        );
+        expect(projectDbSpy.updateProject).toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('Row marking saved: row 2 = 3');
+      });
+
+      it('should unmark a row when markMode is 0', async () => {
+        // First set up a project with an existing row marking
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 2: 3, 4: 1 }
+        });
+
+        await service.markRow(2, 0);
+
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: { 4: 1 } // Row 2 should be removed
+              })
+            })
+          })
+        );
+        expect(projectDbSpy.updateProject).toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('Row marking saved: row 2 = 0');
+      });
+
+      it('should handle case when no current project exists', async () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: null,
+            entities: {},
+            loading: false,
+            error: null,
+            lastSaved: null,
+            isDirty: false
+          }
+        }));
+
+        await service.markRow(2, 3);
+
+        expect(storeSpy.dispatch).not.toHaveBeenCalled();
+        expect(projectDbSpy.updateProject).not.toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('No active project to save row marking to');
+      });
+
+      it('should handle case when current project not found in entities', async () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: 999,
+            entities: { 1: mockProjectState.value },
+            loading: false,
+            error: null,
+            lastSaved: new Date(),
+            isDirty: false
+          }
+        }));
+
+        await service.markRow(2, 3);
+
+        expect(storeSpy.dispatch).not.toHaveBeenCalled();
+        expect(projectDbSpy.updateProject).not.toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('Current project not found in entities');
+      });
+
+      it('should handle errors gracefully', async () => {
+        projectDbSpy.updateProject.and.returnValue(Promise.reject(new Error('Database error')));
+
+        await service.markRow(2, 3);
+
+        expect(loggerSpy.error).toHaveBeenCalledWith('Error marking row:', jasmine.any(Error));
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          jasmine.objectContaining({
+            operation: 'markRow',
+            details: 'Failed to mark row',
+            rowIndex: 2,
+            markMode: 3
+          }),
+          'Unable to save row marking. Marking may not persist.',
+          'medium'
+        );
+      });
+    });
+
+    describe('unmarkRow()', () => {
+      it('should call markRow with mode 0', async () => {
+        spyOn(service, 'markRow');
+
+        await service.unmarkRow(5);
+
+        expect(service.markRow).toHaveBeenCalledWith(5, 0);
+      });
+    });
+
+    describe('toggleRowMark()', () => {
+      it('should mark unmarked row with current mark mode', async () => {
+        const result = await service.toggleRowMark(3);
+
+        expect(result).toBe(2); // Current mark mode is 2
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: { 3: 2 }
+              })
+            })
+          })
+        );
+      });
+
+      it('should unmark row that is marked with current mode', async () => {
+        // Set up project with row marked with current mode
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 3: 2 } // Marked with current mode (2)
+        });
+
+        const result = await service.toggleRowMark(3);
+
+        expect(result).toBe(0);
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: {}
+              })
+            })
+          })
+        );
+      });
+
+      it('should mark row with current mode when marked with different mode', async () => {
+        // Set up project with row marked with different mode
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 3: 1 } // Marked with mode 1, current is 2
+        });
+
+        const result = await service.toggleRowMark(3);
+
+        expect(result).toBe(2); // Should switch to current mode
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: { 3: 2 }
+              })
+            })
+          })
+        );
+      });
+
+      it('should return 0 when not in active mark mode', async () => {
+        // Set current mode to 0 (default)
+        mockMarkModeState.next({
+          currentMode: 0,
+          previousMode: 2,
+          history: [1, 2, 0],
+          lastUpdated: Date.now(),
+          changeCount: 3,
+        });
+
+        const result = await service.toggleRowMark(3);
+
+        expect(result).toBe(0);
+        expect(storeSpy.dispatch).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('getRowMark()', () => {
+      it('should return mark mode for marked row', () => {
+        // Set up project with marked rows
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 2: 3, 5: 1 }
+        });
+
+        expect(service.getRowMark(2)).toBe(3);
+        expect(service.getRowMark(5)).toBe(1);
+      });
+
+      it('should return 0 for unmarked row', () => {
+        expect(service.getRowMark(99)).toBe(0);
+      });
+
+      it('should return 0 when no current project', () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: null,
+            entities: {},
+            loading: false,
+            error: null,
+            lastSaved: new Date(),
+            isDirty: false
+          }
+        }));
+
+        expect(service.getRowMark(2)).toBe(0);
+      });
+
+      it('should return 0 when current project not found', () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: 999,
+            entities: { 1: mockProjectState.value },
+            loading: false,
+            error: null,
+            lastSaved: null,
+            isDirty: false
+          }
+        }));
+
+        expect(service.getRowMark(2)).toBe(0);
+      });
+
+      it('should handle errors gracefully', () => {
+        storeSpy.getState.and.throwError('State error');
+
+        expect(service.getRowMark(2)).toBe(0);
+        expect(loggerSpy.error).toHaveBeenCalledWith('Error getting row mark:', jasmine.any(Error));
+      });
+    });
+
+    describe('getAllMarkedRows()', () => {
+      it('should return all marked rows', () => {
+        // Set up project with marked rows
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 2: 3, 5: 1, 7: 2 }
+        });
+
+        const result = service.getAllMarkedRows();
+
+        expect(result).toEqual({ 2: 3, 5: 1, 7: 2 });
+      });
+
+      it('should return empty object when no rows marked', () => {
+        const result = service.getAllMarkedRows();
+
+        expect(result).toEqual({});
+      });
+
+      it('should return empty object when no current project', () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: null,
+            entities: {},
+            loading: false,
+            error: null,
+            lastSaved: null,
+            isDirty: false
+          }
+        }));
+
+        const result = service.getAllMarkedRows();
+
+        expect(result).toEqual({});
+      });
+
+      it('should handle errors gracefully', () => {
+        storeSpy.getState.and.throwError('State error');
+
+        const result = service.getAllMarkedRows();
+
+        expect(result).toEqual({});
+        expect(loggerSpy.error).toHaveBeenCalledWith('Error getting all marked rows:', jasmine.any(Error));
+      });
+    });
+
+    describe('clearAllMarkedRows()', () => {
+      it('should clear all marked rows', async () => {
+        // Set up project with marked rows
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 2: 3, 5: 1 }
+        });
+
+        await service.clearAllMarkedRows();
+
+        expect(storeSpy.dispatch).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            type: '[Projects] Update Project Success',
+            payload: jasmine.objectContaining({
+              project: jasmine.objectContaining({
+                markedRows: {}
+              })
+            })
+          })
+        );
+        expect(projectDbSpy.updateProject).toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('All marked rows cleared');
+      });
+
+      it('should handle case when no current project exists', async () => {
+        storeSpy.getState.and.returnValue(createMockAppState({
+          markModeState: mockMarkModeState.value,
+          projectState: {
+            currentProjectId: null,
+            entities: {},
+            loading: false,
+            error: null,
+            lastSaved: null,
+            isDirty: false
+          }
+        }));
+
+        await service.clearAllMarkedRows();
+
+        expect(storeSpy.dispatch).not.toHaveBeenCalled();
+        expect(projectDbSpy.updateProject).not.toHaveBeenCalled();
+        expect(loggerSpy.debug).toHaveBeenCalledWith('No active project to clear marked rows from');
+      });
+
+      it('should handle errors gracefully', async () => {
+        projectDbSpy.updateProject.and.returnValue(Promise.reject(new Error('Database error')));
+
+        await service.clearAllMarkedRows();
+
+        expect(loggerSpy.error).toHaveBeenCalledWith('Error clearing marked rows:', jasmine.any(Error));
+        expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
+          jasmine.any(Error),
+          jasmine.objectContaining({
+            operation: 'clearAllMarkedRows',
+            details: 'Failed to clear all marked rows'
+          }),
+          'Unable to clear row markings. Some markings may persist.',
+          'medium'
+        );
+      });
+    });
+
+    describe('getRowMark$()', () => {
+      it('should return observable of row mark', (done) => {
+        // Set up project with marked rows
+        mockProjectState.next({
+          id: 1,
+          name: 'Test Project',
+          rows: [],
+          markedSteps: {},
+          markedRows: { 2: 3 }
+        });
+
+        service.getRowMark$(2).subscribe(markMode => {
+          expect(markMode).toBe(3);
+          done();
+        });
+      });
+
+      it('should return 0 for unmarked row', (done) => {
+        service.getRowMark$(99).subscribe(markMode => {
+          expect(markMode).toBe(0);
+          done();
+        });
+      });
+
+      it('should emit new values when row mark changes', (done) => {
+        let emissionCount = 0;
+        const expectedValues = [0, 3];
+
+        service.getRowMark$(2).subscribe(markMode => {
+          expect(markMode).toBe(expectedValues[emissionCount]);
+          emissionCount++;
+
+          if (emissionCount === 2) {
+            done();
+          }
+        });
+
+        // Trigger change by updating project state
+        setTimeout(() => {
+          mockProjectState.next({
+            id: 1,
+            name: 'Test Project',
+            rows: [],
+            markedSteps: {},
+            markedRows: { 2: 3 }
+          });
+        }, 10);
+      });
+
+      it('should use distinctUntilChanged to prevent duplicate emissions', (done) => {
+        let emissionCount = 0;
+
+        service.getRowMark$(2).subscribe(markMode => {
+          emissionCount++;
+          expect(markMode).toBe(0);
+
+          // After a short delay, verify only one emission occurred
+          if (emissionCount === 1) {
+            setTimeout(() => {
+              expect(emissionCount).toBe(1);
+              done();
+            }, 50);
+          }
+        });
+
+        // Trigger multiple updates with same value
+        setTimeout(() => {
+          mockProjectState.next({
+            id: 1,
+            name: 'Test Project',
+            rows: [],
+            markedSteps: {},
+            markedRows: {}
+          });
+        }, 10);
+
+        setTimeout(() => {
+          mockProjectState.next({
+            id: 1,
+            name: 'Test Project',
+            rows: [],
+            markedSteps: {},
+            markedRows: {}
+          });
+        }, 20);
+      });
     });
   });
 });

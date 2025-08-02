@@ -1,9 +1,20 @@
-<mat-expansion-panel>
-  <mat-expansion-panel-header>
+<!--
+  Expansion panel is disabled during mark mode to prevent opening/closing when clicking to mark rows.
+  The [disabled] attribute uses Angular Material's proper API to prevent the _toggle() method from executing.
+  CSS overrides in the component styles restore normal appearance while preserving the functional disable.
+-->
+<mat-expansion-panel
+  [disabled]="canMarkItems$ | async"
+  [class.mark-mode-active]="canMarkItems$ | async">
+  <mat-expansion-panel-header
+    (click)="onHeaderClick($event)"
+    [attr.role]="(canMarkItems$ | async) ? 'button' : null"
+    [attr.aria-label]="ariaLabel"
+    [attr.aria-pressed]="(canMarkItems$ | async) ? (markedRow > 0) : null">
     <mat-panel-title>
-      {{(settingsService.combine12$ | async) && row.id === 1 ? 'Rows 1 & 2' : 'Row ' + (row.id || 0)}}
+      {{(combine12$ | async) && row.id === 1 ? 'Rows 1 & 2' : 'Row ' + (row.id || 0)}}
     </mat-panel-title>
-    <mat-panel-description *ngIf="settingsService.lrdesignators$ | async">
+    <mat-panel-description *ngIf="lrdesignators$ | async">
       {{(row.id || 0) % 2 ? 'L' : 'R' }}
     </mat-panel-description>
   </mat-expansion-panel-header>
@@ -13,4 +24,3 @@
     </mat-chip-set>
   </ng-template>
 </mat-expansion-panel>
-

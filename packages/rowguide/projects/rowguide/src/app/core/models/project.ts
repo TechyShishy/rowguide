@@ -485,4 +485,75 @@ export interface Project {
    * - **Pattern Analysis**: Enables analysis of marking patterns and completion
    */
   markedSteps?: { [rowIndex: number]: { [stepIndex: number]: number } };
+
+  /**
+   * Marked Rows State
+   *
+   * Optional structured mapping of marked rows for pattern progress tracking and row-level marking.
+   * Stores which specific rows have been marked with which mark mode values using a simple
+   * object structure for efficient lookup and persistence across sessions and project navigation.
+   *
+   * @example
+   * ```typescript
+   * // Marked rows management with structured data
+   * class MarkedRowsManager {
+   *   markRow(project: Project, rowIndex: number, markMode: number): Project {
+   *     const markedRows = { ...project.markedRows };
+   *     if (markMode === 0) {
+   *       // Remove the marking
+   *       delete markedRows[rowIndex];
+   *     } else {
+   *       // Add or update the marking
+   *       markedRows[rowIndex] = markMode;
+   *     }
+   *     
+   *     return {
+   *       ...project,
+   *       markedRows
+   *     };
+   *   }
+   *
+   *   unmarkRow(project: Project, rowIndex: number): Project {
+   *     const markedRows = { ...project.markedRows };
+   *     delete markedRows[rowIndex];
+   *     return {
+   *       ...project,
+   *       markedRows
+   *     };
+   *   }
+   *
+   *   getRowMark(project: Project, rowIndex: number): number {
+   *     return project.markedRows?.[rowIndex] ?? 0; // Default to unmarked
+   *   }
+   * }
+   * ```
+   *
+   * **Structured Format**: `{ [rowIndex: number]: number }`
+   * **Mark Mode Values:**
+   * - **0**: Unmarked (not stored in the structure)
+   * - **1**: First mark state (typically for pattern errors)
+   * - **2**: Second mark state (material changes)
+   * - **3+**: Additional marking states for special techniques, reviews, etc.
+   *
+   * **Benefits of Structured Approach:**
+   * - **Efficient Lookup**: Direct O(1) access to row marks without string parsing
+   * - **Type Safety**: Full TypeScript support with proper number indexing
+   * - **Memory Efficient**: Only stores rows that have markings
+   * - **Simple Organization**: Flat structure for row-level marking
+   * - **Easy Iteration**: Simple loops for processing all marked rows
+   *
+   * **Row-Specific Benefits:**
+   * - **Row-Level Persistence**: Individual row markings persist with project data
+   * - **Pattern Tracking**: Visual indication of problem rows, material changes, etc.
+   * - **Cross-Session Continuity**: Marked rows restored when project loads
+   * - **Data Portability**: Marked rows travel with exported projects
+   * - **Pattern Analysis**: Enables analysis of row-level patterns and issues
+   *
+   * **Use Cases:**
+   * - **Track Pattern Errors**: Mark rows where mistakes occurred
+   * - **Mark Material Changes**: Indicate rows with different bead types/colors
+   * - **Note Special Techniques**: Mark rows requiring special attention
+   * - **Mark for Review**: Indicate rows that need rework or verification
+   */
+  markedRows?: { [rowIndex: number]: number };
 }

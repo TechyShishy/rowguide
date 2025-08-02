@@ -73,7 +73,7 @@ describe('StepComponent Integration', () => {
     };
 
     const mockMarkModeService = {
-      canMarkSteps: jasmine.createSpy('canMarkSteps').and.returnValue(false),
+      canMarkItems: jasmine.createSpy('canMarkItems').and.returnValue(false),
       toggleStepMark: jasmine.createSpy('toggleStepMark'),
       getStepMark$: jasmine.createSpy('getStepMark$').and.returnValue(new BehaviorSubject(0)),
       markModeChanged$: new BehaviorSubject(0)

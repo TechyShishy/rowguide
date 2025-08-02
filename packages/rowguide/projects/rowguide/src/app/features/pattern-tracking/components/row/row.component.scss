@@ -1,3 +1,6 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/colors' as colors;
+
 ol {
   padding: 0;
 }
@@ -11,6 +14,56 @@ button{
   //text-align: center;
   width: 5rem;
   height: 3rem;
+}
+
+// Row Marking Styles
+// Applied to expansion panel headers to indicate row marking state
+// These styles follow the same color pattern as step marking but adapted for expansion panels
+
+:host {
+  &.marked-1 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-1;
+    border-left: 4px solid colors.$rg-mark-active-1;
+  }
+
+  &.marked-2 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-2;
+    border-left: 4px solid colors.$rg-mark-active-2;
+  }
+
+  &.marked-3 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-3;
+    border-left: 4px solid colors.$rg-mark-active-3;
+  }
+
+  &.marked-4 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-4;
+    border-left: 4px solid colors.$rg-mark-active-4;
+  }
+
+  &.marked-5 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-5;
+    border-left: 4px solid colors.$rg-mark-active-5;
+  }
+
+  &.marked-6 mat-expansion-panel-header {
+    background-color: colors.$rg-mark-bg-6;
+    border-left: 4px solid colors.$rg-mark-active-6;
+  }
+}
+
+// Override disabled styling when in mark mode
+// This allows us to use [disabled] for functionality without visual changes
+// Applied to ALL expansion panels in mark mode, regardless of marking state
+mat-expansion-panel.mark-mode-active {
+  // Use Angular Material expansion overrides for proper theming
+  @include mat.expansion-overrides((
+    header-disabled-state-text-color: colors.$rg-gray-900,
+  ));
+
+  mat-expansion-panel-header {
+    cursor: pointer !important;
+  }
 }
 
 

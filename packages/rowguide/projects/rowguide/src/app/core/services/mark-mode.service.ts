@@ -15,28 +15,29 @@ import {
 import { selectCurrentProject } from '../store/selectors/project-selectors';
 import { ProjectActions } from '../store/actions/project-actions';
 import { Project, hasValidId } from '../models';
+import { SafeAccess } from '../models/model-factory';
 import { ErrorHandlerService } from './error-handler.service';
 import { ProjectDbService } from '../../data/services/project-db.service';
 
 /**
- * Service for managing mark mode state and marked steps in the pattern tracking application.
+ * Service for managing mark mode state and marked steps/rows in the pattern tracking application.
  * Handles mode switching, history tracking, undo functionality, and project-based
- * persistence for individual step markings.
+ * persistence for individual step and row markings.
  *
- * Mark modes represent different states for pattern step interaction:
+ * Mark modes represent different states for pattern step/row interaction:
  * - 0: Default/neutral mode (no special marking)
- * - 1: First mark state (typically for starting beads)
- * - 2: Second mark state (progress tracking)
+ * - 1: First mark state (typically for starting beads or progress tracking)
+ * - 2: Second mark state (progress tracking or errors)
  * - 3+: Additional marking states as needed
  *
  * Features:
  * - Reactive mark mode state management for current active mode
  * - Mode history tracking with undo capability
- * - Project-based persistent storage for individual step markings
+ * - Project-based persistent storage for individual step and row markings
  * - Integration with global application state
  * - Real-time mode change notifications
  * - Default mode restoration functionality
- * - Individual step marking persistence across sessions
+ * - Individual step and row marking persistence across sessions
  *
  * @example
  * ```typescript
@@ -56,8 +57,13 @@ import { ProjectDbService } from '../../data/services/project-db.service';
  * this.markModeService.markStep(0, 3, 2); // Mark row 0, step 3 with mode 2
  * this.markModeService.unmarkStep(0, 3); // Remove marking from row 0, step 3
  *
- * // Check step marking
+ * // Mark/unmark entire rows
+ * this.markModeService.markRow(2, 3); // Mark row 2 with mode 3
+ * this.markModeService.unmarkRow(2); // Remove marking from row 2
+ *
+ * // Check markings
  * const stepMark = this.markModeService.getStepMark(0, 3); // Get mark for row 0, step 3
+ * const rowMark = this.markModeService.getRowMark(2); // Get mark for row 2
  *
  * // Mode management
  * this.markModeService.resetMarkMode(); // Return to default
@@ -111,19 +117,19 @@ export class MarkModeService {
   isDefault$: Observable<boolean> = this.store.select(selectIsDefaultMarkMode);
 
   /**
-   * Observable boolean indicating whether step marking is currently enabled.
+   * Observable boolean indicating whether item marking (both steps and rows) is currently enabled.
    * Returns true when in an active mark mode (> 0), false when in default mode (0).
-   * Enables components to reactively respond to marking availability.
+   * Enables components to reactively respond to marking availability for both step and row marking.
    *
    * @example
    * ```typescript
-   * this.markModeService.canMarkSteps$.subscribe(canMark => {
-   *   this.stepClickBehavior = canMark ? 'mark' : 'navigate';
+   * this.markModeService.canMarkItems$.subscribe(canMark => {
+   *   this.itemClickBehavior = canMark ? 'mark' : 'navigate';
    *   this.updateCursorStyle();
    * });
    * ```
    */
-  canMarkSteps$: Observable<boolean> = this.store.select(selectCurrentMarkMode).pipe(
+  canMarkItems$: Observable<boolean> = this.store.select(selectCurrentMarkMode).pipe(
     map(mode => mode > 0),
     distinctUntilChanged()
   );
@@ -269,22 +275,26 @@ export class MarkModeService {
   }
 
   /**
-   * Checks if step marking is currently enabled (active mark mode > 0).
+   * Checks if item marking (both steps and rows) is currently enabled (active mark mode > 0).
    * Returns true when in an active mark mode, false when in default mode (0).
    *
-   * @returns Boolean indicating whether step marking is currently allowed
+   * @returns Boolean indicating whether item marking is currently allowed
    *
    * @example
    * ```typescript
    * // Check before performing marking operation
-   * if (this.markModeService.canMarkSteps()) {
+   * if (this.markModeService.canMarkItems()) {
    *   await this.markModeService.toggleStepMark(0, 3);
+   *   // or
+   *   await this.markModeService.toggleRowMark(2);
    * } else {
    *   this.handleNavigationClick();
    * }
    * ```
+   *
+   * @see {@link canMarkItems$} For reactive observable version
    */
-  canMarkSteps(): boolean {
+  canMarkItems(): boolean {
     const currentState = this.store.getState();
     return currentState.markMode.currentMode > 0;
   }
@@ -626,6 +636,296 @@ export class MarkModeService {
     return this.store.select(selectCurrentProject).pipe(
       filter(project => project !== null),
       map(project => project?.markedSteps?.[rowIndex]?.[stepIndex] ?? 0),
+      distinctUntilChanged()
+    );
+  }
+
+  // ================================
+  // ROW MARKING METHODS
+  // ================================
+
+  /**
+   * Marks a specific row with the given mark mode value and persists to project.
+   * Creates or updates the row marking using structured data format and automatically saves to the database.
+   *
+   * @param rowIndex - Zero-based index of the row to mark
+   * @param markMode - The mark mode value to apply to the row (1-6, use 0 to unmark)
+   *
+   * @example
+   * ```typescript
+   * // Mark row for progress tracking
+   * this.markModeService.markRow(2, 3); // Mark row 2 with mode 3
+   *
+   * // Mark multiple rows
+   * for (let i = 0; i < 5; i++) {
+   *   this.markModeService.markRow(i, 1);
+   * }
+   * ```
+   */
+  async markRow(rowIndex: number, markMode: number): Promise<void> {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        this.logger.debug('No active project to save row marking to');
+        return;
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        this.logger.debug('Current project not found in entities');
+        return;
+      }
+
+      // Update the project with the new row marking using SafeAccess
+      let updatedProject: Project;
+      
+      if (markMode === 0) {
+        // Remove the marking if mode is 0
+        const updatedMarkedRows = { ...currentProject.markedRows };
+        delete updatedMarkedRows[rowIndex];
+        updatedProject = {
+          ...currentProject,
+          markedRows: updatedMarkedRows
+        };
+      } else {
+        // Add or update the marking using SafeAccess
+        const updatedProjectResult = SafeAccess.setRowMark(currentProject, rowIndex, markMode);
+        if (!updatedProjectResult) {
+          this.logger.error('Failed to set row mark: SafeAccess returned null');
+          return;
+        }
+        updatedProject = updatedProjectResult;
+      }
+
+      // Dispatch the project update to the store
+      this.store.dispatch(ProjectActions.updateProjectSuccess(updatedProject));
+      
+      // Save to database
+      await this.projectDbService.updateProject(updatedProject);
+      
+      this.logger.debug(`Row marking saved: row ${rowIndex} = ${markMode}`);
+    } catch (error) {
+      this.logger.error('Error marking row:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'markRow',
+          details: 'Failed to mark row',
+          rowIndex,
+          markMode,
+        },
+        'Unable to save row marking. Marking may not persist.',
+        'medium'
+      );
+    }
+  }
+
+  /**
+   * Removes marking from a specific row and persists to project.
+   * Convenience method equivalent to markRow(rowIndex, 0).
+   *
+   * @param rowIndex - Zero-based index of the row to unmark
+   *
+   * @example
+   * ```typescript
+   * // Remove marking from row
+   * this.markModeService.unmarkRow(2); // Remove marking from row 2
+   * ```
+   */
+  async unmarkRow(rowIndex: number): Promise<void> {
+    await this.markRow(rowIndex, 0);
+  }
+
+  /**
+   * Toggles a row's marking state between unmarked (0) and the current active mark mode.
+   * Implements the core toggle logic for row interactions in mark mode.
+   * 
+   * If the row is currently marked with the active mode, it becomes unmarked (0).
+   * If the row is unmarked or marked with a different mode, it gets marked with the current active mode.
+   *
+   * @param rowIndex - Zero-based index of the row to toggle
+   * @returns Promise resolving to the new mark mode value that was applied
+   *
+   * @example
+   * ```typescript
+   * // User clicks row header in mark mode
+   * const newMarkMode = await this.markModeService.toggleRowMark(2);
+   * console.log(`Row is now marked with mode: ${newMarkMode}`);
+   * 
+   * // Toggle sequence with current mark mode = 2:
+   * await this.toggleRowMark(2); // Row unmarked → marked with 2, returns 2
+   * await this.toggleRowMark(2); // Row marked with 2 → unmarked, returns 0
+   * await this.toggleRowMark(2); // Row unmarked → marked with 2, returns 2
+   * ```
+   */
+  async toggleRowMark(rowIndex: number): Promise<number> {
+    const currentState = this.store.getState();
+    const currentMarkMode = currentState.markMode.currentMode;
+    
+    // Don't toggle if not in an active mark mode
+    if (currentMarkMode === 0) {
+      return 0;
+    }
+    
+    const currentRowMark = this.getRowMark(rowIndex);
+    const newMarkMode = currentRowMark === currentMarkMode ? 0 : currentMarkMode;
+    
+    await this.markRow(rowIndex, newMarkMode);
+    
+    this.logger.debug(`Row toggle completed: row ${rowIndex}, ${currentRowMark} → ${newMarkMode}`);
+    return newMarkMode;
+  }
+
+  /**
+   * Gets the current mark mode value for a specific row.
+   * Returns 0 if the row is not marked.
+   *
+   * @param rowIndex - Zero-based index of the row
+   * @returns The mark mode value for the row (0 if unmarked)
+   *
+   * @example
+   * ```typescript
+   * // Check row marking
+   * const rowMark = this.markModeService.getRowMark(2);
+   * if (rowMark > 0) {
+   *   console.log(`Row is marked with mode ${rowMark}`);
+   * }
+   * ```
+   */
+  getRowMark(rowIndex: number): number {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        return 0;
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        return 0;
+      }
+
+      return SafeAccess.getRowMark(currentProject, rowIndex);
+    } catch (error) {
+      this.logger.error('Error getting row mark:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets all marked rows for the current project.
+   * Returns a copy of the marked rows object to prevent direct mutation.
+   *
+   * @returns Object mapping row indices to mark mode values
+   *
+   * @example
+   * ```typescript
+   * // Get all marked rows
+   * const markedRows = this.markModeService.getAllMarkedRows();
+   * Object.entries(markedRows).forEach(([rowIndex, markMode]) => {
+   *   console.log(`Row ${rowIndex}: Mark Mode ${markMode}`);
+   * });
+   * ```
+   */
+  getAllMarkedRows(): { [rowIndex: number]: number } {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        return {};
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        return {};
+      }
+
+      return SafeAccess.getMarkedRows(currentProject);
+    } catch (error) {
+      this.logger.error('Error getting all marked rows:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Clears all marked rows from the current project.
+   *
+   * @example
+   * ```typescript
+   * // Clear all row markings
+   * this.markModeService.clearAllMarkedRows();
+   * ```
+   */
+  async clearAllMarkedRows(): Promise<void> {
+    try {
+      const currentState = this.store.getState();
+      const currentProjectId = currentState.projects.currentProjectId;
+
+      if (!currentProjectId) {
+        this.logger.debug('No active project to clear marked rows from');
+        return;
+      }
+
+      const currentProject = currentState.projects.entities[currentProjectId];
+      
+      if (!currentProject) {
+        this.logger.debug('Current project not found in entities');
+        return;
+      }
+
+      const updatedProject: Project = {
+        ...currentProject,
+        markedRows: {}
+      };
+
+      // Dispatch the project update to the store
+      this.store.dispatch(ProjectActions.updateProjectSuccess(updatedProject));
+      
+      // Save to database
+      await this.projectDbService.updateProject(updatedProject);
+      
+      this.logger.debug('All marked rows cleared');
+    } catch (error) {
+      this.logger.error('Error clearing marked rows:', error);
+      this.errorHandler.handleError(
+        error,
+        {
+          operation: 'clearAllMarkedRows',
+          details: 'Failed to clear all marked rows',
+        },
+        'Unable to clear row markings. Some markings may persist.',
+        'medium'
+      );
+    }
+  }
+
+  /**
+   * Gets an observable stream for a specific row's mark mode that updates when project data changes.
+   * This enables reactive updates to row components when marked rows are modified.
+   *
+   * @param rowIndex - Zero-based index of the row
+   * @returns Observable that emits the current mark mode value for the row
+   *
+   * @example
+   * ```typescript
+   * // Subscribe to row mark changes for reactive UI updates
+   * this.markModeService.getRowMark$(2).subscribe(markMode => {
+   *   this.rowMarked = markMode;
+   *   this.updateRowVisuals();
+   * });
+   * ```
+   */
+  getRowMark$(rowIndex: number): Observable<number> {
+    return this.store.select(selectCurrentProject).pipe(
+      filter(project => project !== null),
+      map(project => SafeAccess.getRowMark(project!, rowIndex)),
       distinctUntilChanged()
     );
   }

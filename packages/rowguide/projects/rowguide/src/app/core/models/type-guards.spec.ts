@@ -11,6 +11,8 @@ import {
   hasFlam,
   isEmptyProject,
   isValidProject,
+  isValidRowMarking,
+  isValidRowMarkingStructure,
 } from './type-guards';
 import { ModelFactory, SafeAccess, DEFAULT_VALUES } from './model-factory';
 import { Project } from './project';
@@ -1099,6 +1101,75 @@ describe('Type Guards and Null Safety System', () => {
 
       expect(isProject(recoveredProject)).toBe(true);
       expect(isValidProject(recoveredProject)).toBe(true);
+    });
+  });
+
+  describe('Row Marking Type Guards', () => {
+    describe('isValidRowMarking', () => {
+      it('should validate valid row marking values', () => {
+        expect(isValidRowMarking(0)).toBe(true);
+        expect(isValidRowMarking(1)).toBe(true);
+        expect(isValidRowMarking(2)).toBe(true);
+        expect(isValidRowMarking(3)).toBe(true);
+        expect(isValidRowMarking(4)).toBe(true);
+        expect(isValidRowMarking(5)).toBe(true);
+        expect(isValidRowMarking(6)).toBe(true);
+      });
+
+      it('should reject invalid marking values', () => {
+        expect(isValidRowMarking(-1)).toBe(false);
+        expect(isValidRowMarking(7)).toBe(false);
+        expect(isValidRowMarking(3.5)).toBe(false);
+        expect(isValidRowMarking('2')).toBe(false);
+        expect(isValidRowMarking(null)).toBe(false);
+        expect(isValidRowMarking(undefined)).toBe(false);
+        expect(isValidRowMarking(NaN)).toBe(false);
+        expect(isValidRowMarking(Infinity)).toBe(false);
+      });
+    });
+
+    describe('isValidRowMarkingStructure', () => {
+      it('should validate valid row marking structures', () => {
+        expect(isValidRowMarkingStructure({})).toBe(true);
+        expect(isValidRowMarkingStructure({ 0: 1 })).toBe(true);
+        expect(isValidRowMarkingStructure({ 0: 1, 2: 3, 5: 0 })).toBe(true);
+        expect(isValidRowMarkingStructure({ 10: 6 })).toBe(true);
+      });
+
+      it('should reject invalid row marking structures', () => {
+        // Non-object values
+        expect(isValidRowMarkingStructure(null)).toBe(false);
+        expect(isValidRowMarkingStructure(undefined)).toBe(false);
+        expect(isValidRowMarkingStructure('invalid')).toBe(false);
+        expect(isValidRowMarkingStructure(123)).toBe(false);
+        expect(isValidRowMarkingStructure([])).toBe(false);
+
+        // Invalid row indices
+        expect(isValidRowMarkingStructure({ '-1': 1 })).toBe(false);
+        expect(isValidRowMarkingStructure({ '3.5': 2 })).toBe(false);
+        expect(isValidRowMarkingStructure({ 'abc': 1 })).toBe(false);
+
+        // Invalid mark values
+        expect(isValidRowMarkingStructure({ 0: -1 })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: 7 })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: 3.5 })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: '2' })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: null })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: undefined })).toBe(false);
+
+        // Mixed valid and invalid
+        expect(isValidRowMarkingStructure({ 0: 1, 1: 7 })).toBe(false);
+        expect(isValidRowMarkingStructure({ 0: 1, '-1': 2 })).toBe(false);
+      });
+
+      it('should handle edge cases', () => {
+        // Empty object is valid
+        expect(isValidRowMarkingStructure({})).toBe(true);
+
+        // Large row indices
+        expect(isValidRowMarkingStructure({ 999: 1 })).toBe(true);
+        expect(isValidRowMarkingStructure({ 0: 0 })).toBe(true); // Unmarked is valid
+      });
     });
   });
 });

@@ -592,7 +592,7 @@ export class StepComponent implements HierarchicalList, OnInit {
    * ```typescript
    * // User clicks step - behavior determined by service state
    * async onClick(event): Promise<void> {
-   *   if (this.markModeService.canMarkSteps()) {
+   *   if (this.markModeService.canMarkItems()) {
    *     // Service handles all toggle logic and persistence
    *     await this.markModeService.toggleStepMark(this.row.index, this.index);
    *     // Component state updates automatically via reactive subscription
@@ -613,13 +613,13 @@ export class StepComponent implements HierarchicalList, OnInit {
    *
    * @see {@link ProjectService.saveCurrentPosition} For position persistence
    * @see {@link MarkModeService.toggleStepMark} For step marking toggle logic
-   * @see {@link MarkModeService.canMarkSteps} For marking mode validation
+   * @see {@link MarkModeService.canMarkItems} For marking mode validation
    * @since 1.0.0
    */
   @HostListener('click', ['$event'])
   async onClick(_e: any) {
     // Use service method to check if marking is enabled
-    if (this.markModeService.canMarkSteps()) {
+    if (this.markModeService.canMarkItems()) {
       // Delegate toggle logic to service - no business logic in component
       await this.markModeService.toggleStepMark(this.row.index, this.index);
       

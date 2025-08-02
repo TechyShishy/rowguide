@@ -5,7 +5,9 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  HostBinding,
   Input,
+  OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
@@ -18,10 +20,11 @@ import {
   MatExpansionPanel,
 } from '@angular/material/expansion';
 import { NGXLogger } from 'ngx-logger';
+import { take } from 'rxjs/operators';
 
 import { Row } from '../../../../core/models/row';
 import { Step } from '../../../../core/models/step';
-import { SettingsService } from '../../../../core/services';
+import { MarkModeService, SettingsService } from '../../../../core/services';
 import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { ProjectComponent } from '../project/project.component';
 import { StepComponent } from '../step/step.component';
@@ -107,7 +110,7 @@ import { StepComponent } from '../step/step.component';
   styleUrls: ['./row.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RowComponent implements HierarchicalList, AfterViewInit {
+export class RowComponent implements HierarchicalList, OnInit, AfterViewInit {
   /**
    * The row data model containing pattern information and step relationships.
    *
@@ -222,6 +225,93 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   markFirstStep = false;
 
   /**
+   * Current row marking state indicating visual marking category.
+   *
+   * @property
+   * @type {number}
+   * @default 0
+   *
+   * Defines the visual marking state for the row (0 = unmarked, 1-6 = marked).
+   * Used to apply corresponding CSS classes for visual differentiation.
+   * Values map to .marked-1 through .marked-6 CSS classes.
+   */
+  markedRow = 0;
+
+  /**
+   * Host binding for dynamic CSS class application based on marking state.
+   * @returns {string} CSS class string for current marking state
+   */
+  @HostBinding('class')
+  get cssClass(): string {
+    return this.markedRow > 0 ? `marked-${this.markedRow}` : '';
+  }
+
+  /**
+   * Generates accessibility label for row marking interactions.
+   *
+   * @returns {string | null} ARIA label text for screen readers, or null when not in mark mode
+   *
+   * Creates descriptive accessibility text that includes:
+   * - Row identification number
+   * - Current marking state (marked with color or unmarked)
+   * - Available interaction (click to toggle marking)
+   *
+   * Only returns a label when mark mode is active, as the role and interaction
+   * are only relevant during marking operations.
+   */
+  get ariaLabel(): string | null {
+    if (!this.markModeService.canMarkItems()) {
+      return null;
+    }
+
+    const rowId = this.row.id || 0;
+    const markState = this.markedRow > 0
+      ? `, marked with color ${this.markedRow}`
+      : ', not marked';
+
+    return `Row ${rowId}${markState}. Click to toggle marking.`;
+  }
+
+  /**
+   * Observable stream indicating whether items can be marked.
+   *
+   * @returns {Observable<boolean>} Stream of mark mode state
+   *
+   * Provides template access to mark mode state without exposing
+   * the entire MarkModeService. Encapsulates service interaction
+   * while maintaining reactive template bindings.
+   */
+  get canMarkItems$() {
+    return this.markModeService.canMarkItems$;
+  }
+
+  /**
+   * Observable stream for settings combine12 preference.
+   *
+   * @returns {Observable<boolean>} Stream of combine12 setting state
+   *
+   * Provides template access to combine12 setting without exposing
+   * the entire SettingsService. Supports row title display logic
+   * while maintaining proper encapsulation.
+   */
+  get combine12$() {
+    return this.settingsService.combine12$;
+  }
+
+  /**
+   * Observable stream for left/right designators display preference.
+   *
+   * @returns {Observable<boolean>} Stream of designators setting state
+   *
+   * Provides template access to LR designators setting without exposing
+   * the entire SettingsService. Controls panel description visibility
+   * while maintaining service encapsulation.
+   */
+  get lrdesignators$() {
+    return this.settingsService.lrdesignators$;
+  }
+
+  /**
    * Reference to the parent component in the hierarchical navigation structure.
    *
    * @property
@@ -285,11 +375,49 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
    * @since 1.0.0
    */
   constructor(
-    public settingsService: SettingsService,
+    private settingsService: SettingsService,
     private logger: NGXLogger,
     private ref: ElementRef,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private markModeService: MarkModeService
   ) {}
+
+  /**
+   * Initializes component state and sets up reactive subscriptions.
+   *
+   * @returns {void}
+   *
+   * Implements OnInit lifecycle hook to establish row marking state management.
+   * Subscribes to the row marking observable stream to keep the component's
+   * visual state synchronized with the global marking state.
+   *
+   * Following the same pattern as StepComponent, this method sets up:
+   * - Row marking state subscription via getRowMark$(this.index)
+   * - Change detection triggering for OnPush strategy compatibility
+   * - Reactive updates when row marking state changes
+   *
+   * @example
+   * ```typescript
+   * ngOnInit(): void {
+   *   // Subscribe to row marking state
+   *   this.markModeService.getRowMark$(this.index).subscribe(markState => {
+   *     this.markedRow = markState;
+   *     this.cdr.markForCheck();
+   *   });
+   * }
+   * ```
+   *
+   * @see {@link MarkModeService.getRowMark$} For row marking observable
+   * @see {@link StepComponent.ngOnInit} For similar pattern implementation
+   * @since 1.0.0
+   */
+  ngOnInit(): void {
+    // Subscribe to row marking state changes
+    this.markModeService.getRowMark$(this.index).subscribe(markState => {
+      this.markedRow = markState;
+      this.cdr.markForCheck();
+    });
+  }
 
   /**
    * Initializes view-dependent functionality after component view initialization.
@@ -446,6 +574,32 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   }
 
   /**
+   * Handles row header click events for marking functionality.
+   *
+   * @public
+   * @param {Event} event - Click event that needs controlled propagation
+   * @returns {void}
+   *
+   * Processes click events on the expansion panel header. In mark mode, toggles
+   * row marking state. In normal mode, allows default expansion panel behavior.
+   * The [disabled] binding in template prevents expansion when in mark mode.
+   *
+   * @param {Event} event - Required click event for proper handling
+   * @see {@link MarkModeService.toggleRowMark} For the marking operation
+   * @see {@link MarkModeService.canMarkItems} For mark mode validation
+   * @since 1.0.0
+   */
+  onHeaderClick(event: Event): void {
+    // Only handle marking when in mark mode
+    if (this.markModeService.canMarkItems()) {
+      this.markModeService.toggleRowMark(this.index);
+      this.cdr.markForCheck();
+    }
+    // In normal mode, Angular Material handles expansion automatically
+    // The [disabled] binding prevents expansion when in mark mode
+  }
+
+  /**
    * Opens the expansion panel and sets up scrolling behavior with user preferences.
    *
    * @public
@@ -486,7 +640,7 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   show() {
     this.panel.open();
     this.cdr.detectChanges();
-    this.settingsService.scrolloffset$.subscribe((offset) => {
+    this.settingsService.scrolloffset$.pipe(take(1)).subscribe((offset) => {
       this.scrollToOffsetRow(offset);
     });
     //this.scrollToPreviousRow();
@@ -581,32 +735,46 @@ export class RowComponent implements HierarchicalList, AfterViewInit {
   }
 
   /**
-   * Hides the row expansion panel (currently not implemented).
+   * Closes the expansion panel and manages visibility state.
    *
    * @public
    * @returns {void}
    *
-   * Placeholder method for row hiding functionality. Currently empty but
-   * reserved for future implementation of programmatic panel closing,
-   * visibility state management, and coordinated UI hiding behaviors.
+   * Programmatically closes the Material Design expansion panel and updates
+   * the component's visibility state. This method provides the counterpart
+   * to the show() method, enabling complete programmatic control over
+   * panel visibility and state management.
    *
-   * When implemented, this method should provide the counterpart to the
-   * show() method, including panel closing, state cleanup, and any
-   * necessary UI coordination for hiding the row content.
+   * The implementation includes:
+   * - Expansion panel closing via Material Design API
+   * - Visibility state updates for component consistency
+   * - Manual change detection triggering for immediate UI updates
    *
    * @example
    * ```typescript
-   * // Future implementation might include:
-   * hide(): void {
-   *   this.panel.close();
-   *   this.visible = false;
-   *   // Additional cleanup logic
+   * // Programmatic row hiding
+   * hideRow(rowComponent: RowComponent): void {
+   *   rowComponent.hide();
+   *   // Panel closes and visibility updates
    * }
    * ```
    *
-   * TODO: Implement panel closing and state management logic
+   * @example
+   * ```typescript
+   * // Usage with navigation coordination
+   * closeAllRows(): void {
+   *   this.rows.forEach(row => row.hide());
+   *   // All panels close programmatically
+   * }
+   * ```
+   *
    * @see {@link show} For the complementary show functionality
+   * @see {@link visible} For the visibility state property
    * @since 1.0.0
    */
-  hide() {}
+  hide(): void {
+    this.panel.close();
+    this.visible = false;
+    this.cdr.detectChanges();
+  }
 }

@@ -476,4 +476,125 @@ export class SafeAccess {
     const row = rows[position.row];
     return position.step >= 0 && position.step < (row?.steps?.length ?? 0);
   }
+
+  /**
+   * Safely gets a row mark for a specific row with fallback.
+   *
+   * @param project - The project (may be null/undefined)
+   * @param rowIndex - Zero-based row index
+   * @param defaultValue - Value to return if row is not marked
+   * @returns The row mark mode value or default value (0 = unmarked)
+   *
+   * @example
+   * ```typescript
+   * const rowMark = SafeAccess.getRowMark(project, 2);
+   * if (rowMark > 0) {
+   *   // Row is marked
+   *   applyRowMarkingStyles(rowMark);
+   * }
+   * ```
+   */
+  static getRowMark(
+    project: Project | null | undefined,
+    rowIndex: number,
+    defaultValue: number = 0
+  ): number {
+    if (!project?.markedRows || rowIndex < 0) {
+      return defaultValue;
+    }
+    return project.markedRows[rowIndex] ?? defaultValue;
+  }
+
+  /**
+   * Safely sets a row mark in a project, creating a new project instance.
+   *
+   * @param project - The project (may be null/undefined)
+   * @param rowIndex - Zero-based row index
+   * @param markMode - Mark mode value (0 to unmark, 1-6 to mark)
+   * @returns New project instance with updated row marking, or null if invalid
+   *
+   * @example
+   * ```typescript
+   * const updatedProject = SafeAccess.setRowMark(project, 2, 3);
+   * if (updatedProject) {
+   *   // Successfully marked row 2 with mode 3
+   *   saveProject(updatedProject);
+   * }
+   * ```
+   */
+  static setRowMark(
+    project: Project | null | undefined,
+    rowIndex: number,
+    markMode: number
+  ): Project | null {
+    if (!project || rowIndex < 0 || markMode < 0 || markMode > 6) {
+      return null;
+    }
+
+    const updatedMarkedRows = { ...project.markedRows };
+    
+    if (markMode === 0) {
+      // Remove the marking
+      delete updatedMarkedRows[rowIndex];
+    } else {
+      // Add or update the marking
+      updatedMarkedRows[rowIndex] = markMode;
+    }
+
+    return {
+      ...project,
+      markedRows: updatedMarkedRows
+    };
+  }
+
+  /**
+   * Safely gets all marked rows from a project.
+   *
+   * @param project - The project (may be null/undefined)
+   * @returns Object mapping row indices to mark mode values (empty if no marks)
+   *
+   * @example
+   * ```typescript
+   * const markedRows = SafeAccess.getMarkedRows(project);
+   * Object.entries(markedRows).forEach(([rowIndex, markMode]) => {
+   *   console.log(`Row ${rowIndex} marked with mode ${markMode}`);
+   * });
+   * ```
+   */
+  static getMarkedRows(
+    project: Project | null | undefined
+  ): { [rowIndex: number]: number } {
+    if (!project?.markedRows) {
+      return {};
+    }
+    
+    // Return a shallow copy to prevent direct mutation
+    return { ...project.markedRows };
+  }
+
+  /**
+   * Safely gets a row at a specific index with bounds checking.
+   *
+   * @param project - The project (may be null/undefined)
+   * @param rowIndex - Zero-based row index
+   * @returns The Row at the specified index, or null if out of bounds
+   *
+   * @example
+   * ```typescript
+   * const row = SafeAccess.getRowAtIndex(project, 0);
+   * if (row) {
+   *   // Safe to use row
+   *   processSteps(row.steps);
+   * } else {
+   *   console.log('Row not found');
+   * }
+   * ```
+   */
+  static getRowAtIndex(
+    project: Project | null | undefined,
+    rowIndex: number
+  ): Row | null {
+    const rows = SafeAccess.getProjectRows(project);
+    return rows[rowIndex] ?? null;
+  }
 }

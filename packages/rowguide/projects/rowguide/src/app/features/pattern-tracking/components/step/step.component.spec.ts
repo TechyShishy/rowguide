@@ -79,9 +79,9 @@ describe('StepComponent', () => {
     const markedStepsStorage: { [rowIndex: number]: { [stepIndex: number]: number } } = {};
     const stepMarkSubjects: { [key: string]: BehaviorSubject<number> } = {};
     
-    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$', 'toggleStepMark', 'canMarkSteps', 'markMultipleSteps'], {
+    mockMarkModeService = jasmine.createSpyObj('MarkModeService', ['markStep', 'getStepMark', 'getStepMark$', 'toggleStepMark', 'canMarkItems', 'markMultipleSteps'], {
       markModeChanged$: markModeChanged$,
-      canMarkSteps$: new BehaviorSubject<boolean>(true),
+      canMarkItems$: new BehaviorSubject<boolean>(true),
     });
     
     mockMarkModeService.getStepMark.and.callFake((rowIndex: number, stepIndex: number) => {
@@ -128,7 +128,7 @@ describe('StepComponent', () => {
       return newMarkMode;
     });
 
-    mockMarkModeService.canMarkSteps.and.callFake(() => {
+    mockMarkModeService.canMarkItems.and.callFake(() => {
       return markModeChanged$.value > 0;
     });
 

@@ -334,4 +334,132 @@ describe('SafeAccess', () => {
       expect(total).toBe(0);
     });
   });
+
+  describe('getRowMark', () => {
+    it('should return row mark for marked row', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 2, 1: 1 },
+      };
+
+      expect(SafeAccess.getRowMark(projectWithMarkedRows, 0)).toBe(2);
+      expect(SafeAccess.getRowMark(projectWithMarkedRows, 1)).toBe(1);
+    });
+
+    it('should return default value for unmarked row', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 2 },
+      };
+
+      expect(SafeAccess.getRowMark(projectWithMarkedRows, 1)).toBe(0);
+      expect(SafeAccess.getRowMark(projectWithMarkedRows, 1, 5)).toBe(5);
+    });
+
+    it('should return default for null project', () => {
+      expect(SafeAccess.getRowMark(null, 0)).toBe(0);
+      expect(SafeAccess.getRowMark(null, 0, 3)).toBe(3);
+    });
+
+    it('should return default for project without markedRows', () => {
+      expect(SafeAccess.getRowMark(mockProject, 0)).toBe(0);
+    });
+
+    it('should return default for negative row index', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 2 },
+      };
+
+      expect(SafeAccess.getRowMark(projectWithMarkedRows, -1)).toBe(0);
+    });
+  });
+
+  describe('setRowMark', () => {
+    it('should set row mark correctly', () => {
+      const result = SafeAccess.setRowMark(mockProject, 0, 3);
+
+      expect(result).not.toBeNull();
+      expect(result!.markedRows).toEqual({ 0: 3 });
+      expect(result).not.toBe(mockProject); // Should return new instance
+    });
+
+    it('should update existing row mark', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 1, 1: 2 },
+      };
+
+      const result = SafeAccess.setRowMark(projectWithMarkedRows, 0, 4);
+
+      expect(result).not.toBeNull();
+      expect(result!.markedRows).toEqual({ 0: 4, 1: 2 });
+    });
+
+    it('should remove row mark when markMode is 0', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 1, 1: 2 },
+      };
+
+      const result = SafeAccess.setRowMark(projectWithMarkedRows, 0, 0);
+
+      expect(result).not.toBeNull();
+      expect(result!.markedRows).toEqual({ 1: 2 });
+    });
+
+    it('should return null for invalid inputs', () => {
+      expect(SafeAccess.setRowMark(null, 0, 1)).toBeNull();
+      expect(SafeAccess.setRowMark(mockProject, -1, 1)).toBeNull();
+      expect(SafeAccess.setRowMark(mockProject, 0, -1)).toBeNull();
+      expect(SafeAccess.setRowMark(mockProject, 0, 7)).toBeNull();
+    });
+
+    it('should handle project without existing markedRows', () => {
+      const result = SafeAccess.setRowMark(mockProject, 1, 2);
+
+      expect(result).not.toBeNull();
+      expect(result!.markedRows).toEqual({ 1: 2 });
+    });
+  });
+
+  describe('getMarkedRows', () => {
+    it('should return copy of marked rows', () => {
+      const projectWithMarkedRows = {
+        ...mockProject,
+        markedRows: { 0: 1, 2: 3 },
+      };
+
+      const result = SafeAccess.getMarkedRows(projectWithMarkedRows);
+
+      expect(result).toEqual({ 0: 1, 2: 3 });
+      expect(result).not.toBe(projectWithMarkedRows.markedRows); // Should be a copy
+    });
+
+    it('should return empty object for project without markedRows', () => {
+      const result = SafeAccess.getMarkedRows(mockProject);
+      expect(result).toEqual({});
+    });
+
+    it('should return empty object for null project', () => {
+      const result = SafeAccess.getMarkedRows(null);
+      expect(result).toEqual({});
+    });
+  });
+
+  describe('getRowAtIndex', () => {
+    it('should return correct row for valid index', () => {
+      const row = SafeAccess.getRowAtIndex(mockProject, 0);
+      expect(row).toBe(mockProject.rows[0]);
+    });
+
+    it('should return null for out of bounds index', () => {
+      expect(SafeAccess.getRowAtIndex(mockProject, 10)).toBeNull();
+      expect(SafeAccess.getRowAtIndex(mockProject, -1)).toBeNull();
+    });
+
+    it('should return null for null project', () => {
+      expect(SafeAccess.getRowAtIndex(null, 0)).toBeNull();
+    });
+  });
 });

@@ -351,3 +351,73 @@ export function isValidProject(project: Project): boolean {
     project.rows.some((row) => row.steps.length > 0)
   );
 }
+
+/**
+ * Type guard to check if a row marking value is valid.
+ *
+ * Validates that a row marking is a valid mark mode number (0-6).
+ * Used for validating row marking data integrity and user input.
+ *
+ * @param value - The marking value to validate
+ * @returns True if the value is a valid row marking (0-6)
+ *
+ * @example
+ * ```typescript
+ * function applyRowMarking(markMode: unknown) {
+ *   if (isValidRowMarking(markMode)) {
+ *     // TypeScript knows markMode is a valid number 0-6
+ *     setRowMark(markMode);
+ *   } else {
+ *     console.error('Invalid row marking value');
+ *   }
+ * }
+ * ```
+ */
+export function isValidRowMarking(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 6
+  );
+}
+
+/**
+ * Type guard to check if a row marking structure is valid.
+ *
+ * Validates that a markedRows object has the correct structure with
+ * valid row indices and mark mode values.
+ *
+ * @param value - The marked rows object to validate
+ * @returns True if the structure is valid
+ *
+ * @example
+ * ```typescript
+ * function processMarkedRows(data: unknown) {
+ *   if (isValidRowMarkingStructure(data)) {
+ *     // TypeScript knows data has correct structure
+ *     Object.entries(data).forEach(([rowIndex, markMode]) => {
+ *       console.log(`Row ${rowIndex} marked with mode ${markMode}`);
+ *     });
+ *   }
+ * }
+ * ```
+ */
+export function isValidRowMarkingStructure(
+  value: unknown
+): value is { [rowIndex: number]: number } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const obj = value as Record<string, unknown>;
+  
+  return Object.entries(obj).every(([key, val]) => {
+    const rowIndex = Number(key);
+    return (
+      Number.isInteger(rowIndex) &&
+      rowIndex >= 0 &&
+      isValidRowMarking(val)
+    );
+  });
+}
