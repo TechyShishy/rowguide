@@ -1,0 +1,12 @@
+# Playwright E2E Test Results
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Screenshots and videos from test runs
+tests/e2e/screenshots/
+tests/e2e/videos/
+
+# Test artifacts
+*.trace.zip

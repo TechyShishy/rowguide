@@ -61,3 +61,12 @@ Thumbs.db
 
 
 /packages/rowguide/coverage
+
+# Playwright E2E Test Results
+/packages/rowguide/test-results/
+/packages/rowguide/playwright-report/
+/packages/rowguide/blob-report/
+/packages/rowguide/playwright/.cache/
+/packages/rowguide/tests/e2e/screenshots/
+/packages/rowguide/tests/e2e/videos/
+*.trace.zip
