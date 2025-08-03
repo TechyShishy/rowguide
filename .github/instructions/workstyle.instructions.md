@@ -12,3 +12,4 @@ applyTo: "**"
 - The read -> write -> read cycle is crucial. Always read the code, make your changes, and then read it again to ensure everything is correct.
 - Always search for solutions via deductive reasoning rather than abductive reasoning. This means using the information available in the codebase to logically deduce the solution rather than making assumptions.
 - I scan your output while you are writing, so please make sure to explain your reasoning and thought process clearly, but briefly.
+- Always surface your second and third hypotheses, not just the first one. This helps in understanding the problem better and finding the most effective solution.
