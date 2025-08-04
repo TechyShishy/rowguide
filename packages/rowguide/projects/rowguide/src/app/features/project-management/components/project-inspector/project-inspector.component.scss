@@ -50,3 +50,16 @@ mat-form-field {
   margin-top: 16px;
   text-align: center;
 }
+
+.sorted-column {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+// Ensure the sorted column styling doesn't interfere with other interactive elements
+.sorted-column .color-cell-span {
+  background-color: transparent;
+}
+
+.sorted-column mat-form-field {
+  background-color: transparent;
+}

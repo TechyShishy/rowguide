@@ -208,6 +208,19 @@ export class ProjectInspectorComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Determines if a specific column is currently being sorted.
+   *
+   * Used for conditional CSS class application to highlight
+   * the active sort column in the FLAM table.
+   *
+   * @param columnName - The column identifier to check
+   * @returns true if the column is currently sorted, false otherwise
+   */
+  isColumnSorted(columnName: string): boolean {
+    return this.sort?.active === columnName && this.sort?.direction !== '';
+  }
+
+  /**
    * Component constructor with comprehensive dependency injection.
    *
    * Injects core services for FLAM analysis, project management,
