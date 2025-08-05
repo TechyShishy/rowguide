@@ -48,7 +48,7 @@ yarn capacitor:assembleDebug      # Android APK
 
 ### Testing Protocol
 1. **NEVER start dev server** (already running)
-2. **Always run tests** before completion: `yarn workspace rowguide test`
+2. **Always run tests** before completion: `yarn workspace rowguide test --browsers=ChromeHeadless --watch=false`
 3. **Ask user to test** builds instead of starting servers
 4. **100% test pass rate** required before code changes complete
 

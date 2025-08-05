@@ -8,7 +8,6 @@ applyTo: "**"
 
 ### Manual Testing Requirements
 
-- **ALWAYS request manual testing** after code changes (no E2E tests available)
 - **Provide specific testing steps** for user to validate changes
 - **Explain assumptions and intent** clearly before requesting tests
 - **No change is complete** without manual testing validation
