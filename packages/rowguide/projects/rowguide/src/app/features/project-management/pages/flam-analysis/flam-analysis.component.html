@@ -1,0 +1,77 @@
+<app-error-boundary (retryRequested)="onRetry()">
+  <mat-card class="flam">
+    <mat-card-title>FLAM Analysis</mat-card-title>
+    <mat-card-content>
+      <div *ngIf="dataSource.data.length === 0" class="no-data-message">
+        <p>No FLAM data available. Please load a project to analyze pattern data.</p>
+      </div>
+
+      <!-- Always render table in DOM to ensure ViewChild binding, use visibility instead of display -->
+      <div [style.visibility]="dataSource.data.length > 0 ? 'visible' : 'hidden'"
+           [style.height]="dataSource.data.length > 0 ? 'auto' : '0px'"
+           [style.overflow]="'hidden'">
+        <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByKey">
+          <ng-container matColumnDef="key">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('key')">{{flamRow.key}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="firstRow">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>First Row</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('firstRow')">{{flamRow.firstRow+1}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="firstColumn">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>First Column</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('firstColumn')">{{flamRow.firstColumn+1}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="lastRow">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Row</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('lastRow')">{{flamRow.lastRow+1}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="lastColumn">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Column</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('lastColumn')">{{flamRow.lastColumn+1}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Count</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('count')">{{flamRow.count}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="color">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Color</th>
+            <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('color')">
+              <span *ngIf="!isEditingColor(flamRow)" (click)="startEditingColor(flamRow)"
+                class="color-cell-span">
+                {{flamRow.color || ''}}
+              </span>
+              <mat-form-field *ngIf="isEditingColor(flamRow)" appearance="fill">
+                <input matInput [(ngModel)]="flamRow.color" (blur)="updateFlamRowColor(flamRow)"
+                  (keydown.enter)="updateFlamRowColor(flamRow)" (keydown.escape)="stopEditingColor()" #colorInput>
+              </mat-form-field>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="hexColor">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let flamRow">
+              <span *ngIf="flamRow.hexColor" [style.background-color]="flamRow.hexColor" class="hex-color-indicator"></span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row
+            *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor']">
+          </tr>
+          <tr mat-row
+            *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor'];"></tr>
+        </table>
+        <div class="reset-button-container">
+          <button mat-raised-button color="warn" (click)="resetAllColorCodes()">Reset All Color Codes</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</app-error-boundary>

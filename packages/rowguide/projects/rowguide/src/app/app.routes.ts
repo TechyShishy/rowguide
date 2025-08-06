@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { ProjectComponent } from './features/pattern-tracking/components/project/project.component';
 import { ProjectInspectorComponent } from './features/project-management/components/project-inspector/project-inspector.component';
 import { ProjectSelectorComponent } from './features/project-management/components/project-selector/project-selector.component';
+import { FlamAnalysisComponent } from './features/project-management/pages/flam-analysis/flam-analysis.component';
 import { SettingsComponent } from './features/settings/components/settings/settings.component';
 
 /**
@@ -153,6 +154,25 @@ export const routes: Routes = [
    * ```
    */
   { path: 'settings', component: SettingsComponent },
+
+  /**
+   * FLAM Analysis route.
+   *
+   * Displays the FLAM (First/Last Appearance Map) analysis component for
+   * detailed pattern analysis, color management, and visualization.
+   * Extracted from the project inspector for improved UX and maintainability.
+   *
+   * @route `/flam-analysis`
+   * @component {@link FlamAnalysisComponent}
+   * @feature FLAM data visualization, color mapping, pattern analysis
+   *
+   * @example
+   * ```typescript
+   * // Navigate to FLAM analysis
+   * this.router.navigate(['/flam-analysis']);
+   * ```
+   */
+  { path: 'flam-analysis', component: FlamAnalysisComponent },
 
   /**
    * Default route redirect.

@@ -7,4 +7,5 @@ export { BasePage } from './base-page';
 export { ProjectViewPage } from './project-view-page';
 export { ProjectSelectorPage } from './project-selector-page';
 export { ProjectInspectorPage } from './project-inspector-page';
+export { FlamAnalysisPage } from './flam-analysis-page';
 export { SettingsPage } from './settings-page';

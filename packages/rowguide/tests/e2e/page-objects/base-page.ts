@@ -165,7 +165,7 @@ export abstract class BasePage {
   /**
    * Navigate using the main application menu
    */
-  async navigateViaMenu(routeName: 'project-selector' | 'project' | 'project-inspector' | 'settings'): Promise<void> {
+  async navigateViaMenu(routeName: 'project-selector' | 'project' | 'project-inspector' | 'flam-analysis' | 'settings'): Promise<void> {
     await this.openSideNav();
 
     // Find the appropriate navigation link
@@ -173,6 +173,7 @@ export abstract class BasePage {
       'project-selector': 'Project Selector',
       project: 'Project',
       'project-inspector': 'Project Inspector',
+      'flam-analysis': 'FLAM Analysis',
       settings: 'Settings',
       import: 'Import',
       export: 'Export',

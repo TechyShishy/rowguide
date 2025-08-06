@@ -337,6 +337,11 @@ export class ProjectComponent implements HierarchicalList {
 
     this.rows$ = this.store.select(selectZippedRows);
 
+    // CRITICAL: Subscribe to project$ to trigger project loading
+    // This was missing - without this subscription, loadProject() is never called
+    // and the store never gets updated with project data
+    this.project$.subscribe();
+
     // Position observable is now handled by the store selector
     // No need to manually subscribe and update zippedRows since store manages state
 

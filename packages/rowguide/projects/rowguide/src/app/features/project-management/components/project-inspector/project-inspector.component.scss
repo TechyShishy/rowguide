@@ -2,26 +2,6 @@ mat-card {
   margin: 1rem 2rem;
   padding: 1rem;
 }
-:host{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-}
-.flam {
-  grid-row: 1 / 4;
-  grid-column: 1;
-}
-.saved-position {
-  grid-row: 2;
-  grid-column: 2;
-}
-.project-summary {
-  grid-row: 1;
-  grid-column: 2;
-}
-.project-image {
-  grid-row: 3;
-  grid-column: 2;
-}
 
 mat-form-field {
   width: 6em;
@@ -29,37 +9,4 @@ mat-form-field {
   .mat-mdc-form-field-infix {
     width: auto;
   }
-}
-
-.color-cell-span {
-  cursor: pointer;
-  min-height: 1em;
-  display: inline-block;
-  width: 100%;
-  padding: 4px;
-}
-
-.hex-color-indicator {
-  display: inline-block;
-  width: 1.5em;
-  height: 1.5em;
-  border-radius: 50%;
-}
-
-.reset-button-container {
-  margin-top: 16px;
-  text-align: center;
-}
-
-.sorted-column {
-  background-color: rgba(0, 0, 0, 0.04);
-}
-
-// Ensure the sorted column styling doesn't interfere with other interactive elements
-.sorted-column .color-cell-span {
-  background-color: transparent;
-}
-
-.sorted-column mat-form-field {
-  background-color: transparent;
 }

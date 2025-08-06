@@ -1,0 +1,54 @@
+mat-card {
+  margin: 1rem 2rem;
+  padding: 1rem;
+}
+
+:host {
+  display: block;
+  padding: 1rem;
+}
+
+.flam {
+  max-width: 100%;
+}
+
+mat-form-field {
+  width: 6em;
+
+  .mat-mdc-form-field-infix {
+    width: auto;
+  }
+}
+
+.color-cell-span {
+  cursor: pointer;
+  min-height: 1em;
+  display: inline-block;
+  width: 100%;
+  padding: 4px;
+}
+
+.hex-color-indicator {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+}
+
+.reset-button-container {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.sorted-column {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+// Ensure the sorted column styling doesn't interfere with other interactive elements
+.sorted-column .color-cell-span {
+  background-color: transparent;
+}
+
+.sorted-column mat-form-field {
+  background-color: transparent;
+}

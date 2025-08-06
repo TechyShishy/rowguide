@@ -2,6 +2,7 @@ import { test as base, Browser, BrowserContext, Page } from '@playwright/test';
 import { ProjectViewPage } from '../page-objects/project-view-page';
 import { ProjectSelectorPage } from '../page-objects/project-selector-page';
 import { ProjectInspectorPage } from '../page-objects/project-inspector-page';
+import { FlamAnalysisPage } from '../page-objects/flam-analysis-page';
 import { SettingsPage } from '../page-objects/settings-page';
 import { TestDbUtils, TestDataFactory } from '../utils/test-helpers';
 
@@ -13,6 +14,7 @@ interface RowguideFixtures {
   projectViewPage: ProjectViewPage;
   projectSelectorPage: ProjectSelectorPage;
   projectInspectorPage: ProjectInspectorPage;
+  flamAnalysisPage: FlamAnalysisPage;
   settingsPage: SettingsPage;
   testData: typeof TestDataFactory;
   // Override page to use context recreation for clean state
@@ -45,6 +47,14 @@ export const test = base.extend<RowguideFixtures>({
   projectInspectorPage: async ({ page }, use) => {
     const projectInspectorPage = new ProjectInspectorPage(page);
     await use(projectInspectorPage);
+  },
+
+  /**
+   * FLAM analysis page fixture - provides access to dedicated FLAM analysis interface
+   */
+  flamAnalysisPage: async ({ page }, use) => {
+    const flamAnalysisPage = new FlamAnalysisPage(page);
+    await use(flamAnalysisPage);
   },
 
   /**
