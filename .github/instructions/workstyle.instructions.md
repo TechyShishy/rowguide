@@ -13,3 +13,4 @@ applyTo: "**"
 - Always search for solutions via deductive reasoning rather than abductive reasoning. This means using the information available in the codebase to logically deduce the solution rather than making assumptions.
 - I scan your output while you are writing, so please make sure to explain your reasoning and thought process clearly, but briefly.
 - Always surface your second and third hypotheses, not just the first one. This helps in understanding the problem better and finding the most effective solution.
+- While developing e2e tests, run them only on one browser project at a time in order to minimize development time.  Once you've completed the tests for one browser, you can then run them across all browsers to ensure compatibility.
