@@ -22,6 +22,7 @@ import { ProjectActions } from '../../../../core/store/actions/project-actions';
 import { selectCurrentProject } from '../../../../core/store/selectors/project-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
+import { ProjectCalculationService } from '../../services/project-calculation.service';
 import { ErrorBoundaryComponent } from '../../../../shared/components/error-boundary/error-boundary.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData, ConfirmationResult } from '../../../../shared/components/confirmation-dialog';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
@@ -104,6 +105,7 @@ export class ProjectInspectorComponent implements OnInit {
    *
    * @param settingsService - User preferences and configuration management
    * @param projectService - Project state and lifecycle management
+   * @param projectCalculationService - Project calculation and analysis service
    * @param logger - Structured logging service for debugging
    * @param cdr - Change detection reference for OnPush optimization
    * @param indexedDBService - Database persistence for projects
@@ -114,6 +116,7 @@ export class ProjectInspectorComponent implements OnInit {
   constructor(
     public settingsService: SettingsService,
     public projectService: ProjectService,
+    public projectCalculationService: ProjectCalculationService,
     public logger: NGXLogger,
     private cdr: ChangeDetectorRef,
     private indexedDBService: ProjectDbService,
@@ -132,6 +135,45 @@ export class ProjectInspectorComponent implements OnInit {
     this.projectService.ready$.subscribe(async () => {
       this.cdr.markForCheck();
     });
+  }
+
+  /**
+   * Get the longest row (maximum columns) for the current project.
+   *
+   * @returns Observable that emits the longest row count
+   */
+  getLongestRow(): Observable<number> {
+    return this.projectService.project$.pipe(
+      map(project => this.projectCalculationService.longestRow(project)),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Get the total bead count for the current project.
+   *
+   * @returns Observable that emits the total bead count
+   */
+  getTotalBeads(): Observable<number> {
+    return this.projectService.project$.pipe(
+      map(project => this.projectCalculationService.totalBeads(project)),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Get the total color count for the current project.
+   *
+   * @returns Observable that emits the total color count
+   */
+  getTotalColors(): Observable<number> {
+    return this.projectService.project$.pipe(
+      map(project => this.projectCalculationService.totalColors(project)),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
   }
 
   /**

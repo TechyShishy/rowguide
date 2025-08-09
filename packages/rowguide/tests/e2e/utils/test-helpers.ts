@@ -148,82 +148,111 @@ export class TestDataFactory {
  */
 export class TestDbUtils {
   /**
-   * Seed test project data directly into IndexedDB
+   * Seed test project data and trigger FLAM generation through proper service flow
    */
   static async seedProjectData(page: Page, projects: TestProject[]): Promise<void> {
     await page.evaluate(async (projectsData) => {
       return new Promise<void>((resolve, reject) => {
         const request = indexedDB.open('rowguide', 2);
-        
+
         request.onerror = () => reject(new Error('Failed to open IndexedDB'));
-        
+
         request.onupgradeneeded = (event: any) => {
           const db = event.target.result;
-          
+
           // Create object stores if they don't exist
           if (!db.objectStoreNames.contains('projects')) {
             const projectStore = db.createObjectStore('projects', { keyPath: 'id', autoIncrement: true });
             projectStore.createIndex('name', 'name', { unique: false });
             projectStore.createIndex('dateCreated', 'dateCreated', { unique: false });
           }
-          
+
           if (!db.objectStoreNames.contains('currentProject')) {
             db.createObjectStore('currentProject');
           }
-          
+
           if (!db.objectStoreNames.contains('settings')) {
             db.createObjectStore('settings');
           }
-          
+
           if (!db.objectStoreNames.contains('migrations')) {
             db.createObjectStore('migrations', { autoIncrement: false });
           }
         };
-        
+
         request.onsuccess = (event: any) => {
           const db = event.target.result;
-          
+
           try {
             // Clear existing projects
             const clearTx = db.transaction(['projects'], 'readwrite');
             const projectStore = clearTx.objectStore('projects');
             const clearRequest = projectStore.clear();
-            
+
             clearRequest.onsuccess = () => {
               // Add test projects
               let addedCount = 0;
-              
+
               const addNextProject = (index: number) => {
                 if (index >= projectsData.length) {
                   db.close();
-                  console.log(`Seeded ${projectsData.length} test projects to IndexedDB`);
-                  resolve();
+
+                  // Trigger FLAM generation by accessing Angular services
+                  setTimeout(() => {
+                    // Access Angular services through the global window object
+                    const angular = (window as any).ng;
+                    if (angular && angular.getInjector) {
+                      try {
+                        const injector = angular.getInjector(document.querySelector('app-root'));
+                        const projectService = injector.get('ProjectService');
+
+                        // Load the first project to trigger FLAM generation
+                        if (projectsData.length > 0) {
+                          projectService.loadProject(projectsData[0].id).then(() => {
+                            resolve();
+                          }).catch((error: any) => {
+                            console.warn('Failed to trigger FLAM generation:', error);
+                            resolve(); // Continue anyway
+                          });
+                        } else {
+                          resolve();
+                        }
+                      } catch (error) {
+                        console.warn('Could not access Angular services for FLAM generation:', error);
+                        resolve(); // Continue anyway
+                      }
+                    } else {
+                      console.warn('Angular not available for FLAM generation');
+                      resolve(); // Continue anyway
+                    }
+                  }, 100);
+
                   return;
                 }
-                
+
                 const addTx = db.transaction(['projects'], 'readwrite');
                 const addStore = addTx.objectStore('projects');
                 const addRequest = addStore.add(projectsData[index]);
-                
+
                 addRequest.onsuccess = () => {
                   addedCount++;
                   addNextProject(index + 1);
                 };
-                
+
                 addRequest.onerror = () => {
                   db.close();
                   reject(new Error(`Failed to add project ${index}`));
                 };
               };
-              
+
               addNextProject(0);
             };
-            
+
             clearRequest.onerror = () => {
               db.close();
               reject(new Error('Failed to clear existing projects'));
             };
-            
+
           } catch (error) {
             db.close();
             reject(error);
@@ -240,28 +269,27 @@ export class TestDbUtils {
     await page.evaluate(async () => {
       return new Promise<void>((resolve, reject) => {
         const request = indexedDB.open('rowguide', 2);
-        
+
         request.onerror = () => reject(new Error('Failed to open IndexedDB'));
-        
+
         request.onsuccess = (event: any) => {
           const db = event.target.result;
-          
+
           try {
             const tx = db.transaction(['projects'], 'readwrite');
             const projectStore = tx.objectStore('projects');
             const clearRequest = projectStore.clear();
-            
+
             clearRequest.onsuccess = () => {
               db.close();
-              console.log('Cleared IndexedDB data');
               resolve();
             };
-            
+
             clearRequest.onerror = () => {
               db.close();
               reject(new Error('Failed to clear database'));
             };
-            
+
           } catch (error) {
             db.close();
             reject(error);
@@ -278,27 +306,27 @@ export class TestDbUtils {
     return await page.evaluate(async () => {
       return new Promise<any[]>((resolve, reject) => {
         const request = indexedDB.open('rowguide', 2);
-        
+
         request.onerror = () => reject(new Error('Failed to open IndexedDB'));
-        
+
         request.onsuccess = (event: any) => {
           const db = event.target.result;
-          
+
           try {
             const tx = db.transaction(['projects'], 'readonly');
             const projectStore = tx.objectStore('projects');
             const getAllRequest = projectStore.getAll();
-            
+
             getAllRequest.onsuccess = () => {
               db.close();
               resolve(getAllRequest.result || []);
             };
-            
+
             getAllRequest.onerror = () => {
               db.close();
               reject(new Error('Failed to get project data'));
             };
-            
+
           } catch (error) {
             db.close();
             reject(error);
@@ -338,12 +366,10 @@ export class AccessibilityUtils {
       const ariaLabel = await element.getAttribute('aria-label');
       const role = await element.getAttribute('role');
 
-      if (ariaLabel) {
-        console.log('Found aria-label:', ariaLabel);
-      }
-      if (role) {
-        console.log('Found role:', role);
-      }
+      // Log accessibility attributes only if needed for debugging
+      // (commented out to reduce test output noise)
+      // if (ariaLabel) console.log('Found aria-label:', ariaLabel);
+      // if (role) console.log('Found role:', role);
     }
   }
 
@@ -353,7 +379,7 @@ export class AccessibilityUtils {
   static async testScreenReaderAnnouncements(page: Page): Promise<void> {
     // Check for live regions and announcements
     const liveRegions = await page.locator('[aria-live]').all();
-    console.log(`Found ${liveRegions.length} live regions`);
+    // Log only if needed for debugging: console.log(`Found ${liveRegions.length} live regions`);
   }
 }
 

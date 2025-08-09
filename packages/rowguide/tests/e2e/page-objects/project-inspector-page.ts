@@ -17,6 +17,9 @@ export class ProjectInspectorPage extends BasePage {
   private readonly projectSummaryCard = this.page.locator('mat-card.project-summary');
   private readonly projectNameItem = this.page.locator('mat-list-item:has-text("Name:")');
   private readonly projectRowsItem = this.page.locator('mat-list-item:has-text("Rows:")');
+  private readonly projectColumnsItem = this.page.locator('mat-list-item:has-text("Columns:")');
+  private readonly projectBeadsItem = this.page.locator('mat-list-item:has-text("Beads:")');
+  private readonly projectColorsItem = this.page.locator('mat-list-item:has-text("Colors:")');
 
   // Saved Position elements
   private readonly savedPositionCard = this.page.locator('mat-card.saved-position');
@@ -69,6 +72,26 @@ export class ProjectInspectorPage extends BasePage {
   }
 
   /**
+   * Get the project summary card locator for test assertions
+   */
+  get summaryCardLocator(): Locator {
+    return this.projectSummaryCard;
+  }
+
+  /**
+   * Get project summary list item locators for test assertions
+   */
+  get summaryItemLocators() {
+    return {
+      name: this.projectNameItem,
+      rows: this.projectRowsItem,
+      columns: this.projectColumnsItem,
+      beads: this.projectBeadsItem,
+      colors: this.projectColorsItem
+    };
+  }
+
+  /**
    * Get the current project name from the project summary
    */
   async getProjectName(): Promise<string> {
@@ -83,6 +106,65 @@ export class ProjectInspectorPage extends BasePage {
     const rowsText = await this.projectRowsItem.textContent();
     const match = rowsText?.match(/Rows: (\d+)/);
     return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Get the number of columns (longest row) from the project summary
+   */
+  async getProjectColumnCount(): Promise<number> {
+    try {
+      const columnsText = await this.projectColumnsItem.textContent();
+      const match = columnsText?.match(/Columns: (\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    } catch {
+      // Element not found (ppinspector disabled)
+      return 0;
+    }
+  }
+
+  /**
+   * Get the total number of beads from the project summary
+   */
+  async getProjectBeadCount(): Promise<number> {
+    try {
+      const beadsText = await this.projectBeadsItem.textContent();
+      const match = beadsText?.match(/Beads: (\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    } catch {
+      // Element not found (ppinspector disabled)
+      return 0;
+    }
+  }
+
+  /**
+   * Get the total number of colors from the project summary
+   */
+  async getProjectColorCount(): Promise<number> {
+    try {
+      const colorsText = await this.projectColorsItem.textContent();
+      const match = colorsText?.match(/Colors: (\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    } catch {
+      // Element not found (ppinspector disabled)
+      return 0;
+    }
+  }
+
+  /**
+   * Check if the expanded project summary is visible (with columns, beads, colors)
+   */
+  async isExpandedSummaryVisible(): Promise<boolean> {
+    try {
+      // Wait a bit for Angular change detection to propagate the setting change
+      await this.page.waitForTimeout(500);
+
+      // Check if the columns item is actually in the DOM and visible
+      const isVisible = await this.projectColumnsItem.isVisible({ timeout: 2000 });
+      return isVisible;
+    } catch {
+      // Element not found or not visible
+      return false;
+    }
   }
 
   /**

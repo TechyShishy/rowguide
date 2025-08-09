@@ -10,6 +10,9 @@
         <ng-template [ngIf]="settingsService.ppinspector$ | async">
           <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
           <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
+          <mat-list-item>Columns: {{getLongestRow() | async}}</mat-list-item>
+          <mat-list-item>Beads: {{getTotalBeads() | async}}</mat-list-item>
+          <mat-list-item>Colors: {{getTotalColors() | async}}</mat-list-item>
         </ng-template>
       </mat-list>
     </mat-card-content>

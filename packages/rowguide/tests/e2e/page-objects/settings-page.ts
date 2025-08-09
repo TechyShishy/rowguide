@@ -120,15 +120,34 @@ export class SettingsPage extends BasePage {
    * Toggle the "Pretty Print Inspector Tab" setting
    */
   async togglePPInspector(): Promise<void> {
-    await this.ppInspectorToggle.click();
+    // Click the button inside the toggle (this is the correct target)
+    const button = this.ppInspectorToggle.locator('button[role="switch"]');
+    await button.click();
+
+    // Wait for Angular to process the change
     await this.waitForAngular();
+    await this.page.waitForTimeout(500);
   }
 
   /**
    * Get the current state of the "Pretty Print Inspector Tab" toggle
    */
   async isPPInspectorEnabled(): Promise<boolean> {
-    return await this.ppInspectorToggle.isChecked();
+    const toggle = this.page.locator('mat-slide-toggle[formcontrolname="ppinspector"]');
+
+    // Check the main toggle element for the correct checked class
+    const classList = await toggle.evaluate(el => Array.from(el.classList));
+    const isMainToggleChecked = classList.includes('mat-mdc-slide-toggle-checked');
+
+    // Also check the internal button for additional confirmation
+    const button = toggle.locator('button[role="switch"]');
+    const buttonClassList = await button.evaluate(el => Array.from(el.classList));
+    const ariaChecked = await button.getAttribute('aria-checked');
+    const isButtonSelected = buttonClassList.includes('mdc-switch--selected');
+    const isAriaChecked = ariaChecked === 'true';
+
+    // All three should agree for a proper enabled state
+    return isMainToggleChecked && isButtonSelected && isAriaChecked;
   }
 
   /**

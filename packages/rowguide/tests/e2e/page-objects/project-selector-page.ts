@@ -262,6 +262,10 @@ export class ProjectSelectorPage extends BasePage {
     if (isExpanded !== 'true') {
       await this.projectHeaders.nth(index).click();
       await this.waitForMaterialComponents();
+
+      // Wait for the panel to actually expand and content to be visible
+      await projectPanel.waitFor({ state: 'visible' });
+      await this.page.waitForTimeout(500); // Give time for expansion animation
     }
   }
 
@@ -270,7 +274,13 @@ export class ProjectSelectorPage extends BasePage {
    */
   async loadProject(index: number): Promise<void> {
     await this.expandProject(index);
-    await this.loadProjectButtons.nth(index).click();
+
+    // Wait for the specific panel's content to be visible, then find the button within that panel
+    const projectPanel = this.projectPanels.nth(index);
+    const loadButton = projectPanel.locator('button').filter({ hasText: /^Load Project$/ });
+
+    await loadButton.waitFor({ state: 'visible' });
+    await loadButton.click();
     await this.waitForAngular();
   }
 
