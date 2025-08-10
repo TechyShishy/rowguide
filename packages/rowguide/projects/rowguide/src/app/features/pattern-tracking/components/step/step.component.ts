@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostBinding,
   HostListener,
   Input,
   OnInit,
@@ -13,7 +14,11 @@ import { Observable, combineLatest, firstValueFrom, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Step } from '../../../../core/models/step';
-import { FlamService, SettingsService, MarkModeService } from '../../../../core/services';
+import {
+  FlamService,
+  SettingsService,
+  MarkModeService,
+} from '../../../../core/services';
 import { HierarchicalList } from '../../../../shared/utils/hierarchical-list';
 import { ZipperService } from '../../../file-import/services';
 import { ProjectService } from '../../../project-management/services';
@@ -178,7 +183,26 @@ export class StepComponent implements HierarchicalList, OnInit {
    * or programmatically for navigation coordination. Triggers 'current'
    * CSS class binding for visual feedback.
    */
-  isCurrentStep = false; // Can be set externally (via onClick)
+  private _isCurrentStep = false;
+
+  /**
+   * Indicates whether this step is the currently active step in the
+   * pattern tracking interface. Can be set programmatically by step clicks
+   * or programmatically for navigation coordination. Triggers 'current'
+   * CSS class application for visual highlighting.
+   */
+  get isCurrentStep(): boolean {
+    return this._isCurrentStep;
+  }
+
+  set isCurrentStep(value: boolean) {
+    this._isCurrentStep = value;
+
+    // CRITICAL FIX: Force change detection for OnPush strategy
+    // This ensures host bindings are re-evaluated when isCurrentStep changes
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
 
   /**
    * Mark mode state for pattern progress tracking (0-6).
@@ -546,10 +570,12 @@ export class StepComponent implements HierarchicalList, OnInit {
     });
 
     // Set up reactive step marking that updates when project marked steps change
-    this.markModeService.getStepMark$(this.row.index, this.index).subscribe(markMode => {
-      this.marked = markMode;
-      this.cdr.markForCheck(); // Trigger change detection for OnPush
-    });
+    this.markModeService
+      .getStepMark$(this.row.index, this.index)
+      .subscribe((markMode) => {
+        this.marked = markMode;
+        this.cdr.markForCheck(); // Trigger change detection for OnPush
+      });
 
     this.beadCount$ = this.projectService.zippedRows$.pipe(
       map((rows) => rows[this.row.index]),
@@ -622,13 +648,13 @@ export class StepComponent implements HierarchicalList, OnInit {
     if (this.markModeService.canMarkItems()) {
       // Delegate toggle logic to service - no business logic in component
       await this.markModeService.toggleStepMark(this.row.index, this.index);
-      
+
       // Note: Component state (this.marked) automatically updates via reactive subscription
       // No manual state synchronization needed
-      
+
       return;
     }
-    
+
     // Handle navigation mode (when not in mark mode)
     const currentStep = await firstValueFrom(this.row.project.currentStep$);
     if (currentStep) {
@@ -636,9 +662,9 @@ export class StepComponent implements HierarchicalList, OnInit {
       // Trigger change detection on previous step for OnPush
       currentStep.cdr.markForCheck();
     }
-    
+
     this.isCurrentStep = true;
-    
+
     this.projectService.saveCurrentPosition(this.row.index, this.index);
     this.row.project.currentStep$.next(this);
   }

@@ -12,7 +12,11 @@ import {
   ModelFactory,
   SafeAccess,
 } from '../../../core/models';
-import { SettingsService, ErrorHandlerService, DataIntegrityService } from '../../../core/services';
+import {
+  SettingsService,
+  ErrorHandlerService,
+  DataIntegrityService,
+} from '../../../core/services';
 import { ReactiveStateStore } from '../../../core/store/reactive-state-store';
 import { ProjectActions } from '../../../core/store/actions/project-actions';
 import {
@@ -183,6 +187,9 @@ export class ProjectService {
   ready$: Observable<boolean> = this.store.select(selectProjectsReady);
   currentStep!: StepComponent;
 
+  // Prevent multiple simultaneous loadProject calls for same ID
+  private loadingProjects = new Map<number, Promise<Project | null>>();
+
   constructor(
     private peyoteShorthandService: PeyoteShorthandService,
     private settingsService: SettingsService,
@@ -194,7 +201,12 @@ export class ProjectService {
     private dataIntegrityService: DataIntegrityService
   ) {
     this.settingsService.ready.subscribe(() => {
-      this.loadCurrentProject();
+      // Only auto-load current project if we're not already on a project route
+      // This prevents race condition with route-based project loading
+      const currentUrl = window.location.pathname;
+      if (!currentUrl.includes('/project')) {
+        this.loadCurrentProject();
+      }
     });
   }
   /**
@@ -728,6 +740,33 @@ export class ProjectService {
     const currentProject = this.loadCurrentProjectId();
     if (!currentProject) {
       this.logger.debug('No current project found in localStorage');
+      return;
+    }
+
+    // Check if project is already loaded in store to prevent duplicate loading
+    const currentProjectInStore = this.store
+      .select(selectCurrentProject)
+      .pipe(take(1));
+    const storeProject = await firstValueFrom(currentProjectInStore);
+
+    if (
+      storeProject &&
+      storeProject.id === currentProject.id &&
+      isValidProject(storeProject)
+    ) {
+      return;
+    }
+
+    // Additional check: if a project with this ID is currently loading,
+    // don't start another load operation
+    const isCurrentProjectLoading = this.store
+      .select(selectCurrentProject)
+      .pipe(
+        take(1),
+        map((project) => project?.id === currentProject.id)
+      );
+
+    if (await firstValueFrom(isCurrentProjectLoading)) {
       return;
     }
 

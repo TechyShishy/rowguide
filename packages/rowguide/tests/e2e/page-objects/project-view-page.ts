@@ -180,7 +180,29 @@ export class ProjectViewPage extends BasePage {
     const row = this.rows.nth(rowIndex);
     const step = row.locator('app-step').nth(stepIndex);
     const classes = (await step.getAttribute('class')) || '';
-    return classes.includes('current-step') || classes.includes('is-current');
+
+    return classes.includes('current');
+  }
+
+  /**
+   * Get the current position by finding which step has the current class
+   */
+  async getCurrentPosition(): Promise<{ row: number; step: number } | null> {
+    const rowCount = await this.getRowCount();
+
+    for (let row = 0; row < rowCount; row++) {
+      await this.expandRow(row);
+      const stepCount = await this.getStepCountInRow(row);
+
+      for (let step = 0; step < stepCount; step++) {
+        const isCurrent = await this.isStepCurrent(row, step);
+        if (isCurrent) {
+          return { row, step };
+        }
+      }
+    }
+
+    return null;
   }
 
   // Navigation methods

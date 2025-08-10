@@ -20,6 +20,7 @@ import {
   distinctUntilChanged,
   filter,
   map,
+  shareReplay,
   skipWhile,
   switchMap,
   take,
@@ -250,7 +251,9 @@ export class ProjectComponent implements HierarchicalList {
     // Initialize position$ after store injection is complete
     this.position$ = this.store
       .select(selectCurrentPosition)
-      .pipe(map((position) => position ?? { row: 0, step: 0 }));
+      .pipe(
+        map((position) => position ?? { row: 0, step: 0 })
+      );
   }
 
   /**
@@ -306,23 +309,11 @@ export class ProjectComponent implements HierarchicalList {
       }),
       distinctUntilChanged(), // Prevent duplicate ID processing
       switchMap((id) => {
-        // First check if this project is already in the store
-        return this.store.select(selectCurrentProject).pipe(
-          take(1),
-          switchMap((currentProject) => {
-            if (
-              currentProject &&
-              currentProject.id === id &&
-              isValidProject(currentProject)
-            ) {
-              return of(currentProject);
-            } else {
-              return this.projectService
-                .loadProject(id)
-                .then((project) => project || ({ rows: [] } as Project));
-            }
-          })
-        );
+        // SIMPLIFIED: Direct project loading without store dependency in switchMap
+        // This prevents feedback loops where store updates retrigger the observable
+        return this.projectService
+          .loadProject(id)
+          .then((project) => project || ({ rows: [] } as Project));
       }),
       map((project) => {
         if (!project || !isValidProject(project)) {
@@ -332,7 +323,8 @@ export class ProjectComponent implements HierarchicalList {
           return { rows: [] } as Project;
         }
         return project;
-      })
+      }),
+      shareReplay(1) // Cache the latest project to prevent redundant processing
     );
 
     this.rows$ = this.store.select(selectZippedRows);
@@ -407,6 +399,7 @@ export class ProjectComponent implements HierarchicalList {
           if (!step) {
             return null;
           }
+
           return step;
         }),
         filter((step): step is StepComponent => step !== null),
@@ -433,18 +426,19 @@ export class ProjectComponent implements HierarchicalList {
             currentStep.isCurrentStep = false;
           }
 
-          // Set new current step
+          // Set new current step with enhanced lifecycle management
           step.isCurrentStep = true;
           step.row.show();
 
           // Update observables and persist position
           this.currentStep$.next(step);
-          
-          // Trigger change detection after state update
+
+          // Trigger change detection for OnPush strategy
+          this.cdr.markForCheck();
           this.cdr.detectChanges();
-          
-          // Fire-and-forget position save (don't await to avoid blocking)
-          this.projectService.saveCurrentPosition(step.row.index, step.index);
+
+          // NOTE: Do NOT save position here - this creates a feedback loop
+          // Position is already correct in store, no need to save again
         } catch (error) {
           console.warn('Failed to set current step:', error);
         }
@@ -842,7 +836,7 @@ export class ProjectComponent implements HierarchicalList {
    * ```
    */
   @HostListener('keydown.ArrowUp', ['$event'])
-  onUpArrow() {
+  onUpArrow(event: KeyboardEvent) {
     this.doRowBackward();
   }
 

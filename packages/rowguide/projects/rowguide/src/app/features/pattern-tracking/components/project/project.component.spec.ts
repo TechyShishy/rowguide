@@ -210,7 +210,7 @@ describe('ProjectComponent', () => {
 
     fixture = TestBed.createComponent(ProjectComponent);
     component = fixture.componentInstance;
-    
+
     // Disable change detection for tests that don't need the full component lifecycle
     fixture.autoDetectChanges(false);
   });
@@ -335,7 +335,7 @@ describe('ProjectComponent', () => {
     const mockStep0 = new MockStepComponent();
     mockStep0.index = 0;
     mockStep0.isCurrentStep = false;
-    
+
     const mockStep1 = new MockStepComponent();
     mockStep1.index = 1;
     mockStep1.isCurrentStep = false;
@@ -343,57 +343,57 @@ describe('ProjectComponent', () => {
     const mockRowComponent = new MockRowComponent();
     mockRowComponent.index = 0;
     mockRowComponent.show = jasmine.createSpy('show');
-    
+
     // Create a QueryList that has the get() method and proper steps
     const stepQueryList = new QueryList<StepComponent>();
     stepQueryList.reset([mockStep0 as any, mockStep1 as any]);
-    
+
     // Add get method to the QueryList manually
     (stepQueryList as any).get = (index: number) => {
       const items = stepQueryList.toArray();
       return items[index];
     };
-    
+
     mockRowComponent.children = stepQueryList;
     mockStep0.row = mockRowComponent;
     mockStep1.row = mockRowComponent;
 
-    // Create the main children QueryList  
+    // Create the main children QueryList
     const mockChildren = new QueryList<RowComponent>();
     mockChildren.reset([mockRowComponent as any]);
-    
+
     // Add get method to QueryList for test compatibility
     (mockChildren as any).get = (index: number) => {
       const items = mockChildren.toArray();
       return items[index];
     };
-    
+
     const mockPosition = { row: 0, step: 1 } as Position;
 
     component.ngOnInit();
     await fixture.whenStable();
-    
+
     // Update store spy and trigger reactive chain
     storeSpy.select.withArgs(selectCurrentPosition).and.returnValue(of(mockPosition));
     component.children$.next(mockChildren);
-    
+
     // Simulate position$ update
     const positionSubject = new BehaviorSubject<Position>(mockPosition);
     component.position$ = positionSubject.asObservable();
-    
+
     // Test the reactive navigation logic
     const row = mockChildren.get(mockPosition.row);
     expect(row).toBeDefined();
-    
+
     if (row) {
       const step = row.children?.get(mockPosition.step);
       expect(step).toBeDefined();
-      
+
       if (step) {
         // Simulate reactive chain execution
         component.currentStep$.next(step);
         step.isCurrentStep = true;
-        
+
         const currentStep = component.currentStep$.value;
         expect(currentStep).toBeDefined();
         expect(currentStep?.index).toBe(1);
@@ -440,7 +440,7 @@ describe('ProjectComponent', () => {
 
   it('should handle up arrow key press', () => {
     spyOn(component, 'doRowBackward').and.returnValue(Promise.resolve(false));
-    component.onUpArrow();
+    component.onUpArrow({} as KeyboardEvent);
     expect(component.doRowBackward).toHaveBeenCalled();
   });
 
