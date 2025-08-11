@@ -330,8 +330,7 @@ export class ProjectComponent implements HierarchicalList {
     this.rows$ = this.store.select(selectZippedRows);
 
     // CRITICAL: Subscribe to project$ to trigger project loading
-    // This was missing - without this subscription, loadProject() is never called
-    // and the store never gets updated with project data
+    // This subscription is needed to ensure loadProject() gets called
     this.project$.subscribe();
 
     // Position observable is now handled by the store selector
@@ -409,14 +408,7 @@ export class ProjectComponent implements HierarchicalList {
         ),
         // Prevent infinite loops by filtering duplicate step objects
         // distinctUntilChanged ensures the same step isn't processed multiple times
-        distinctUntilChanged((a, b) => {
-          // Allow null -> step transitions
-          if (a === null || b === null) {
-            return a === b;
-          }
-          // Compare step identity by position
-          return a?.index === b?.index && a?.row?.index === b?.row?.index;
-        })
+        distinctUntilChanged()
       )
       .subscribe(async (step: StepComponent) => {
         try {
@@ -433,9 +425,9 @@ export class ProjectComponent implements HierarchicalList {
           // Update observables and persist position
           this.currentStep$.next(step);
 
-          // Trigger change detection for OnPush strategy
+          // Trigger change detection for OnPush strategy but avoid detectChanges()
+          // which can cause feedback loops during navigation
           this.cdr.markForCheck();
-          this.cdr.detectChanges();
 
           // NOTE: Do NOT save position here - this creates a feedback loop
           // Position is already correct in store, no need to save again
