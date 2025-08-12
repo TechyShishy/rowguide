@@ -33,6 +33,7 @@ describe('ReactiveStateStore', () => {
       'info',
       'warn',
       'error',
+      'trace',
     ]);
 
     TestBed.configureTestingModule({
@@ -108,7 +109,7 @@ describe('ReactiveStateStore', () => {
 
       store.dispatch(action);
 
-      expect(loggerSpy.debug).toHaveBeenCalledWith(
+      expect(loggerSpy.trace).toHaveBeenCalledWith(
         jasmine.stringContaining('[ACTION]'),
         jasmine.objectContaining({
           action,

@@ -362,7 +362,7 @@ export class ReactiveStateStore {
       // Notify listeners
       this.notifyListeners(newState, processedAction);
 
-      this.logger.debug('Action dispatched:', processedAction.type, {
+      this.logger.trace('Action dispatched:', processedAction.type, {
         action: processedAction,
         previousState: this.getState(),
         newState,
@@ -837,14 +837,22 @@ export class ReactiveStateStore {
    * Setup logging middleware for debugging
    */
   private setupLogging(): void {
-    this.addMiddleware((action, getState) => {
-      this.logger.debug(`[ACTION] ${action.type}`, {
-        action,
-        stateBefore: getState(),
-      });
-      return action;
-    });
+    this.addMiddleware(this.loggingMiddleware);
   }
+
+  /**
+   * Logging middleware for debugging actions
+   */
+  private loggingMiddleware = (
+    action: StateAction,
+    getState: () => AppState
+  ): StateAction => {
+    this.logger.trace(`[ACTION] ${action.type}`, {
+      action,
+      stateBefore: getState(),
+    });
+    return action;
+  };
 
   /**
    * Initialize store with default configuration
