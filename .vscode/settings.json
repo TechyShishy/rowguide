@@ -5,5 +5,6 @@
   },
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "redHatDependencyAnalytics.npm.executable.path": "npm-version.sh"
+  "redHatDependencyAnalytics.npm.executable.path": "npm-version.sh",
+  "yarn.packageJson": "packages/rowguide/package.json"
 }
