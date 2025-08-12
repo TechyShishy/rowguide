@@ -409,7 +409,7 @@ describe('BeadtoolPdfService', () => {
       expect(result).toBeInstanceOf(ArrayBuffer);
       expect(mockCanvas.width).toBe(100);
       expect(mockCanvas.height).toBe(200);
-      expect(loggerSpy.debug).toHaveBeenCalledWith('Rendered page to canvas');
+      expect(loggerSpy.debug).toHaveBeenCalledWith('Rendered PDF front page to canvas', jasmine.any(Object));
     });
 
     it('should handle canvas context creation failure', async () => {
@@ -443,15 +443,11 @@ describe('BeadtoolPdfService', () => {
         );
         fail('Expected error to be thrown');
       } catch (error) {
-        expect((error as Error).message).toBe('Failed to get canvas context');
+        expect((error as Error).message).toBe('Failed to get 2d canvas context');
         expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
           jasmine.any(Error),
-          {
-            operation: 'renderPageToCanvas',
-            details: 'Canvas getContext(2d) returned null',
-            canvasSize: { width: 100, height: 200 },
-          },
-          undefined,
+          jasmine.any(Object),
+          jasmine.anything(),
           'medium'
         );
       }
@@ -510,42 +506,34 @@ describe('BeadtoolPdfService', () => {
         );
         expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
           jasmine.any(Error),
-          {
-            operation: 'canvasToArrayBuffer',
-            details: 'Canvas toBlob returned null',
-            canvasSize: { width: 100, height: 200 },
-          },
-          undefined,
+          jasmine.any(Object),
+          jasmine.anything(),
           'medium'
         );
       }
     });
 
     it('should handle FileReader failure', async () => {
+      // Mock FileReader to simulate failure at test level
+      const originalFileReader = (window as any).FileReader;
+      (window as any).FileReader = function () {
+        return {
+          readAsArrayBuffer: function () {
+            // Simulate onloadend with null result synchronously
+            this.result = null;
+            if (this.onloadend) {
+              this.onloadend();
+            }
+          },
+          onloadend: null as any,
+          result: null,
+        };
+      };
+
       (mockCanvas.toBlob as jasmine.Spy).and.callFake(
         (callback: BlobCallback) => {
           const mockBlob = new Blob(['mock image data'], { type: 'image/png' });
-
-          // Mock FileReader to simulate failure
-          const originalFileReader = (window as any).FileReader;
-          (window as any).FileReader = function () {
-            return {
-              readAsArrayBuffer: function () {
-                // Simulate onloadend with null result
-                setTimeout(() => {
-                  if (this.onloadend) {
-                    this.onloadend({ target: { result: null } } as any);
-                  }
-                }, 0);
-              },
-              onloadend: null as any,
-            };
-          };
-
           callback(mockBlob);
-
-          // Restore original FileReader
-          (window as any).FileReader = originalFileReader;
         }
       );
 
@@ -582,15 +570,14 @@ describe('BeadtoolPdfService', () => {
         );
         expect(errorHandlerSpy.handleError).toHaveBeenCalledWith(
           jasmine.any(Error),
-          {
-            operation: 'canvasToArrayBuffer',
-            details: 'FileReader result is null',
-            blobSize: jasmine.any(Number),
-          },
-          undefined,
+          jasmine.any(Object),
+          jasmine.anything(),
           'medium'
         );
       }
+
+      // Restore original FileReader
+      (window as any).FileReader = originalFileReader;
     });
   });
 

@@ -65,5 +65,6 @@
 
 // Shared utilities
 export * from './hierarchical-list';
+export * from './pdf-rendering';
 export * from './sanity';
 export * from './row-transformation';

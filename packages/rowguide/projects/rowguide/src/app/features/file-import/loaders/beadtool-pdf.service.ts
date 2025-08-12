@@ -57,6 +57,7 @@ import { map, switchMap, tap, catchError } from 'rxjs/operators';
 
 import { ErrorHandlerService, DataIntegrityService } from '../../../core/services';
 import { PdfjslibService } from '../services/pdfjslib.service';
+import { PdfRenderingUtil } from '../../../shared/utils';
 
 @Injectable({
   providedIn: 'root',
@@ -66,7 +67,8 @@ export class BeadtoolPdfService {
     private pdfJsLibService: PdfjslibService,
     private logger: NGXLogger,
     private errorHandler: ErrorHandlerService,
-    private dataIntegrity: DataIntegrityService
+    private dataIntegrity: DataIntegrityService,
+    private pdfRenderingUtil: PdfRenderingUtil
   ) {}
 
   /**
@@ -358,179 +360,6 @@ export class BeadtoolPdfService {
   }
 
   /**
-   * Convert HTML5 Canvas to ArrayBuffer for image storage
-   *
-   * Converts rendered PDF page canvas to ArrayBuffer format for storage
-   * and processing. Includes comprehensive error handling for blob creation
-   * and FileReader operations.
-   *
-   * @private
-   * @param {HTMLCanvasElement} canvas - Canvas element containing rendered PDF page
-   * @returns {Observable<ArrayBuffer>} Observable emitting ArrayBuffer of image data
-   *
-   * @example
-   * ```typescript
-   * // Internal usage during image rendering
-   * this.canvasToArrayBuffer(canvas).subscribe(buffer => {
-   *   console.log('Image buffer size:', buffer.byteLength);
-   * });
-   * ```
-   */
-  private canvasToArrayBuffer(
-    canvas: HTMLCanvasElement
-  ): Observable<ArrayBuffer> {
-    const result$ = new Promise<ArrayBuffer>((resolve, reject) => {
-      try {
-        canvas.toBlob((blob) => {
-          if (blob === null) {
-            const error = new Error('Failed to create blob from canvas');
-            this.errorHandler.handleError(
-              error,
-              {
-                operation: 'canvasToArrayBuffer',
-                details: 'Canvas toBlob returned null',
-                canvasSize: { width: canvas.width, height: canvas.height },
-              },
-              undefined,
-              'medium'
-            );
-            reject(error);
-            return;
-          }
-          const reader = new FileReader();
-
-          reader.onloadend = () => {
-            if (reader.result) {
-              resolve(reader.result as ArrayBuffer);
-            } else {
-              const error = new Error('Failed to read blob as ArrayBuffer');
-              this.errorHandler.handleError(
-                error,
-                {
-                  operation: 'canvasToArrayBuffer',
-                  details: 'FileReader result is null',
-                  blobSize: blob.size,
-                },
-                undefined,
-                'medium'
-              );
-              reject(error);
-            }
-          };
-
-          reader.onerror = () => {
-            const error = new Error('FileReader error occurred');
-            this.errorHandler.handleError(
-              error,
-              {
-                operation: 'canvasToArrayBuffer',
-                details: 'FileReader encountered an error',
-                blobSize: blob.size,
-              },
-              undefined,
-              'medium'
-            );
-            reject(error);
-          };
-
-          reader.readAsArrayBuffer(blob);
-        });
-      } catch (error) {
-        this.errorHandler.handleError(
-          error,
-          {
-            operation: 'canvasToArrayBuffer',
-            details:
-              'Exception occurred during canvas to ArrayBuffer conversion',
-            canvasSize: { width: canvas.width, height: canvas.height },
-          },
-          undefined,
-          'medium'
-        );
-        reject(error);
-      }
-    });
-
-    return from(result$);
-  }
-
-  /**
-   * Render PDF page to HTML5 Canvas element
-   *
-   * Converts PDF page to canvas for image generation and preview.
-   * Handles viewport scaling and rendering context setup with
-   * comprehensive error handling.
-   *
-   * @private
-   * @param {any} page - PDF.js page object
-   * @returns {Promise<HTMLCanvasElement>} Promise resolving to rendered canvas
-   *
-   * @example
-   * ```typescript
-   * // Internal usage during PDF rendering
-   * this.renderPageToCanvas(page).then(canvas => {
-   *   console.log('Canvas size:', canvas.width, 'x', canvas.height);
-   * });
-   * ```
-   */
-  private renderPageToCanvas(page: any): Promise<HTMLCanvasElement> {
-    try {
-      const viewport = page.getViewport({
-        offsetX: 0,
-        offsetY: 0,
-        scale: 1,
-      });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const canvasContext = canvas.getContext('2d');
-      if (!canvasContext) {
-        const error = new Error('Failed to get canvas context');
-        this.errorHandler.handleError(
-          error,
-          {
-            operation: 'renderPageToCanvas',
-            details: 'Canvas getContext(2d) returned null',
-            canvasSize: { width: canvas.width, height: canvas.height },
-          },
-          undefined,
-          'medium'
-        );
-        return Promise.reject(error);
-      }
-      return page
-        .render({ canvasContext, viewport })
-        .promise.then(() => {
-          return canvas;
-        })
-        .catch((error: any) => {
-          this.errorHandler.handleError(
-            error,
-            {
-              operation: 'renderPageToCanvas',
-              details: 'PDF page rendering failed',
-              canvasSize: { width: canvas.width, height: canvas.height },
-            },
-            undefined,
-            'medium'
-          );
-          return Promise.reject(error);
-        });
-    } catch (error) {
-      this.errorHandler.handleError(
-        error,
-        {
-          operation: 'renderPageToCanvas',
-          details: 'Exception occurred during page to canvas rendering setup',
-        },
-        undefined,
-        'medium'
-      );
-      return Promise.reject(error);
-    }
-  }
-
-  /**
    * Render PDF front page to ArrayBuffer for preview generation
    *
    * Processes the first page of a PDF document to generate a preview image
@@ -555,32 +384,7 @@ export class BeadtoolPdfService {
    * ```
    */
   renderFrontPage(file: File): Observable<ArrayBuffer> {
-    return from(file.arrayBuffer()).pipe(
-      switchMap(
-        (buffer) => this.pdfJsLibService.getDocument({ data: buffer }).promise
-      ),
-      switchMap((pdfDoc) => pdfDoc.getPage(1)),
-      switchMap((page) => this.renderPageToCanvas(page)),
-      switchMap((canvas) => {
-        this.logger.debug('Rendered page to canvas');
-        return this.canvasToArrayBuffer(canvas);
-      }),
-      catchError((error) => {
-        this.errorHandler.handleError(
-          error,
-          {
-            operation: 'renderFrontPage',
-            details: 'Failed to render PDF front page',
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type,
-          },
-          'Unable to render PDF preview.',
-          'medium'
-        );
-        return throwError(() => error);
-      })
-    );
+    return this.pdfRenderingUtil.renderFrontPage(file);
   }
 
   /**

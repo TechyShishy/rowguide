@@ -30,7 +30,7 @@ import { ProjectActions } from '../../../../core/store/actions/project-actions';
 import { SettingsActions } from '../../../../core/store/actions/settings-actions';
 import { selectProjectSort } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
-import { BeadtoolPdfService } from '../../../file-import/loaders';
+import { BeadtoolPdfService, XlsmPdfService } from '../../../file-import/loaders';
 import { ProjectService } from '../../services';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -59,7 +59,7 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
  * // 7. Navigates to project view after import
  *
  * // Supported file formats:
- * // - PDF: BeadTool PDF pattern files with automatic text extraction
+ * // - PDF: BeadTool PDF pattern files and XLSM-style tabular patterns with automatic fallback
  * // - GZIP: Compressed project files for backup/restore
  * // - RGS: Raw Peyote shorthand pattern notation
  * ```
@@ -126,7 +126,8 @@ export class ProjectSelectorComponent {
    * @param projectService - Service for project management and pattern parsing
    * @param indexedDBService - Service for IndexedDB project persistence
    * @param flamService - Service for First/Last Appearance Map generation
-   * @param beadtoolPdfService - Service for PDF pattern extraction and processing
+   * @param beadtoolPdfService - Service for BeadTool PDF pattern extraction and processing
+   * @param xlsmPdfService - Service for XLSM-style PDF pattern extraction and processing
    * @param router - Angular router for navigation after import
    * @param notificationService - Service for user feedback and warnings
    * @param settingsService - Service for application configuration management
@@ -149,6 +150,7 @@ export class ProjectSelectorComponent {
     private indexedDBService: ProjectDbService,
     private flamService: FlamService,
     private beadtoolPdfService: BeadtoolPdfService,
+    private xlsmPdfService: XlsmPdfService,
     private router: Router,
     private notificationService: NotificationService,
     private settingsService: SettingsService,
@@ -242,7 +244,7 @@ export class ProjectSelectorComponent {
    *
    * // Automatic routing:
    * // GZIP → importGzipFile() → JSON.parse() → Project
-   * // PDF → importPdfFile() → BeadToolPdfService → Project + image
+   * // PDF → importPdfFile() → BeadTool/XLSM Services → Project + image
    * // RGS → importRgsFile() → PeyoteShorthandService → Project
    * ```
    *
@@ -332,73 +334,170 @@ export class ProjectSelectorComponent {
     );
   }
   /**
-   * Imports BeadTool PDF patterns with image rendering and validation.
+   * Imports PDF patterns with automatic service fallback and validation.
    *
-   * Complex pipeline that processes BeadTool PDF files by:
-   * 1. Extracting text content and parsing peyote pattern data
-   * 2. Detecting row count discrepancies for import validation
-   * 3. Rendering the front page as a project thumbnail image
-   * 4. Generating FLAM (First/Last Appearance Map) for navigation
-   * 5. Applying user preferences (combine1&2 setting) to row processing
+   * Complex pipeline that processes PDF files by:
+   * 1. First attempting BeadTool PDF extraction for standard format patterns
+   * 2. Falling back to XLSM PDF extraction for tabular format patterns
+   * 3. Detecting row count discrepancies for import validation
+   * 4. Rendering the front page as a project thumbnail image
+   * 5. Generating FLAM (First/Last Appearance Map) for navigation
+   * 6. Applying user preferences (combine1&2 setting) to row processing
    *
-   * Includes sophisticated error detection for malformed PDFs and
-   * comprehensive user notifications for import issues.
+   * The fallback mechanism ensures maximum compatibility across different
+   * PDF pattern formats by trying BeadTool format first, then XLSM format
+   * if the BeadTool service returns empty or invalid results.
    *
    * @private
-   * @param file - BeadTool PDF file containing peyote pattern
+   * @param file - PDF file containing peyote pattern (BeadTool or XLSM format)
    * @returns Observable that emits fully processed Project with image
    *
    * @example
    * ```typescript
-   * // PDF processing pipeline:
-   * // 1. beadtoolPdfService.loadDocument() → Extract text
-   * // 2. Regex pattern matching → Detect last row number
-   * // 3. projectService.loadPeyote() → Parse pattern data
-   * // 4. beadtoolPdfService.renderFrontPage() → Generate thumbnail
-   * // 5. flamService.generateFLAM() → Build navigation map
-   * // 6. Row count validation → User notification if mismatch
+   * // PDF processing pipeline with fallback:
+   * // 1. beadtoolPdfService.loadDocument() → Try BeadTool format
+   * // 2. If empty/invalid → xlsmPdfService.loadDocument() → Try XLSM format
+   * // 3. Regex pattern matching → Detect last row number
+   * // 4. projectService.loadPeyote() → Parse pattern data
+   * // 5. [Active service].renderFrontPage() → Generate thumbnail
+   * // 6. flamService.generateFLAM() → Build navigation map
+   * // 7. Row count validation → User notification if mismatch
    * ```
    *
-   * @throws {Error} When PDF parsing fails or pattern data is malformed
-   * @since 1.0.0
+   * @throws {Error} When both PDF parsing services fail or pattern data is malformed
+   * @since 2.0.0
    */
   importPdfFile(file: File) {
+    this.logger.debug('Starting PDF import process for file:', file.name);
     return from(this.beadtoolPdfService.loadDocument(file)).pipe(
+      switchMap((beadtoolText: string) => {
+        // Check if BeadTool service returned useful content
+        this.logger.debug('BeadTool service returned text length:', beadtoolText?.length || 0);
+        this.logger.debug('BeadTool service text preview:', beadtoolText?.substring(0, 200) || 'null/empty');
+
+        const isBeadtoolValid = beadtoolText &&
+          beadtoolText.trim().length > 0 &&
+          beadtoolText.includes('Row');
+
+        this.logger.debug('BeadTool validation result:', isBeadtoolValid);
+
+        if (isBeadtoolValid) {
+          this.logger.debug('Using BeadTool PDF format');
+          return this.processPdfWithService(file, beadtoolText, this.beadtoolPdfService, 'BeadTool');
+        } else {
+          this.logger.debug('BeadTool format failed, falling back to XLSM PDF format');
+          return from(this.xlsmPdfService.loadDocument(file)).pipe(
+            switchMap((xlsmText: string) => {
+              this.logger.debug('XLSM service returned text length:', xlsmText?.length || 0);
+              this.logger.debug('XLSM service text preview:', xlsmText?.substring(0, 200) || 'null/empty');
+
+              const isXlsmValid = xlsmText &&
+                xlsmText.trim().length > 0 &&
+                xlsmText.includes('Row');
+
+              this.logger.debug('XLSM validation result:', isXlsmValid);
+
+              if (isXlsmValid) {
+                this.logger.debug('Using XLSM PDF format');
+                return this.processPdfWithService(file, xlsmText, this.xlsmPdfService, 'XLSM');
+              } else {
+                this.logger.error('Both PDF services failed to extract valid content');
+                this.logger.error('BeadTool text was:', beadtoolText || 'null/empty');
+                this.logger.error('XLSM text was:', xlsmText || 'null/empty');
+                this.notificationService.snackbar(
+                  'Unable to extract pattern data from PDF. Please verify the file format is supported.'
+                );
+                throw new Error('Both BeadTool and XLSM PDF services failed to extract valid content');
+              }
+            })
+          );
+        }
+      })
+    );
+  }
+
+  /**
+   * Processes PDF text content using the specified service for rendering.
+   *
+   * Helper method that handles the common processing steps after text extraction,
+   * including pattern parsing, thumbnail generation, FLAM creation, and validation.
+   * Uses the same service that successfully extracted the text for rendering operations.
+   *
+   * @private
+   * @param file - Original PDF file for rendering operations
+   * @param text - Extracted text content from PDF
+   * @param pdfService - PDF service to use for rendering (BeadTool or XLSM)
+   * @param serviceType - Type identifier for logging purposes
+   * @returns Observable that emits fully processed Project with image
+   *
+   * @since 2.0.0
+   */
+  private processPdfWithService(
+    file: File,
+    text: string,
+    pdfService: BeadtoolPdfService | XlsmPdfService,
+    serviceType: string
+  ): Observable<Project> {
+    this.logger.debug(`Starting processPdfWithService with ${serviceType} service`);
+    this.logger.debug(`Processing text (length: ${text.length})`);
+
+    return of(text).pipe(
       map((text: string): [string, number] => {
+        this.logger.debug('Analyzing text for row count matching...');
         const match = text.match(
           /(?:Row (\d+) \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)$/
         );
         let lastRow = 0;
         if (match) {
           lastRow = parseInt(match[1]);
+          this.logger.debug('Found last row number:', lastRow);
+        } else {
+          this.logger.debug('No row number match found in text');
         }
         return [text, lastRow];
       }),
       switchMap(([data, lastRow]: [string, number]) => {
+        this.logger.debug('Calling projectService.loadPeyote');
         return forkJoin([
           from(this.projectService.loadPeyote(file.name, data)),
           of(lastRow),
         ]);
       }),
-      combineLatestWith(from(this.beadtoolPdfService.renderFrontPage(file))),
+      tap(([project, lastRow]) => {
+        this.logger.debug('Project loaded successfully:', {
+          name: project.name,
+          rowCount: project.rows?.length,
+          lastRowFromMatch: lastRow
+        });
+      }),
+      combineLatestWith(from(pdfService.renderFrontPage(file))),
       map(([[project, lastRow], image]): [Project, number] => {
+        this.logger.debug('Front page rendered, setting up project properties');
         project.image = image;
         project.firstLastAppearanceMap = this.flamService.generateFLAM(
           project.rows
         );
         project.position = { row: 0, step: 0 };
+        this.logger.debug(`Successfully processed PDF using ${serviceType} format`);
         return [project, lastRow];
       }),
       combineLatestWith(this.settingsService.combine12$),
       map(([[project, lastRow], combine12]: [[Project, number], boolean]) => {
+        this.logger.debug('Final processing step - row count validation');
         if (lastRow > 0) {
           if (lastRow !== project.rows.length) {
-            this.logger.warn('Row count mismatch');
+            this.logger.warn('Row count mismatch detected:', {
+              expectedRows: lastRow,
+              actualRows: project.rows.length
+            });
             this.notificationService.snackbar(
               'Number of rows imported does not match the highest row number in the PDF.  This may be a sign of a failed import.  Please send the file to the developer for review if the import was not successful.'
             );
+          } else {
+            this.logger.debug('Row count validation passed');
           }
         }
+        this.logger.debug('PDF processing completed successfully');
         return project;
       })
     );

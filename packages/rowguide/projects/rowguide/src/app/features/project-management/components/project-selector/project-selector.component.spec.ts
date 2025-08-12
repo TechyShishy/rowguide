@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
 import { ProjectService } from '../../services';
 import { ProjectDbService } from '../../../../data/services/project-db.service';
-import { BeadtoolPdfService } from '../../../file-import/loaders';
+import { BeadtoolPdfService, XlsmPdfService } from '../../../file-import/loaders';
 import { FlamService } from '../../../../core/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -19,6 +19,7 @@ describe('ProjectSelectorComponent', () => {
   let projectServiceSpy: jasmine.SpyObj<ProjectService>;
   let indexedDBServiceSpy: jasmine.SpyObj<ProjectDbService>;
   let beadtoolPdfServiceSpy: jasmine.SpyObj<BeadtoolPdfService>;
+  let xlsmPdfServiceSpy: jasmine.SpyObj<XlsmPdfService>;
   let flamServiceSpy: jasmine.SpyObj<FlamService>;
 
   beforeEach(async () => {
@@ -32,6 +33,10 @@ describe('ProjectSelectorComponent', () => {
       'updateProject',
     ]);
     beadtoolPdfServiceSpy = jasmine.createSpyObj('BeadtoolPdfService', [
+      'loadDocument',
+      'renderFrontPage',
+    ]);
+    xlsmPdfServiceSpy = jasmine.createSpyObj('XlsmPdfService', [
       'loadDocument',
       'renderFrontPage',
     ]);
@@ -50,6 +55,7 @@ describe('ProjectSelectorComponent', () => {
         { provide: ProjectService, useValue: projectServiceSpy },
         { provide: ProjectDbService, useValue: indexedDBServiceSpy },
         { provide: BeadtoolPdfService, useValue: beadtoolPdfServiceSpy },
+        { provide: XlsmPdfService, useValue: xlsmPdfServiceSpy },
         { provide: FlamService, useValue: flamServiceSpy },
         provideRouter(routes),
       ],
@@ -97,14 +103,15 @@ describe('ProjectSelectorComponent', () => {
     });
   });
 
-  it('should detect PDF file and process it', async () => {
+  it('should detect PDF file and process it with BeadTool format', async () => {
     const mockFile = new File(
       [new Uint8Array([0x25, 0x50, 0x44, 0x46])],
       'test.pdf'
     );
     component.file = mockFile;
 
-    beadtoolPdfServiceSpy.loadDocument.and.returnValue(of('PDF file content'));
+    // Mock successful BeadTool extraction
+    beadtoolPdfServiceSpy.loadDocument.and.returnValue(of('Row 1 (L) (3)A, (2)B'));
     beadtoolPdfServiceSpy.renderFrontPage.and.returnValue(
       from(Promise.resolve(new ArrayBuffer(0)))
     );
@@ -122,9 +129,48 @@ describe('ProjectSelectorComponent', () => {
     await firstValueFrom(component.importFile());
 
     expect(beadtoolPdfServiceSpy.loadDocument).toHaveBeenCalled();
+    expect(xlsmPdfServiceSpy.loadDocument).not.toHaveBeenCalled(); // Should not fallback
     expect(projectServiceSpy.loadPeyote).toHaveBeenCalledWith(
       'test.pdf',
-      'PDF file content'
+      'Row 1 (L) (3)A, (2)B'
+    );
+    expect(flamServiceSpy.generateFLAM).toHaveBeenCalled();
+    expect(indexedDBServiceSpy.updateProject).toHaveBeenCalled();
+  });
+
+  it('should fallback to XLSM format when BeadTool fails', async () => {
+    const mockFile = new File(
+      [new Uint8Array([0x25, 0x50, 0x44, 0x46])],
+      'test.pdf'
+    );
+    component.file = mockFile;
+
+    // Mock failed BeadTool extraction (empty result)
+    beadtoolPdfServiceSpy.loadDocument.and.returnValue(of(''));
+    // Mock successful XLSM extraction
+    xlsmPdfServiceSpy.loadDocument.and.returnValue(of('Row 1 (L) A B C'));
+    xlsmPdfServiceSpy.renderFrontPage.and.returnValue(
+      from(Promise.resolve(new ArrayBuffer(0)))
+    );
+
+    const mockProject = {
+      id: 1,
+      name: 'Test Project',
+      rows: [],
+    };
+    projectServiceSpy.project$ = new BehaviorSubject<Project>(mockProject);
+    flamServiceSpy.flam$ = new BehaviorSubject<FLAM>({});
+    projectServiceSpy.ready$ = new Subject<boolean>();
+
+    projectServiceSpy.loadPeyote.and.returnValue(Promise.resolve(mockProject));
+
+    await firstValueFrom(component.importFile());
+
+    expect(beadtoolPdfServiceSpy.loadDocument).toHaveBeenCalled();
+    expect(xlsmPdfServiceSpy.loadDocument).toHaveBeenCalled(); // Should fallback
+    expect(projectServiceSpy.loadPeyote).toHaveBeenCalledWith(
+      'test.pdf',
+      'Row 1 (L) A B C'
     );
     expect(flamServiceSpy.generateFLAM).toHaveBeenCalled();
     expect(indexedDBServiceSpy.updateProject).toHaveBeenCalled();
