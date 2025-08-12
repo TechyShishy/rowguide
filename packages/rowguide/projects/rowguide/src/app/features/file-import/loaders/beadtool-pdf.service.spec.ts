@@ -367,7 +367,12 @@ describe('BeadtoolPdfService', () => {
       mockContext = jasmine.createSpyObj('CanvasRenderingContext2D', [
         'drawImage',
       ]);
-      spyOn(document, 'createElement').and.returnValue(mockCanvas);
+      spyOn(document, 'createElement').and.callFake(<K extends keyof HTMLElementTagNameMap>(tagName: K): HTMLElementTagNameMap[K] => {
+        if (tagName === 'canvas') {
+          return mockCanvas as HTMLElementTagNameMap[K];
+        }
+        return document.createElement(tagName);
+      });
       spyOn(mockCanvas, 'getContext').and.returnValue(mockContext);
       spyOn(mockCanvas, 'toBlob').and.callFake((callback: BlobCallback) => {
         const mockBlob = new Blob(['mock image data'], { type: 'image/png' });
