@@ -2,6 +2,101 @@
 
 This document explains the null safety improvements implemented in the Rowguide application and how to use them effectively.
 
+## Quick Reference
+
+### Import Statement
+```typescript
+import {
+  // Type Guards
+  isProject, isRow, isStep, hasValidId, hasName, hasPosition,
+  isValidProject, isEmptyProject,
+
+  // Safe Factory
+  ModelFactory, DEFAULT_VALUES,
+
+  // Safe Access
+  SafeAccess
+} from './core/models';
+```
+
+### Common Patterns
+
+#### ✅ Validate API Responses
+```typescript
+const response = await api.getProject(id);
+if (isValidProject(response)) {
+  this.project = response;
+} else {
+  this.showError('Invalid project data');
+}
+```
+
+#### ✅ Safe Property Access
+```typescript
+// Instead of: project?.name || 'Untitled'
+const name = SafeAccess.getProjectName(project, 'Untitled');
+
+// Instead of: project?.rows || []
+const rows = SafeAccess.getProjectRows(project);
+```
+
+#### ✅ Create Safe Objects
+```typescript
+// Instead of: { id: 1, count: 5, description: 'step' }
+const step = ModelFactory.createStep({
+  id: 1,
+  count: 5,
+  description: 'step'
+});
+
+// Instead of: { row: 0, step: 0 }
+const position = DEFAULT_VALUES.position();
+```
+
+#### ✅ Database Operations
+```typescript
+async saveProject(project: Project) {
+  if (!hasValidId(project)) {
+    throw new Error('Cannot save project without ID');
+  }
+
+  if (!isValidProject(project)) {
+    throw new Error('Invalid project data');
+  }
+
+  return await this.db.save(project);
+}
+```
+
+#### ✅ Component Safety
+```typescript
+ngOnInit() {
+  this.project$ = this.route.params.pipe(
+    map(params => parseInt(params.id)),
+    switchMap(id => this.projectService.loadProject(id)),
+    map(project => isValidProject(project) ? project : ModelFactory.createProject())
+  );
+}
+```
+
+### Anti-Patterns to Avoid
+
+#### ❌ Don't use type assertions
+```typescript
+const project = response as Project; // Dangerous!
+```
+
+#### ❌ Don't access properties without checking
+```typescript
+const name = project.name.trim(); // Can throw!
+```
+
+#### ❌ Don't use inconsistent defaults
+```typescript
+const pos1 = { row: 0, step: 0 };
+const pos2 = { row: 0, step: 0 }; // Duplicated magic values
+```
+
 ## Overview
 
 The null safety system provides comprehensive protection against runtime null/undefined errors through:
@@ -146,12 +241,12 @@ async loadProject(id: number): Promise<Project | null> {
 
   try {
     const project = await this.db.get(id);
-    
+
     if (!isValidProject(project)) {
       this.logger.error('Invalid project data from database');
       return null;
     }
-    
+
     return project;
   } catch (error) {
     this.logger.error('Database error:', error);
@@ -176,7 +271,7 @@ ngOnInit() {
       return project;
     })
   );
-  
+
   this.projectName$ = this.project$.pipe(
     map(project => SafeAccess.getProjectName(project, 'Untitled'))
   );
@@ -215,7 +310,7 @@ describe('Type Guards', () => {
     const validProject = ModelFactory.createProject({
       rows: [/* valid rows */]
     });
-    
+
     expect(isProject(validProject)).toBe(true);
     expect(isValidProject(validProject)).toBe(true);
   });
@@ -258,13 +353,13 @@ function getValidatedProject(id: number): Project | null {
   if (validatedProjects.has(id)) {
     return validatedProjects.get(id)!;
   }
-  
+
   const project = loadProjectFromDb(id);
   if (isValidProject(project)) {
     validatedProjects.set(id, project);
     return project;
   }
-  
+
   return null;
 }
 ```
@@ -280,13 +375,13 @@ function renderProject(projectData: unknown) {
     this.showErrorMessage('Invalid project data');
     return;
   }
-  
+
   if (!isValidProject(projectData)) {
     // Show empty state
     this.showEmptyProject();
     return;
   }
-  
+
   // Render normally
   this.displayProject(projectData);
 }
@@ -301,7 +396,7 @@ function processApiResponse(response: unknown) {
     this.telemetry.trackError('invalid_api_response', { response });
     return null;
   }
-  
+
   return response;
 }
 ```
