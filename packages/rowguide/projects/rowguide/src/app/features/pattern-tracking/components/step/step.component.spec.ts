@@ -453,9 +453,14 @@ describe('StepComponent', () => {
       expect(descriptor3?.set).toBeUndefined();
       expect(descriptor3?.get).toBeDefined();
 
-      // While isCurrentStep and marked should still be directly settable
-      expect(component.hasOwnProperty('isCurrentStep')).toBe(true);
-      expect(component.hasOwnProperty('marked')).toBe(true);
+      // While isCurrentStep should be settable (via getter/setter) and marked should be directly settable
+      const currentStepDescriptor = Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(component),
+        'isCurrentStep'
+      );
+      expect(currentStepDescriptor?.set).toBeDefined(); // Has setter
+      expect(currentStepDescriptor?.get).toBeDefined(); // Has getter
+      expect(component.hasOwnProperty('marked')).toBe(true); // Direct property
     });
   });
 
