@@ -20,7 +20,8 @@ rowguide/
 ### Development & Testing
 ```bash
 # NEVER start dev server - always already running
-yarn workspace rowguide test --browsers=ChromeHeadless --watch=false
+yarn workspace rowguide test:unit
+yarn workspace rowguide test:e2e
 
 # Component generation
 yarn workspace rowguide run ng generate component features/[domain]/components/[name]
@@ -48,7 +49,7 @@ yarn capacitor:assembleDebug      # Android APK
 
 ### Testing Protocol
 1. **NEVER start dev server** (already running)
-2. **Always run tests** before completion: `yarn workspace rowguide test --browsers=ChromeHeadless --watch=false`
+2. **Always run unit tests** before completion: `yarn workspace rowguide test:unit`
 3. **Ask user to test** builds instead of starting servers
 4. **100% test pass rate** required before code changes complete
 

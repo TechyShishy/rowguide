@@ -41,8 +41,8 @@ git stash                  # Separate changes into focused commits
 yarn test | head -50
 
 # ✅ Do this instead:
-yarn test > /tmp/test-output.txt
-# Then use read_file tool to examine /tmp/test-output.txt
+yarn test > test-output.txt
+# Then use read_file tool to examine test-output.txt
 ```
 
 ### When to Ask for Help
