@@ -136,13 +136,13 @@ describe('PdfRenderingUtil', () => {
       const originalCreateElement = document.createElement;
       spyOn(document, 'createElement').and.callFake((tagName: string) => {
         if (tagName === 'canvas') {
-          const canvas = originalCreateElement.call(document, 'canvas') as HTMLCanvasElement;
+          const canvas = (originalCreateElement.call(document, 'canvas' as any) as unknown) as HTMLCanvasElement;
           canvas.width = 100;
           canvas.height = 200;
           spyOn(canvas, 'getContext').and.returnValue(null);
-          return canvas;
+          return canvas as any;
         }
-        return originalCreateElement.call(document, tagName);
+        return originalCreateElement.call(document, tagName as any) as any;
       });
 
       // Act & Assert

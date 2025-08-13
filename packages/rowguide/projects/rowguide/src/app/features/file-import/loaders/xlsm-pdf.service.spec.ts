@@ -299,7 +299,7 @@ describe('XlsmPdfService', () => {
       mockCanvas = document.createElement('canvas');
       mockContext = jasmine.createSpyObj('CanvasRenderingContext2D', ['drawImage']);
       spyOn(mockCanvas, 'getContext').and.returnValue(mockContext);
-      spyOn(document, 'createElement').and.returnValue(mockCanvas);
+      spyOn(document, 'createElement').and.returnValue(mockCanvas as any);
 
       // Create mock page
       mockPage = {
