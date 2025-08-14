@@ -109,3 +109,4 @@
 export * from './project-selector/project-selector.component';
 export * from './project-inspector/project-inspector.component';
 export * from './project-summary/project-summary.component';
+export * from './flam-analysis/flam-analysis.component';
