@@ -10,6 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -61,6 +62,12 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
  *
  * Provides comprehensive FLAM visualization and color management functionality
  * extracted from the project inspector for improved maintainability and UX.
+ *
+ * **Route Parameter Support:**
+ * - **Direct Project Access**: Supports `/flam-analysis/:id` for loading specific projects
+ * - **Fallback Behavior**: Falls back to localStorage-based loading when no ID parameter
+ * - **URL Navigation**: Enables bookmarking and direct links to specific project analysis
+ * - **Parameter Validation**: Handles invalid project IDs gracefully
  *
  * **Key Features:**
  * - **FLAM Data Visualization**: Interactive table showing first/last appearances of each pattern element
@@ -210,7 +217,8 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
    *
    * Injects core services for FLAM analysis, project management,
    * settings synchronization, HTTP client for color data loading,
-   * and change detection management.
+   * change detection management, and route handling for direct
+   * project access via URL parameters.
    *
    * @param flamService - FLAM generation and management service
    * @param settingsService - User preferences and configuration management
@@ -221,6 +229,7 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
    * @param store - Centralized state management store
    * @param dialog - Material Dialog service for confirmations
    * @param errorHandler - Error handling service
+   * @param route - Activated route for reading URL parameters
    */
   constructor(
     public flamService: FlamService,
@@ -231,23 +240,87 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
     private http: HttpClient,
     private store: ReactiveStateStore,
     private dialog: MatDialog,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private route: ActivatedRoute
   ) {}
 
   /**
-   * Component initialization with Delica color loading and project readiness.
+   * Component initialization with route parameter handling and Delica color loading.
    *
-   * Performs critical initialization tasks:
-   * 1. Ensures current project is loaded from localStorage if not in store (similar to project component)
-   * 2. Loads Delica color mapping from JSON configuration file
-   * 3. Refreshes table data when colors are available for hex preview
-   * 4. Subscribes to project readiness for FLAM data availability
-   * 5. Handles color loading errors with appropriate logging
+   * Performs critical initialization tasks with support for both route-based project
+   * loading (when ID parameter is present) and localStorage-based loading (fallback behavior):
+   * 1. Handles route parameter changes for direct project access
+   * 2. Ensures current project is loaded from localStorage if not in store and no route param
+   * 3. Loads Delica color mapping from JSON configuration file
+   * 4. Refreshes table data when colors are available for hex preview
+   * 5. Subscribes to project readiness for FLAM data availability
+   * 6. Handles loading errors with appropriate logging
+   *
+   * **Route Parameter Handling:**
+   * - Checks for 'id' parameter in route
+   * - Loads specific project when ID is provided
+   * - Falls back to localStorage-based loading when no ID parameter
+   * - Uses implicit subscription management (no manual cleanup needed)
+   *
+   * @example
+   * ```typescript
+   * // Direct navigation to specific project analysis
+   * this.router.navigate(['/flam-analysis', 123]);
+   * // Component will automatically load project 123
+   *
+   * // Navigation without ID parameter
+   * this.router.navigate(['/flam-analysis']);
+   * // Component will load from localStorage as before
+   * ```
    */
   ngOnInit() {
-    // CRITICAL: Initialize project loading chain similar to project component
-    // This ensures the project is loaded in the store and triggers the FLAM service subscription
-    this.initializeProjectLoading();
+    // Handle route parameter changes for direct project access
+    this.route.params.subscribe(async (params) => {
+      const projectId = params['id'];
+      
+      if (projectId) {
+        // Route has project ID parameter - load specific project
+        const id = Number(projectId);
+        
+        if (id && id > 0) {
+          try {
+            this.logger.info(`Loading project from route parameter for FLAM analysis: ${id}`);
+            await this.projectService.loadProject(id);
+            // Set up reactive subscription to FLAM data changes for the loaded project
+            this.subscribeToFlamUpdates();
+          } catch (error) {
+            this.errorHandler.handleError(
+              error,
+              {
+                operation: 'loadProjectFromRouteForFlam',
+                details: `Failed to load project from route parameter for FLAM analysis: ${id}`,
+                projectId: id,
+                route: this.route.snapshot.url.join('/'),
+              },
+              `Unable to load project ${id} for FLAM analysis. Please try selecting a different project.`,
+              'medium'
+            );
+          }
+        } else {
+          this.logger.warn(`Invalid project ID in route parameter for FLAM analysis: ${projectId}`);
+          this.errorHandler.handleError(
+            new Error(`Invalid project ID in FLAM analysis route: ${projectId}`),
+            {
+              operation: 'loadProjectFromRouteForFlam',
+              details: 'Route parameter contains invalid project ID',
+              invalidId: projectId,
+              route: this.route.snapshot.url.join('/'),
+            },
+            'The project ID in the URL is invalid. Please check the link and try again.',
+            'medium'
+          );
+        }
+      } else {
+        // No route parameter - use existing localStorage-based loading
+        this.logger.debug('No project ID in route for FLAM analysis, using standard project loading');
+        this.initializeProjectLoading();
+      }
+    });
 
     // Load delica colors mapping
     this.http
@@ -269,9 +342,11 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
     });
   }
   /**
-   * Initialize project loading chain similar to project component pattern.
-   * Creates project observable that loads from route params or localStorage,
-   * and subscribes to trigger the loading process.
+   * Initialize project loading chain from localStorage (fallback method).
+   * 
+   * This method is now used as a fallback when no route parameter is provided.
+   * Creates project observable that loads from localStorage and subscribes to
+   * trigger the loading process and FLAM subscription setup.
    */
   private initializeProjectLoading(): void {
     const project$ = this.store.select(selectCurrentProject).pipe(

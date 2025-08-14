@@ -124,12 +124,13 @@ export class ProjectSummaryComponent {
   }
 
   /**
-   * Loads project for pattern tracking and navigation.
+   * Loads project into tracking interface with parameterized routing.
    *
-   * Comprehensive project loading workflow that:
-   * 1. Sets the project as the current active project
-   * 2. Navigates to the project tracking interface
-   * 3. Preserves project ID in route parameters for deep linking
+   * Performs comprehensive project loading and navigation:
+   * 1. Sets project as current in ProjectService for session persistence
+   * 2. Saves project ID to localStorage for cross-session restoration
+   * 3. Navigates to project tracking interface with parameterized route
+   * 4. Preserves project ID in route parameters for deep linking
    *
    * Integrates with ProjectService for current project state
    * management and Angular Router for seamless navigation.
@@ -137,17 +138,15 @@ export class ProjectSummaryComponent {
    * @example
    * ```typescript
    * // Navigation result:
-   * // URL: /project;id=123
+   * // URL: /project/123
    * // Current project set in ProjectService
    * // Project tracking interface loaded
    * ```
    */
   loadProject() {
     this.projectService.saveCurrentProject(this.project.id ?? 0);
-    this.router.navigate(['/project', { id: this.project.id }]);
-  }
-
-  /**
+    this.router.navigate(['/project', this.project.id]);
+  }  /**
    * Deletes project with immediate UI feedback.
    *
    * Performs project deletion with immediate visual feedback:

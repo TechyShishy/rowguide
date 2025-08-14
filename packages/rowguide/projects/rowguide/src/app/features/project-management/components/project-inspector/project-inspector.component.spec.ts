@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogModule } from '@angular/material/dialog';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { ActivatedRoute } from '@angular/router';
 import { ProjectInspectorComponent } from './project-inspector.component';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { ProjectService } from '../../services';
@@ -23,6 +24,7 @@ describe('ProjectInspectorComponent', () => {
   let mockIndexedDBService: Partial<ProjectDbService>;
   let mockErrorHandler: Partial<ErrorHandlerService>;
   let mockStoreSpy: jasmine.SpyObj<ReactiveStateStore>;
+  let mockActivatedRoute: Partial<ActivatedRoute>;
   let dialog: MatDialog;
 
   const mockProject: Project = {
@@ -85,6 +87,31 @@ describe('ProjectInspectorComponent', () => {
     mockStoreSpy.select.and.returnValue(mockProjectBehaviorSubject.asObservable());
     mockStoreSpy.dispatch.and.stub();
 
+    // Create ActivatedRoute mock with minimal required properties
+    // Component only uses: route.params and route.snapshot.url
+    mockActivatedRoute = {
+      params: of({}), // Observable for route parameters (main usage)
+      snapshot: {
+        url: [], // Used for error logging: route.snapshot.url.join('/')
+        // Required by TypeScript interface but not used by component
+        params: {},
+        queryParams: {},
+        fragment: null,
+        data: {},
+        outlet: 'primary',
+        component: null,
+        routeConfig: null,
+        root: null as any,
+        parent: null,
+        firstChild: null,
+        children: [],
+        pathFromRoot: [],
+        title: '',
+        paramMap: { get: () => null, has: () => false, getAll: () => [], keys: [] },
+        queryParamMap: { get: () => null, has: () => false, getAll: () => [], keys: [] }
+      }
+    };
+
     await TestBed.configureTestingModule({
       imports: [
         ProjectInspectorComponent,
@@ -99,6 +126,7 @@ describe('ProjectInspectorComponent', () => {
         { provide: ProjectDbService, useValue: mockIndexedDBService },
         { provide: ErrorHandlerService, useValue: mockErrorHandler },
         { provide: ReactiveStateStore, useValue: mockStoreSpy },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
       ],
     }).compileComponents();
 
@@ -258,5 +286,118 @@ describe('ProjectInspectorComponent', () => {
 
       expect(image).toBe('');
     });
+  });
+
+  describe('Route Parameter Handling', () => {
+    beforeEach(() => {
+      // Add loadProject spy to mockProjectService if not already present
+      if (!mockProjectService.loadProject) {
+        mockProjectService.loadProject = jasmine.createSpy('loadProject').and.returnValue(Promise.resolve(mockProject));
+      }
+    });
+
+    it('should load project when route parameter ID is provided', fakeAsync(() => {
+      const projectId = 123;
+      const mockRouteParams = new BehaviorSubject({ id: projectId.toString() });
+      
+      // Update the ActivatedRoute mock to emit route parameters
+      (mockActivatedRoute as any).params = mockRouteParams.asObservable();
+
+      // Create a new component instance with the updated route
+      const newFixture = TestBed.createComponent(ProjectInspectorComponent);
+      const newComponent = newFixture.componentInstance;
+      
+      newFixture.detectChanges();
+      tick();
+
+      expect(mockProjectService.loadProject).toHaveBeenCalledWith(projectId);
+    }));
+
+    it('should handle invalid project ID in route parameter', fakeAsync(() => {
+      const invalidId = 'invalid';
+      const mockRouteParams = new BehaviorSubject({ id: invalidId });
+      
+      // Update the ActivatedRoute mock to emit invalid route parameters
+      (mockActivatedRoute as any).params = mockRouteParams.asObservable();
+
+      // Create a new component instance with the updated route
+      const newFixture = TestBed.createComponent(ProjectInspectorComponent);
+      const newComponent = newFixture.componentInstance;
+      
+      newFixture.detectChanges();
+      tick();
+
+      // Should not call loadProject with invalid ID
+      expect(mockProjectService.loadProject).not.toHaveBeenCalled();
+      // Should log error through error handler
+      expect(mockErrorHandler.handleError).toHaveBeenCalled();
+    }));
+
+    it('should handle negative project ID in route parameter', fakeAsync(() => {
+      const negativeId = -1;
+      const mockRouteParams = new BehaviorSubject({ id: negativeId.toString() });
+      
+      // Update the ActivatedRoute mock to emit negative route parameters
+      (mockActivatedRoute as any).params = mockRouteParams.asObservable();
+
+      // Create a new component instance with the updated route
+      const newFixture = TestBed.createComponent(ProjectInspectorComponent);
+      const newComponent = newFixture.componentInstance;
+      
+      newFixture.detectChanges();
+      tick();
+
+      // Should not call loadProject with negative ID
+      expect(mockProjectService.loadProject).not.toHaveBeenCalled();
+      // Should log error through error handler
+      expect(mockErrorHandler.handleError).toHaveBeenCalled();
+    }));
+
+    it('should use default behavior when no route parameter is provided', fakeAsync(() => {
+      const mockRouteParams = new BehaviorSubject({});
+      
+      // Update the ActivatedRoute mock to emit no route parameters
+      (mockActivatedRoute as any).params = mockRouteParams.asObservable();
+
+      // Create a new component instance with the updated route
+      const newFixture = TestBed.createComponent(ProjectInspectorComponent);
+      const newComponent = newFixture.componentInstance;
+      
+      newFixture.detectChanges();
+      tick();
+
+      // Should not call loadProject when no ID parameter is present
+      // (relies on ProjectService's localStorage-based loading)
+      expect(mockProjectService.loadProject).not.toHaveBeenCalled();
+    }));
+
+    it('should handle project loading errors from route parameter', fakeAsync(() => {
+      const projectId = 123;
+      const mockRouteParams = new BehaviorSubject({ id: projectId.toString() });
+      const loadError = new Error('Project not found');
+      
+      // Update the ActivatedRoute mock and make loadProject fail
+      (mockActivatedRoute as any).params = mockRouteParams.asObservable();
+      (mockProjectService.loadProject as jasmine.Spy).and.returnValue(Promise.reject(loadError));
+
+      // Create a new component instance with the updated route
+      const newFixture = TestBed.createComponent(ProjectInspectorComponent);
+      const newComponent = newFixture.componentInstance;
+      
+      newFixture.detectChanges();
+      tick();
+
+      expect(mockProjectService.loadProject).toHaveBeenCalledWith(projectId);
+      // Should handle the error through error handler
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        loadError,
+        jasmine.objectContaining({
+          operation: 'loadProjectFromRoute',
+          projectId: projectId
+        }),
+        jasmine.any(String),
+        'medium'
+      );
+    }));
   });
 });

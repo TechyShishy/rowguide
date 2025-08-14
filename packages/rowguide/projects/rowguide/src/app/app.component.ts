@@ -6,11 +6,14 @@ import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { Observable } from 'rxjs';
 
 import { UpgradeService } from './data/migrations/upgrade.service';
 import { ProjectService } from './features/project-management/services/project.service';
 import { NotificationComponent } from './shared/components';
 import { ErrorBoundaryComponent } from './shared/components/error-boundary/error-boundary.component';
+import { ReactiveStateStore } from './core/store/reactive-state-store';
+import { ProjectSelectors } from './core/store/selectors/project-selectors';
 
 /**
  * AppComponent - Root Application Component
@@ -131,6 +134,17 @@ export class AppComponent implements OnInit {
   title = 'rowguide';
 
   /**
+   * Observable for current project ID to enable conditional navigation
+   * 
+   * This observable provides the current project ID for use in navigation
+   * logic, allowing routes to use parameterized paths when a project is
+   * currently loaded.
+   * 
+   * @type {Observable<number | null>}
+   */
+  currentProjectId$: Observable<number | null>;
+
+  /**
    * Root component constructor with dependency injection
    *
    * Injects core services required for application initialization and operation.
@@ -139,6 +153,7 @@ export class AppComponent implements OnInit {
    *
    * @param {ProjectService} projectService - Public project service for template access
    * @param {UpgradeService} upgradeService - Database migration service
+   * @param {ReactiveStateStore} store - Application state store
    *
    * @example
    * ```typescript
@@ -150,9 +165,13 @@ export class AppComponent implements OnInit {
    */
   constructor(
     public projectService: ProjectService,
-    private upgradeService: UpgradeService
+    private upgradeService: UpgradeService,
+    private store: ReactiveStateStore
   ) {
     // No manual change detection needed - async pipe handles this automatically
+    
+    // Set up observable for current project ID to enable conditional navigation
+    this.currentProjectId$ = this.store.select(ProjectSelectors.selectCurrentProjectId);
   }
 
   /**
@@ -193,5 +212,80 @@ export class AppComponent implements OnInit {
    */
   ngOnInit() {
     this.upgradeService.doNewMigrations();
+  }
+
+  /**
+   * Get Project Inspector Route Link
+   * 
+   * Returns the appropriate route for project inspector navigation.
+   * Uses parameterized route when a current project exists, otherwise
+   * uses the base route.
+   * 
+   * @param {number | null} currentProjectId - Current project ID or null
+   * @returns {string[]} Array of route segments for Angular router
+   * 
+   * @example
+   * ```typescript
+   * // With current project (ID: 123)
+   * getProjectInspectorRoute(123) // Returns ['/project-inspector', '123']
+   * 
+   * // Without current project  
+   * getProjectInspectorRoute(null) // Returns ['/project-inspector']
+   * ```
+   */
+  getProjectInspectorRoute(currentProjectId: number | null): string[] {
+    return currentProjectId 
+      ? ['/project-inspector', currentProjectId.toString()]
+      : ['/project-inspector'];
+  }
+
+  /**
+   * Get FLAM Analysis Route Link
+   * 
+   * Returns the appropriate route for FLAM analysis navigation.
+   * Uses parameterized route when a current project exists, otherwise
+   * uses the base route.
+   * 
+   * @param {number | null} currentProjectId - Current project ID or null
+   * @returns {string[]} Array of route segments for Angular router
+   * 
+   * @example
+   * ```typescript
+   * // With current project (ID: 123)
+   * getFlamAnalysisRoute(123) // Returns ['/flam-analysis', '123']
+   * 
+   * // Without current project  
+   * getFlamAnalysisRoute(null) // Returns ['/flam-analysis']
+   * ```
+   */
+  getFlamAnalysisRoute(currentProjectId: number | null): string[] {
+    return currentProjectId 
+      ? ['/flam-analysis', currentProjectId.toString()]
+      : ['/flam-analysis'];
+  }
+
+  /**
+   * Get Project Route Link
+   * 
+   * Returns the appropriate route for project navigation.
+   * Uses parameterized route when a current project exists, otherwise
+   * uses the base route.
+   * 
+   * @param {number | null} currentProjectId - Current project ID or null
+   * @returns {string[]} Array of route segments for Angular router
+   * 
+   * @example
+   * ```typescript
+   * // With current project (ID: 123)
+   * getProjectRoute(123) // Returns ['/project', '123']
+   * 
+   * // Without current project  
+   * getProjectRoute(null) // Returns ['/project']
+   * ```
+   */
+  getProjectRoute(currentProjectId: number | null): string[] {
+    return currentProjectId 
+      ? ['/project', currentProjectId.toString()]
+      : ['/project'];
   }
 }

@@ -4,10 +4,24 @@
       <mat-list>
         <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-selector">Project
             Selector</a></mat-list-item>
-        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project">Project</a></mat-list-item>
-        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/project-inspector">Project
-            Inspector</a></mat-list-item>
-        <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/flam-analysis">FLAM Analysis</a></mat-list-item>
+        <mat-list-item>
+          <a mat-button (click)="sidenav.close()" 
+             [routerLink]="getProjectRoute(currentProjectId$ | async)">
+            Project
+          </a>
+        </mat-list-item>
+        <mat-list-item>
+          <a mat-button (click)="sidenav.close()" 
+             [routerLink]="getProjectInspectorRoute(currentProjectId$ | async)">
+            Project Inspector
+          </a>
+        </mat-list-item>
+        <mat-list-item>
+          <a mat-button (click)="sidenav.close()" 
+             [routerLink]="getFlamAnalysisRoute(currentProjectId$ | async)">
+            FLAM Analysis
+          </a>
+        </mat-list-item>
         <mat-list-item><a mat-button (click)="sidenav.close()" routerLink="/settings">Settings</a></mat-list-item>
       </mat-list>
     </mat-sidenav>

@@ -5,6 +5,7 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -34,6 +35,12 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
  * and image upload capabilities. Now focused on project management features
  * with FLAM analysis moved to dedicated `/flam-analysis` route.
  *
+ * **Route Parameter Support:**
+ * - **Direct Project Access**: Supports `/project-inspector/:id` for loading specific projects
+ * - **Fallback Behavior**: Falls back to localStorage-based loading when no ID parameter
+ * - **URL Navigation**: Enables bookmarking and direct links to specific projects
+ * - **Parameter Validation**: Handles invalid project IDs gracefully
+ *
  * **Key Features:**
  * - **Project Summary**: Basic project information display
  * - **Position Tracking**: Current position display and reset functionality
@@ -48,15 +55,22 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
  *
  * @example
  * ```typescript
- * // In template:
+ * // In template (route-based access):
  * <app-project-inspector></app-project-inspector>
  *
+ * // Direct navigation to specific project:
+ * this.router.navigate(['/project-inspector', 123]);
+ *
+ * // Standard navigation (uses localStorage):
+ * this.router.navigate(['/project-inspector']);
+ *
  * // The component automatically:
- * // 1. Loads current project data
- * // 2. Displays project summary
- * // 3. Shows current position
- * // 4. Handles image upload and validation
- * // 5. Persists changes to database
+ * // 1. Checks for route ID parameter
+ * // 2. Loads specific project if ID provided
+ * // 3. Falls back to localStorage project if no ID
+ * // 4. Displays project summary and current position
+ * // 5. Handles image upload and validation
+ * // 6. Persists changes to database
  * ```
  *
  * @since 1.0.0
@@ -101,7 +115,8 @@ export class ProjectInspectorComponent implements OnInit {
    * Component constructor with comprehensive dependency injection.
    *
    * Injects core services for project management, settings synchronization,
-   * database persistence, and change detection management.
+   * database persistence, and change detection management, plus route handling
+   * for direct project access via URL parameters.
    *
    * @param settingsService - User preferences and configuration management
    * @param projectService - Project state and lifecycle management
@@ -112,6 +127,7 @@ export class ProjectInspectorComponent implements OnInit {
    * @param store - Centralized state management store
    * @param dialog - Material Dialog service for modals
    * @param errorHandler - Error handling and recovery service
+   * @param route - Activated route for reading URL parameters
    */
   constructor(
     public settingsService: SettingsService,
@@ -122,18 +138,90 @@ export class ProjectInspectorComponent implements OnInit {
     private indexedDBService: ProjectDbService,
     private store: ReactiveStateStore,
     private dialog: MatDialog,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private route: ActivatedRoute
   ) {}
 
   /**
-   * Component initialization.
+   * Component initialization with route parameter handling.
    *
-   * Performs basic initialization for project display functionality.
-   * Sets up subscriptions for project readiness state.
+   * Performs initialization for project display functionality with support
+   * for both route-based project loading (when ID parameter is present) and
+   * localStorage-based loading (fallback behavior). This enables direct
+   * navigation to specific projects via URLs like /project-inspector/123.
+   *
+   * **Route Parameter Handling:**
+   * - Checks for 'id' parameter in route
+   * - Loads specific project when ID is provided
+   * - Falls back to ProjectService auto-loading when no ID parameter
+   * - Uses implicit subscription management (no manual cleanup needed)
+   *
+   * **Error Handling:**
+   * - Invalid project IDs are handled gracefully
+   * - Loading failures fall back to normal project selection flow
+   * - All errors are logged and reported through ErrorHandlerService
+   *
+   * @example
+   * ```typescript
+   * // Direct navigation to specific project
+   * this.router.navigate(['/project-inspector', 123]);
+   * // Component will automatically load project 123
+   *
+   * // Navigation without ID parameter
+   * this.router.navigate(['/project-inspector']);
+   * // Component will load from localStorage as before
+   * ```
    */
   ngOnInit() {
+    // Set up subscription for project readiness state
     this.projectService.ready$.subscribe(async () => {
       this.cdr.markForCheck();
+    });
+
+    // Handle route parameter changes for direct project access
+    this.route.params.subscribe(async (params) => {
+      const projectId = params['id'];
+      
+      if (projectId) {
+        // Route has project ID parameter - load specific project
+        const id = Number(projectId);
+        
+        if (id && id > 0) {
+          try {
+            this.logger.info(`Loading project from route parameter: ${id}`);
+            await this.projectService.loadProject(id);
+          } catch (error) {
+            this.errorHandler.handleError(
+              error,
+              {
+                operation: 'loadProjectFromRoute',
+                details: `Failed to load project from route parameter: ${id}`,
+                projectId: id,
+                route: this.route.snapshot.url.join('/'),
+              },
+              `Unable to load project ${id}. Please try selecting a different project.`,
+              'medium'
+            );
+          }
+        } else {
+          this.logger.warn(`Invalid project ID in route parameter: ${projectId}`);
+          this.errorHandler.handleError(
+            new Error(`Invalid project ID in route: ${projectId}`),
+            {
+              operation: 'loadProjectFromRoute',
+              details: 'Route parameter contains invalid project ID',
+              invalidId: projectId,
+              route: this.route.snapshot.url.join('/'),
+            },
+            'The project ID in the URL is invalid. Please check the link and try again.',
+            'medium'
+          );
+        }
+      } else {
+        // No route parameter - use existing localStorage-based loading
+        this.logger.debug('No project ID in route, using standard project loading');
+        // ProjectService automatically loads from localStorage in constructor
+      }
     });
   }
 

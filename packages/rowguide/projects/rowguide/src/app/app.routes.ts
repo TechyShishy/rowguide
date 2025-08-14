@@ -138,6 +138,32 @@ export const routes: Routes = [
   { path: 'project-inspector', component: ProjectInspectorComponent },
 
   /**
+   * Project inspection and management route with ID parameter.
+   *
+   * Displays the project inspector component for a specific project identified by its ID.
+   * The ID parameter is used to load the project data directly without relying on
+   * localStorage state, providing direct access to project management features.
+   *
+   * @route `/project-inspector/:id`
+   * @component {@link ProjectInspectorComponent}
+   * @param id - The unique identifier of the project to inspect
+   * @feature Project editing, metadata management, project administration
+   *
+   * @example
+   * ```typescript
+   * // Navigate to specific project inspector
+   * this.router.navigate(['/project-inspector', 123]);
+   *
+   * // Access route parameter in component
+   * this.activatedRoute.params.subscribe(params => {
+   *   const projectId = Number(params['id']);
+   *   this.loadProjectForInspection(projectId);
+   * });
+   * ```
+   */
+  { path: 'project-inspector/:id', component: ProjectInspectorComponent },
+
+  /**
    * Application settings route.
    *
    * Displays the settings component for configuring application preferences,
@@ -173,6 +199,33 @@ export const routes: Routes = [
    * ```
    */
   { path: 'flam-analysis', component: FlamAnalysisComponent },
+
+  /**
+   * FLAM Analysis route with ID parameter.
+   *
+   * Displays the FLAM (First/Last Appearance Map) analysis component for
+   * a specific project identified by its ID. The ID parameter is used to
+   * load the project data directly without relying on localStorage state,
+   * providing direct access to pattern analysis features.
+   *
+   * @route `/flam-analysis/:id`
+   * @component {@link FlamAnalysisComponent}
+   * @param id - The unique identifier of the project to analyze
+   * @feature FLAM data visualization, color mapping, pattern analysis
+   *
+   * @example
+   * ```typescript
+   * // Navigate to specific project FLAM analysis
+   * this.router.navigate(['/flam-analysis', 123]);
+   *
+   * // Access route parameter in component
+   * this.activatedRoute.params.subscribe(params => {
+   *   const projectId = Number(params['id']);
+   *   this.loadProjectForAnalysis(projectId);
+   * });
+   * ```
+   */
+  { path: 'flam-analysis/:id', component: FlamAnalysisComponent },
 
   /**
    * Default route redirect.
