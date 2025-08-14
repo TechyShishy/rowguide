@@ -180,11 +180,8 @@ export abstract class BasePage {
     };
 
     const linkText = linkMap[routeName];
-    // Use more specific selector to avoid ambiguity with multiple "Project" links
-    const navLink =
-      routeName === 'project'
-        ? this.page.locator('mat-list-item a[routerlink="/project"]')
-        : this.page.locator(`mat-list-item a:has-text("${linkText}")`);
+    // Use getByRole with exact match to avoid ambiguity (e.g., "Project" vs "Project Inspector")
+    const navLink = this.page.getByRole('link', { name: linkText, exact: true });
     await navLink.click();
     await this.waitForAngular();
   }
@@ -313,6 +310,40 @@ export abstract class BasePage {
     }
 
     return 'No Project';
+  }
+
+  /**
+   * Get the current project ID from navigation links (if a project is loaded)
+   * Returns null if no project is loaded
+   */
+  async getCurrentProjectId(): Promise<string | null> {
+    try {
+      // Check if a project is loaded by examining the toolbar
+      const projectName = await this.getCurrentProjectName();
+      if (projectName === 'No Project') {
+        return null;
+      }
+
+      // Open sidenav to get navigation links
+      await this.openSideNav();
+      
+      // Get the Project Inspector link which should have the project ID
+      const inspectorLink = this.page.getByRole('link', { name: 'Project Inspector', exact: true });
+      const href = await inspectorLink.getAttribute('href');
+      
+      // Close sidenav
+      await this.page.locator('mat-sidenav-container').click(); // Click outside to close
+
+      // Extract project ID from href like "/project-inspector/123456"
+      if (href && href.includes('/project-inspector/')) {
+        const projectId = href.split('/project-inspector/')[1];
+        return projectId;
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   /**

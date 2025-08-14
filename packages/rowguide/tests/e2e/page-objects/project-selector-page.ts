@@ -282,6 +282,13 @@ export class ProjectSelectorPage extends BasePage {
     await loadButton.waitFor({ state: 'visible' });
     await loadButton.click();
     await this.waitForAngular();
+    
+    // Wait for the project to be fully loaded by checking the toolbar
+    await this.page.waitForFunction(() => {
+      const toolbar = document.querySelector('mat-toolbar');
+      return toolbar?.textContent?.includes('Project:') && 
+             !toolbar?.textContent?.includes('No Project');
+    }, { timeout: 5000 });
   }
 
   /**

@@ -58,6 +58,16 @@ export class FlamAnalysisPage extends BasePage {
   }
 
   /**
+   * Navigate to a specific project's FLAM analysis page
+   */
+  async gotoProject(projectId: number): Promise<void> {
+    await super.goto(`/flam-analysis/${projectId}`);
+    await this.waitForPageLoad();
+    await this.waitForAngular();
+    await this.waitForFlamAnalysisData();
+  }
+
+  /**
    * Wait for FLAM analysis specific data to load
    */
   async waitForFlamAnalysisData(): Promise<void> {

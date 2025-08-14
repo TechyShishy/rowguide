@@ -50,6 +50,16 @@ export class ProjectInspectorPage extends BasePage {
   }
 
   /**
+   * Navigate to a specific project's inspector page
+   */
+  async gotoProject(projectId: number): Promise<void> {
+    await super.goto(`/project-inspector/${projectId}`);
+    await this.waitForPageLoad();
+    await this.waitForAngular();
+    await this.waitForProjectInspectorData();
+  }
+
+  /**
    * Wait for project inspector specific data to load
    */
   async waitForProjectInspectorData(): Promise<void> {

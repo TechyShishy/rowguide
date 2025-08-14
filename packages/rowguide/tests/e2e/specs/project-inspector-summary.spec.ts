@@ -70,8 +70,12 @@ test.describe('Project Inspector - Project Summary', () => {
     // Actually select and load the first available project
     await projectSelectorPage.loadProject(0);
 
-    // Navigate to inspector - now a project should be loaded
-    await projectInspectorPage.goto();
+    // Get the project ID that was just loaded
+    const projectId = await projectInspectorPage.getCurrentProjectId();
+    expect(projectId).not.toBeNull();
+
+    // Navigate to inspector for this specific project
+    await projectInspectorPage.gotoProject(parseInt(projectId!));
 
     // Verify we have a loaded project (not "No Project")
     await projectInspectorPage.verifyProjectLoaded();
@@ -115,7 +119,11 @@ test.describe('Project Inspector - Project Summary', () => {
 
     // Load the first project
     await projectSelectorPage.loadProject(0);
-    await projectInspectorPage.goto();
+    
+    // Get the project ID and navigate to inspector for this specific project
+    let projectId = await projectInspectorPage.getCurrentProjectId();
+    expect(projectId).not.toBeNull();
+    await projectInspectorPage.gotoProject(parseInt(projectId!));
 
     // Get initial statistics
     const initialStats = {
@@ -130,8 +138,10 @@ test.describe('Project Inspector - Project Summary', () => {
     await projectSelectorPage.goto();
     await projectSelectorPage.loadProject(1); // Load second project
 
-    // Return to inspector and verify statistics changed
-    await projectInspectorPage.goto();
+    // Get the new project ID and navigate to inspector for this specific project
+    projectId = await projectInspectorPage.getCurrentProjectId();
+    expect(projectId).not.toBeNull();
+    await projectInspectorPage.gotoProject(parseInt(projectId!));
 
     const newStats = {
       name: await projectInspectorPage.getProjectName(),
