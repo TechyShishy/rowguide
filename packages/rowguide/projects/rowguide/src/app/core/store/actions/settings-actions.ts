@@ -16,7 +16,6 @@
  * - `combine12`: Boolean - Whether to combine first and second rows in pattern display
  * - `lrdesignators`: Boolean - Whether to show left/right designators in pattern navigation
  * - `flammarkers`: Boolean - Whether to show First/Last Appearance Map markers
- * - `ppinspector`: Boolean - Whether to enable pattern inspector functionality
  * - `zoom`: Boolean - Whether to enable pattern zoom functionality
  * - `scrolloffset`: Number - Scroll offset for pattern navigation (pixels)
  * - `multiadvance`: Number - Number of steps to advance in multi-step navigation
@@ -84,8 +83,6 @@ export interface SettingsConfiguration {
   readonly lrdesignators: boolean;
   /** Whether to show First/Last Appearance Map markers */
   readonly flammarkers: boolean;
-  /** Whether to enable pattern inspector functionality */
-  readonly ppinspector: boolean;
   /** Whether to enable pattern zoom functionality */
   readonly zoom: boolean;
   /** Scroll offset for pattern navigation (pixels) */
@@ -288,7 +285,6 @@ export const SettingsActions = {
    *   combine12: true,
    *   lrdesignators: false,
    *   flammarkers: true,
-   *   ppinspector: true,
    *   zoom: false,
    *   scrolloffset: 10,
    *   multiadvance: 1,
@@ -426,7 +422,7 @@ export const SettingsActions = {
    *   this.store.dispatch(SettingsActions.updateColorModel(colorModel));
    * }
    * ```
-   */  
+   */
   updateColorModel: (colorModel: 'MIYUKI_DELICA' | 'NONE'): UpdateColorModelAction => ({
     type: SettingsActionTypes.UPDATE_COLOR_MODEL,
     payload: { colorModel },

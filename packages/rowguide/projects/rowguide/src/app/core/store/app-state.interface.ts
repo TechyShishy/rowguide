@@ -696,8 +696,7 @@ export interface SystemState {
  *   (settings) => ({
  *     combineTwelve: settings.combine12,
  *     showLRDesignators: settings.lrdesignators,
- *     flamMarkersEnabled: settings.flammarkers,
- *     patternInspectorEnabled: settings.ppinspector
+ *     flamMarkersEnabled: settings.flammarkers
  *   })
  * );
  * ```
@@ -784,14 +783,6 @@ export interface SettingsState {
    * ```
    */
   readonly flammarkers: boolean;
-
-  /**
-   * Pattern Progress Inspector
-   *
-   * Enables advanced pattern analysis tools including progress tracking,
-   * statistics, and detailed pattern information display.
-   */
-  readonly ppinspector: boolean;
 
   /**
    * Zoom Feature Enable
@@ -887,7 +878,7 @@ export interface SettingsState {
    *
    * **Future Extensibility:**
    * - `'TOHO'`: Toho beads prefix "T" (planned)
-   * - `'CZECH'`: Czech beads prefix "C" (planned)  
+   * - `'CZECH'`: Czech beads prefix "C" (planned)
    * - `'DMC'`: DMC thread system (planned)
    *
    * @example
@@ -1468,7 +1459,6 @@ export const createInitialState = (): AppState => ({
     combine12: false,
     lrdesignators: false,
     flammarkers: false,
-    ppinspector: false,
     zoom: false,
     scrolloffset: -1,
     multiadvance: 3,

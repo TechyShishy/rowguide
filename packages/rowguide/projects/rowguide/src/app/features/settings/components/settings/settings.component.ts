@@ -25,7 +25,6 @@ import {
   selectCombine12,
   selectLRDesignators,
   selectFlamMarkers,
-  selectPPInspector,
   selectZoom,
   selectScrollOffset,
   selectMultiAdvance,
@@ -107,12 +106,6 @@ export class SettingsComponent {
   flammarkersControl = new FormControl(false);
 
   /**
-   * Controls whether the Pretty Print Inspector tab is enabled.
-   * Provides enhanced formatting for pattern data inspection.
-   */
-  ppinspectorControl = new FormControl(false);
-
-  /**
    * Controls whether the current step is zoomed/highlighted.
    * Improves focus and visibility during pattern tracking.
    */
@@ -159,7 +152,6 @@ export class SettingsComponent {
     combine12: this.combine12Control,
     lrdesignators: this.lrdesignatorsControl,
     flammarkers: this.flammarkersControl,
-    ppinspector: this.ppinspectorControl,
     zoom: this.zoomControl,
     scrolloffset: this.scrolloffsetControl,
     multiadvance: this.multiadvanceControl,
@@ -241,7 +233,6 @@ export class SettingsComponent {
         combine12: value.combine12,
         lrdesignators: value.lrdesignators,
         flammarkers: value.flammarkers,
-        ppinspector: value.ppinspector,
         zoom: value.zoom,
         scrolloffset: value.scrolloffset,
         multiadvance: value.multiadvance,
@@ -283,9 +274,6 @@ export class SettingsComponent {
     const flammarkers = await firstValueFrom(
       this.store.select(selectFlamMarkers)
     );
-    const ppinspector = await firstValueFrom(
-      this.store.select(selectPPInspector)
-    );
     const zoom = await firstValueFrom(this.store.select(selectZoom));
     const scrolloffset = await firstValueFrom(
       this.store.select(selectScrollOffset)
@@ -300,7 +288,6 @@ export class SettingsComponent {
     this.combine12Control.setValue(combine12);
     this.lrdesignatorsControl.setValue(lrdesignators);
     this.flammarkersControl.setValue(flammarkers);
-    this.ppinspectorControl.setValue(ppinspector);
     this.zoomControl.setValue(zoom);
     this.scrolloffsetControl.setValue(scrolloffset);
     this.multiadvanceControl.setValue(multiadvance);

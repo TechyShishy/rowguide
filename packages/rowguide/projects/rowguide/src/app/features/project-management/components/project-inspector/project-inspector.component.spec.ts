@@ -61,7 +61,6 @@ describe('ProjectInspectorComponent', () => {
       combine12$: new BehaviorSubject<boolean>(false),
       lrdesignators$: new BehaviorSubject<boolean>(false),
       flammarkers$: new BehaviorSubject<boolean>(false),
-      ppinspector$: new BehaviorSubject<boolean>(false),
       zoom$: new BehaviorSubject<boolean>(false),
       scrolloffset$: new BehaviorSubject<number>(-1),
       multiadvance$: new BehaviorSubject<number>(3),
@@ -299,14 +298,14 @@ describe('ProjectInspectorComponent', () => {
     it('should load project when route parameter ID is provided', fakeAsync(() => {
       const projectId = 123;
       const mockRouteParams = new BehaviorSubject({ id: projectId.toString() });
-      
+
       // Update the ActivatedRoute mock to emit route parameters
       (mockActivatedRoute as any).params = mockRouteParams.asObservable();
 
       // Create a new component instance with the updated route
       const newFixture = TestBed.createComponent(ProjectInspectorComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       newFixture.detectChanges();
       tick();
 
@@ -316,14 +315,14 @@ describe('ProjectInspectorComponent', () => {
     it('should handle invalid project ID in route parameter', fakeAsync(() => {
       const invalidId = 'invalid';
       const mockRouteParams = new BehaviorSubject({ id: invalidId });
-      
+
       // Update the ActivatedRoute mock to emit invalid route parameters
       (mockActivatedRoute as any).params = mockRouteParams.asObservable();
 
       // Create a new component instance with the updated route
       const newFixture = TestBed.createComponent(ProjectInspectorComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       newFixture.detectChanges();
       tick();
 
@@ -336,14 +335,14 @@ describe('ProjectInspectorComponent', () => {
     it('should handle negative project ID in route parameter', fakeAsync(() => {
       const negativeId = -1;
       const mockRouteParams = new BehaviorSubject({ id: negativeId.toString() });
-      
+
       // Update the ActivatedRoute mock to emit negative route parameters
       (mockActivatedRoute as any).params = mockRouteParams.asObservable();
 
       // Create a new component instance with the updated route
       const newFixture = TestBed.createComponent(ProjectInspectorComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       newFixture.detectChanges();
       tick();
 
@@ -355,14 +354,14 @@ describe('ProjectInspectorComponent', () => {
 
     it('should use default behavior when no route parameter is provided', fakeAsync(() => {
       const mockRouteParams = new BehaviorSubject({});
-      
+
       // Update the ActivatedRoute mock to emit no route parameters
       (mockActivatedRoute as any).params = mockRouteParams.asObservable();
 
       // Create a new component instance with the updated route
       const newFixture = TestBed.createComponent(ProjectInspectorComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       newFixture.detectChanges();
       tick();
 
@@ -375,7 +374,7 @@ describe('ProjectInspectorComponent', () => {
       const projectId = 123;
       const mockRouteParams = new BehaviorSubject({ id: projectId.toString() });
       const loadError = new Error('Project not found');
-      
+
       // Update the ActivatedRoute mock and make loadProject fail
       (mockActivatedRoute as any).params = mockRouteParams.asObservable();
       (mockProjectService.loadProject as jasmine.Spy).and.returnValue(Promise.reject(loadError));
@@ -383,7 +382,7 @@ describe('ProjectInspectorComponent', () => {
       // Create a new component instance with the updated route
       const newFixture = TestBed.createComponent(ProjectInspectorComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       newFixture.detectChanges();
       tick();
 

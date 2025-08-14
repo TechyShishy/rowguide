@@ -3,17 +3,11 @@
     <mat-card-title>Project Summary</mat-card-title>
     <mat-card-content>
       <mat-list>
-        <ng-template [ngIf]="!(settingsService.ppinspector$ | async)">
-          <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
-          <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
-        </ng-template>
-        <ng-template [ngIf]="settingsService.ppinspector$ | async">
-          <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
-          <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
-          <mat-list-item>Columns: {{getLongestRow() | async}}</mat-list-item>
-          <mat-list-item>Beads: {{getTotalBeads() | async}}</mat-list-item>
-          <mat-list-item>Colors: {{getTotalColors() | async}}</mat-list-item>
-        </ng-template>
+        <mat-list-item>Name: {{(projectService.project$ | async)?.name || 'No Project'}}</mat-list-item>
+        <mat-list-item>Rows: {{(projectService.project$ | async)?.rows?.length || 0}}</mat-list-item>
+        <mat-list-item>Columns: {{getLongestRow() | async}}</mat-list-item>
+        <mat-list-item>Beads: {{getTotalBeads() | async}}</mat-list-item>
+        <mat-list-item>Colors: {{getTotalColors() | async}}</mat-list-item>
       </mat-list>
     </mat-card-content>
   </mat-card>
@@ -21,14 +15,8 @@
     <mat-card-title>Saved Position</mat-card-title>
     <mat-card-content>
       <mat-list>
-        <ng-template [ngIf]="!(settingsService.ppinspector$ | async)">
-          <mat-list-item>{{ (projectService.project$ | async)?.position?.row ?? 0 }}, {{ (projectService.project$ |
-            async)?.position?.step ?? 0 }}</mat-list-item>
-        </ng-template>
-        <ng-template [ngIf]="settingsService.ppinspector$ | async">
-          <mat-list-item>Row: {{ getDisplayRow() | async }}</mat-list-item>
-          <mat-list-item>Step: {{ getDisplayStep() | async }}</mat-list-item>
-        </ng-template>
+        <mat-list-item>Row: {{ getDisplayRow() | async }}</mat-list-item>
+        <mat-list-item>Step: {{ getDisplayStep() | async }}</mat-list-item>
       </mat-list>
       <button mat-raised-button color="warn" (click)="resetPosition()">Reset Position</button>
     </mat-card-content>

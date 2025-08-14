@@ -7,19 +7,6 @@ test.describe('Project Inspector - Project Summary', () => {
     const testProjects = TestDataFactory.createMultipleProjects(3);
     await TestDbUtils.seedProjectData(page, testProjects);
 
-    // First enable the expanded inspector view to see all statistics
-    await settingsPage.goto();
-
-    // Check current state and ensure ppinspector is enabled
-    const isCurrentlyEnabled = await settingsPage.isPPInspectorEnabled();
-    if (!isCurrentlyEnabled) {
-      await settingsPage.togglePPInspector();
-    }
-
-    // Verify it's now enabled
-    const isNowEnabled = await settingsPage.isPPInspectorEnabled();
-    expect(isNowEnabled).toBe(true);
-
     // Navigate to project inspector
     await projectInspectorPage.goto();
   });
@@ -28,15 +15,10 @@ test.describe('Project Inspector - Project Summary', () => {
     // Verify the project summary card is visible
     await expect(projectInspectorPage.summaryCardLocator).toBeVisible();
 
-    // After enabling ppinspector in beforeEach, the expanded summary MUST be visible
-    await expect(projectInspectorPage.isExpandedSummaryVisible()).resolves.toBe(true);
-
     // Get the basic items that should always be visible
     const summaryItems = projectInspectorPage.summaryItemLocators;
     await expect(summaryItems.name).toBeVisible();
     await expect(summaryItems.rows).toBeVisible();
-
-    // Since ppinspector is enabled, all expanded items MUST be visible
     await expect(summaryItems.columns).toBeVisible();
     await expect(summaryItems.beads).toBeVisible();
     await expect(summaryItems.colors).toBeVisible();
@@ -80,9 +62,6 @@ test.describe('Project Inspector - Project Summary', () => {
     // Verify we have a loaded project (not "No Project")
     await projectInspectorPage.verifyProjectLoaded();
 
-    // After enabling ppinspector in beforeEach, expanded view MUST be visible
-    await expect(projectInspectorPage.isExpandedSummaryVisible()).resolves.toBe(true);
-
     // Get basic statistics that should always be available
     const projectName = await projectInspectorPage.getProjectName();
     const rowCount = await projectInspectorPage.getProjectRowCount();
@@ -119,7 +98,7 @@ test.describe('Project Inspector - Project Summary', () => {
 
     // Load the first project
     await projectSelectorPage.loadProject(0);
-    
+
     // Get the project ID and navigate to inspector for this specific project
     let projectId = await projectInspectorPage.getCurrentProjectId();
     expect(projectId).not.toBeNull();
@@ -166,9 +145,6 @@ test.describe('Project Inspector - Project Summary', () => {
     // Navigate directly to inspector (should show default/empty state)
     await projectInspectorPage.goto();
 
-    // After enabling ppinspector in beforeEach, expanded view MUST be visible
-    await expect(projectInspectorPage.isExpandedSummaryVisible()).resolves.toBe(true);
-
     // Test that all our getter methods return valid numbers even for empty project
     const projectName = await projectInspectorPage.getProjectName();
     const rowCount = await projectInspectorPage.getProjectRowCount();
@@ -195,9 +171,6 @@ test.describe('Project Inspector - Project Summary', () => {
 
   test('should handle missing or invalid project data gracefully', async ({ projectInspectorPage }) => {
     await projectInspectorPage.goto();
-
-    // After enabling ppinspector in beforeEach, expanded view MUST be visible
-    await expect(projectInspectorPage.isExpandedSummaryVisible()).resolves.toBe(true);
 
     // Test that all our getter methods return valid numbers even in edge cases
     const columnCount = await projectInspectorPage.getProjectColumnCount();

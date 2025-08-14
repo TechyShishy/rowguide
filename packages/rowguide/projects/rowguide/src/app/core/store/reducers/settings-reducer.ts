@@ -53,7 +53,6 @@ import { SettingsAction, SettingsActionTypes } from '../actions/settings-actions
  *   combine12: false,        // Combine first and second rows
  *   lrdesignators: false,    // Show left/right designators
  *   flammarkers: false,      // Show FLAM markers
- *   ppinspector: false,      // Pattern inspector enabled
  *   zoom: false,             // Zoom functionality enabled
  *   scrolloffset: -1,        // Scroll offset (pixels)
  *   multiadvance: 3,         // Multi-step advance count
@@ -68,7 +67,6 @@ const initialSettingsState: SettingsState = {
   combine12: false,
   lrdesignators: false,
   flammarkers: false,
-  ppinspector: false,
   zoom: false,
   scrolloffset: -1,
   multiadvance: 3,
@@ -202,7 +200,7 @@ export function settingsReducer(
        *   type: 'UPDATE_COLOR_MODEL',
        *   payload: { colorModel: 'MIYUKI_DELICA' }
        * };
-       * 
+       *
        * // State transition
        * const newState = settingsReducer(state, action);
        * // newState.colorModel === 'MIYUKI_DELICA'

@@ -127,7 +127,7 @@ export class ProjectInspectorPage extends BasePage {
       const match = columnsText?.match(/Columns: (\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     } catch {
-      // Element not found (ppinspector disabled)
+      // Element not found or not loaded yet
       return 0;
     }
   }
@@ -141,7 +141,7 @@ export class ProjectInspectorPage extends BasePage {
       const match = beadsText?.match(/Beads: (\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     } catch {
-      // Element not found (ppinspector disabled)
+      // Element not found or not loaded yet
       return 0;
     }
   }
@@ -155,7 +155,7 @@ export class ProjectInspectorPage extends BasePage {
       const match = colorsText?.match(/Colors: (\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     } catch {
-      // Element not found (ppinspector disabled)
+      // Element not found or not loaded yet
       return 0;
     }
   }

@@ -80,7 +80,6 @@ function createMockAppState(overrides: {
     combine12: false,
     lrdesignators: false,
     flammarkers: false,
-    ppinspector: false,
     zoom: false,
     scrolloffset: -1,
     multiadvance: 3,
@@ -133,7 +132,7 @@ describe('MarkModeService', () => {
   beforeEach(() => {
     // Create spy for ReactiveStateStore with stateful behavior using BehaviorSubject
     const storeSpyObj = jasmine.createSpyObj('ReactiveStateStore', ['select', 'dispatch', 'getState']);
-    
+
     // Create spies for logger, error handler, and project database
     const loggerSpyObj = jasmine.createSpyObj('NGXLogger', ['debug', 'warn', 'error']);
     const errorHandlerSpyObj = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
@@ -196,7 +195,7 @@ describe('MarkModeService', () => {
       if (selector === selectCurrentProject) {
         return mockProjectState.asObservable();
       }
-      
+
       return mockMarkModeState.pipe(
         map(state => {
           // Apply selector function to current state
@@ -530,7 +529,6 @@ describe('MarkModeService', () => {
           combine12: false,
           lrdesignators: false,
           flammarkers: false,
-          ppinspector: false,
           zoom: false,
           scrolloffset: -1,
           multiadvance: 3,
@@ -599,7 +597,6 @@ describe('MarkModeService', () => {
           combine12: false,
           lrdesignators: false,
           flammarkers: false,
-          ppinspector: false,
           zoom: false,
           scrolloffset: -1,
           multiadvance: 3,
@@ -668,7 +665,6 @@ describe('MarkModeService', () => {
           combine12: false,
           lrdesignators: false,
           flammarkers: false,
-          ppinspector: false,
           zoom: false,
           scrolloffset: -1,
           multiadvance: 3,
@@ -740,7 +736,6 @@ describe('MarkModeService', () => {
           combine12: false,
           lrdesignators: false,
           flammarkers: false,
-          ppinspector: false,
           zoom: false,
           scrolloffset: -1,
           multiadvance: 3,

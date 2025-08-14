@@ -11,7 +11,6 @@ import {
   selectCombine12,
   selectLRDesignators,
   selectFlamMarkers,
-  selectPPInspector,
   selectZoom,
   selectScrollOffset,
   selectMultiAdvance,
@@ -52,7 +51,6 @@ describe('SettingsService', () => {
       combine12: false,
       lrdesignators: false,
       flammarkers: false,
-      ppinspector: false,
       zoom: false,
       scrolloffset: -1,
       multiadvance: 3,
@@ -144,7 +142,6 @@ describe('SettingsService', () => {
       combine12: false,
       lrdesignators: false,
       flammarkers: false,
-      ppinspector: false,
       zoom: false,
       scrolloffset: -1,
       multiadvance: 3,
@@ -184,7 +181,6 @@ describe('SettingsService', () => {
           if (selector === selectCombine12) return state.combine12;
           if (selector === selectLRDesignators) return state.lrdesignators;
           if (selector === selectFlamMarkers) return state.flammarkers;
-          if (selector === selectPPInspector) return state.ppinspector;
           if (selector === selectZoom) return state.zoom;
           if (selector === selectScrollOffset) return state.scrolloffset;
           if (selector === selectMultiAdvance) return state.multiadvance;
@@ -211,7 +207,6 @@ describe('SettingsService', () => {
       combine12: false,
       lrdesignators: false,
       flammarkers: false,
-      ppinspector: false,
       zoom: false,
       scrolloffset: -1,
       multiadvance: 3,
@@ -241,7 +236,6 @@ describe('SettingsService', () => {
       expect(service.combine12$).toBeDefined();
       expect(service.lrdesignators$).toBeDefined();
       expect(service.flammarkers$).toBeDefined();
-      expect(service.ppinspector$).toBeDefined();
       expect(service.zoom$).toBeDefined();
       expect(service.scrolloffset$).toBeDefined();
       expect(service.multiadvance$).toBeDefined();
@@ -254,7 +248,6 @@ describe('SettingsService', () => {
       await expectObservableValue(service.combine12$, false);
       await expectObservableValue(service.lrdesignators$, false);
       await expectObservableValue(service.flammarkers$, false);
-      await expectObservableValue(service.ppinspector$, false);
       await expectObservableValue(service.zoom$, false);
       await expectObservableValue(service.scrolloffset$, -1);
       await expectObservableValue(service.multiadvance$, 3);
@@ -318,7 +311,6 @@ describe('SettingsService', () => {
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
-        ppinspector: true,
         zoom: true,
         scrolloffset: 0,
       });
@@ -342,7 +334,6 @@ describe('SettingsService', () => {
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
-        ppinspector: true,
         zoom: true,
       });
 
@@ -352,7 +343,6 @@ describe('SettingsService', () => {
       expect(savedSettings.combine12).toBe(true);
       expect(savedSettings.lrdesignators).toBe(true);
       expect(savedSettings.flammarkers).toBe(true);
-      expect(savedSettings.ppinspector).toBe(true);
       expect(savedSettings.zoom).toBe(true);
     });
 
@@ -361,7 +351,6 @@ describe('SettingsService', () => {
         combine12: false,
         lrdesignators: false,
         flammarkers: false,
-        ppinspector: false,
         zoom: false,
       });
 
@@ -371,7 +360,6 @@ describe('SettingsService', () => {
       expect(savedSettings.combine12).toBe(false);
       expect(savedSettings.lrdesignators).toBe(false);
       expect(savedSettings.flammarkers).toBe(false);
-      expect(savedSettings.ppinspector).toBe(false);
       expect(savedSettings.zoom).toBe(false);
     });
 
@@ -470,7 +458,6 @@ describe('SettingsService', () => {
         combine12: true,
         lrdesignators: true,
         flammarkers: true,
-        ppinspector: true,
         zoom: true,
       });
       service.saveSettings(settings);

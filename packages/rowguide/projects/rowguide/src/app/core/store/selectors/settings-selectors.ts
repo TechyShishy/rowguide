@@ -85,13 +85,13 @@ const createSelector = <T, R>(
 
   return (state: AppState): R => {
     const currentDependency = dependency(state);
-    
+
     if (!hasComputed || currentDependency !== lastDependency) {
       lastDependency = currentDependency;
       lastResult = transform(currentDependency);
       hasComputed = true;
     }
-    
+
     return lastResult;
   };
 };
@@ -152,17 +152,6 @@ export const selectLRDesignators = (state: AppState): boolean => state.settings.
  * @returns Boolean indicating if FLAM markers are visible
  */
 export const selectFlamMarkers = (state: AppState): boolean => state.settings.flammarkers;
-
-/**
- * Pattern Progress Inspector Selector
- *
- * Selects enablement of advanced pattern analysis and progress tracking tools.
- * Controls availability of detailed pattern statistics and inspection features.
- *
- * @param state - Application state tree
- * @returns Boolean indicating if pattern inspector is enabled
- */
-export const selectPPInspector = (state: AppState): boolean => state.settings.ppinspector;
 
 /**
  * Zoom Feature Availability Selector
@@ -242,14 +231,14 @@ export const selectSettingsReady = (state: AppState): boolean => state.settings.
  * ```typescript
  * // Component subscription
  * this.colorModel$ = this.store.select(selectColorModel);
- * 
+ *
  * // Usage in component
  * this.colorModel$.subscribe(model => {
  *   this.autoPrefix = model !== 'NONE';
  * });
  * ```
  */
-export const selectColorModel = (state: AppState): 'MIYUKI_DELICA' | 'NONE' => 
+export const selectColorModel = (state: AppState): 'MIYUKI_DELICA' | 'NONE' =>
   state.settings.colorModel;
 
 /**
@@ -348,7 +337,6 @@ export const selectAllSettings = (state: AppState) => ({
   combine12: state.settings.combine12,
   lrdesignators: state.settings.lrdesignators,
   flammarkers: state.settings.flammarkers,
-  ppinspector: state.settings.ppinspector,
   zoom: state.settings.zoom,
   scrolloffset: state.settings.scrolloffset,
   multiadvance: state.settings.multiadvance,
@@ -420,7 +408,6 @@ export const selectHasValidSettings = (state: AppState): boolean => {
     typeof settings.combine12 === 'boolean' &&
     typeof settings.lrdesignators === 'boolean' &&
     typeof settings.flammarkers === 'boolean' &&
-    typeof settings.ppinspector === 'boolean' &&
     typeof settings.zoom === 'boolean' &&
     typeof settings.scrolloffset === 'number' &&
     typeof settings.multiadvance === 'number' &&

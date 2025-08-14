@@ -9,7 +9,6 @@ import {
   selectCombine12,
   selectLRDesignators,
   selectFlamMarkers,
-  selectPPInspector,
   selectZoom,
   selectScrollOffset,
   selectMultiAdvance,
@@ -34,7 +33,7 @@ import {
  *
  * Settings Categories:
  * - Display: combine12, lrdesignators, flammarkers, zoom
- * - Analysis: ppinspector, flamsort, projectsort
+ * - Analysis: flamsort, projectsort
  * - Navigation: scrolloffset, multiadvance
  *
  * @example
@@ -90,12 +89,6 @@ export class SettingsService {
   public flammarkers$ = this.store.select(selectFlamMarkers);
 
   /**
-   * Observable for pattern preview inspector setting.
-   * Enables/disables the detailed pattern analysis inspector panel.
-   */
-  public ppinspector$ = this.store.select(selectPPInspector);
-
-  /**
    * Observable for zoom functionality setting.
    * Controls whether zoom features are enabled for detailed pattern viewing.
    */
@@ -146,7 +139,7 @@ export class SettingsService {
     private store: ReactiveStateStore
   ) {
     this.loadSettings();
-    
+
     // Automatically persist settings changes to localStorage
     this.store.select(selectSettingsForPersistence).subscribe(settings => {
       this.persistToStorage(settings);
@@ -156,7 +149,7 @@ export class SettingsService {
   /**
    * Persists settings to localStorage only (no Redux dispatch).
    * Used internally for automatic persistence subscription.
-   * 
+   *
    * @private
    * @param settings - Settings object to persist
    */
@@ -166,7 +159,7 @@ export class SettingsService {
       if (!settings) {
         return;
       }
-      
+
       // Persist complete settings object to localStorage
       localStorage.setItem('settings', JSON.stringify(settings));
     } catch (error) {
@@ -271,7 +264,6 @@ export class SettingsService {
             combine12: s.combine12 ?? false,
             lrdesignators: s.lrdesignators ?? false,
             flammarkers: s.flammarkers ?? false,
-            ppinspector: s.ppinspector ?? false,
             zoom: s.zoom ?? false,
             scrolloffset: s.scrolloffset ?? -1,
             multiadvance: s.multiadvance ?? 3,
@@ -361,13 +353,6 @@ export class Settings {
    * Default: false (no FLAM markers)
    */
   flammarkers: boolean = false;
-
-  /**
-   * Whether to enable the pattern preview inspector.
-   * Provides detailed analysis and preview capabilities.
-   * Default: false (inspector disabled)
-   */
-  ppinspector: boolean = false;
 
   /**
    * Whether zoom functionality is enabled.

@@ -39,8 +39,7 @@ describe('FlamAnalysisComponent', () => {
       'updateSettings'
     ], {
       flamsort$: of('keyAsc'),
-      colorModelPrefix$: of('DB'),
-      ppinspector$: of(true)
+      colorModelPrefix$: of('DB')
     });
 
     mockReactiveStateStore = jasmine.createSpyObj('ReactiveStateStore', [
@@ -106,10 +105,10 @@ describe('FlamAnalysisComponent', () => {
 
     fixture = TestBed.createComponent(FlamAnalysisComponent);
     component = fixture.componentInstance;
-    
+
     // Spy on subscribeToFlamUpdates to prevent it from being called during route parameter tests
     spyOn(component as any, 'subscribeToFlamUpdates');
-    
+
     // Don't call fixture.detectChanges() here - let individual tests control when ngOnInit is called
   });
 
@@ -140,17 +139,17 @@ describe('FlamAnalysisComponent', () => {
       mockLogger.debug?.calls?.reset();
       mockLogger.warn?.calls?.reset();
       mockErrorHandler.handleError?.calls?.reset();
-      
+
       // Reset route params to empty
       mockRouteParamsSubject.next({});
     });
 
     it('should load project when route parameter ID is provided', fakeAsync(() => {
       const projectId = 123;
-      
+
       // Emit route params with project ID before ngOnInit
       mockRouteParamsSubject.next({ id: projectId.toString() });
-      
+
       // Trigger ngOnInit by calling detectChanges
       fixture.detectChanges();
       tick();
@@ -163,10 +162,10 @@ describe('FlamAnalysisComponent', () => {
 
     it('should handle invalid project ID in route parameter', fakeAsync(() => {
       const invalidId = 'invalid';
-      
+
       // Emit route params with invalid ID before ngOnInit
       mockRouteParamsSubject.next({ id: invalidId });
-      
+
       // Trigger ngOnInit by calling detectChanges
       fixture.detectChanges();
       tick();
@@ -189,7 +188,7 @@ describe('FlamAnalysisComponent', () => {
 
       // Emit empty route params (no ID parameter) before ngOnInit
       mockRouteParamsSubject.next({});
-      
+
       // Trigger ngOnInit by calling detectChanges
       fixture.detectChanges();
       tick();
