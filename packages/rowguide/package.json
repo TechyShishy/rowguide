@@ -10,7 +10,7 @@
     "test": "yarn run test:unit && yarn run test:e2e",
     "test:unit": "ng test --watch=false --browsers=ChromeHeadless",
     "test:unit:headed": "ng test --watch=false --browsers=Chrome",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --reporter=line",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
