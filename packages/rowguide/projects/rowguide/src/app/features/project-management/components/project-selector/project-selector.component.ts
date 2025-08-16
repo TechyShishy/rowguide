@@ -31,6 +31,7 @@ import { SettingsActions } from '../../../../core/store/actions/settings-actions
 import { selectProjectSort } from '../../../../core/store/selectors/settings-selectors';
 import { ProjectDbService } from '../../../../data/services';
 import { BeadtoolPdfService, XlsmPdfService } from '../../../file-import/loaders';
+import { CrochetPatternService } from '../../../file-import/loaders/crochet-pattern.service';
 import { ProjectService } from '../../services';
 import { ProjectSummaryComponent } from '../project-summary/project-summary.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -151,6 +152,7 @@ export class ProjectSelectorComponent {
     private flamService: FlamService,
     private beadtoolPdfService: BeadtoolPdfService,
     private xlsmPdfService: XlsmPdfService,
+    private crochetPatternService: CrochetPatternService,
     private router: Router,
     private notificationService: NotificationService,
     private settingsService: SettingsService,
@@ -273,9 +275,20 @@ export class ProjectSelectorComponent {
     }
 
     return project$.pipe(
-      tap((project) => {
+      tap(async (project) => {
         this.store.dispatch(ProjectActions.updateProjectSuccess(project));
-        this.indexedDBService.updateProject(project);
+
+        // If project doesn't have an ID, add it to get one, otherwise update
+        if (!project.id) {
+          const projectId = await this.indexedDBService.addProject(project);
+          if (projectId) {
+            project.id = projectId;
+            this.store.dispatch(ProjectActions.updateProjectSuccess(project));
+          }
+        } else {
+          this.indexedDBService.updateProject(project);
+        }
+
         this.router.navigate(['project', { id: project.id }]);
       })
     );
@@ -536,7 +549,19 @@ export class ProjectSelectorComponent {
   importRgsFile(file: File) {
     return from(this.file.text()).pipe(
       switchMap((data) => {
-        return from(this.projectService.loadPeyote(file.name, data));
+        // Detect pattern type based on content
+        const patternType = this.detectPatternType(data);
+
+        if (patternType === 'crochet') {
+          this.logger.debug('Crochet pattern detected, using CrochetPatternService');
+          // Use the service directly since it follows the loader interface
+          const project = this.crochetPatternService.toProject(data);
+          project.name = file.name.replace(/\.[^/.]+$/, ''); // Remove file extension
+          return of(project);
+        } else {
+          this.logger.debug('Peyote pattern detected, using PeyoteShorthandService');
+          return from(this.projectService.loadPeyote(file.name, data));
+        }
       }),
       map((project) => {
         project.firstLastAppearanceMap = this.flamService.generateFLAM(
@@ -641,5 +666,56 @@ export class ProjectSelectorComponent {
         });
       })
     );
+  }
+
+  /**
+   * Detects pattern type based on content analysis.
+   *
+   * Analyzes pattern text to determine format:
+   * - Crochet: Row-based instructions with crochet terminology
+   * - Peyote: Bead sequences and color codes
+   *
+   * @private
+   * @param data - Raw pattern text content
+   * @returns Pattern type ('crochet' or 'peyote')
+   */
+  private detectPatternType(data: string): 'crochet' | 'peyote' {
+    const content = data.toLowerCase();
+    
+    // Crochet pattern indicators
+    const crochetIndicators = [
+      /row\s+\d+\s*[:\-–]\s*(?!.*[a-z]\d+[a-z])/i, // "Row 1:" or "Row 1 –" but not "Row 1: 8DBM" (peyote style)
+      /ch\s*\d+/i,          // Chain stitches (Ch 4, Ch4)
+      /sc\s*\d*\s/i,        // Single crochet
+      /dc\s*\d*\s/i,        // Double crochet  
+      /tr\s*\d*\s/i,        // Treble crochet
+      /hdc\s*\d*\s/i,       // Half double crochet
+      /sl\s*st/i,           // Slip stitch
+      /magic\s*circle/i,    // Magic circle
+      /\*.*\*\s*x\s*\d+/i,  // Repetition patterns (*...* x5)
+      /\([^)]*count[^)]*\)/i // Parenthetical notes about counting
+    ];
+    
+    // Check for crochet indicators
+    const crochetScore = crochetIndicators.reduce((score, pattern) => {
+      return score + (pattern.test(content) ? 1 : 0);
+    }, 0);
+    
+    // Peyote pattern indicators  
+    const peyoteIndicators = [
+      /\b[a-z]\d+[a-z]\b/i,    // Bead codes like "8DBM", "2LB"
+      /\b\d+[A-Z]\b/i,         // Count+color like "6A", "4B" (uppercase only to avoid crochet)
+      /\b[A-Z]\d+\b/i,         // Color+count like "A6", "B4" (uppercase only to avoid crochet)
+      /,\s*\d+[A-Z]\b/i,       // Comma separated "6A, 4B" (uppercase only)
+      /row\s+\d+\s*:\s*\d*[a-z]+\d+/i // "Row 1: 8DBM" style
+    ];
+    
+    const peyoteScore = peyoteIndicators.reduce((score, pattern) => {
+      return score + (pattern.test(content) ? 1 : 0);
+    }, 0);
+    
+    // Decision logic: crochet wins if it has more indicators
+    const result = crochetScore > peyoteScore ? 'crochet' : 'peyote';
+    return result;
   }
 }

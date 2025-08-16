@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSelectorComponent } from './project-selector.component';
 import { ProjectService } from '../../services';
 import { ProjectDbService } from '../../../../data/services/project-db.service';
-import { BeadtoolPdfService, XlsmPdfService } from '../../../file-import/loaders';
+import { BeadtoolPdfService, XlsmPdfService, CrochetPatternService } from '../../../file-import/loaders';
 import { FlamService } from '../../../../core/services';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -20,6 +20,7 @@ describe('ProjectSelectorComponent', () => {
   let indexedDBServiceSpy: jasmine.SpyObj<ProjectDbService>;
   let beadtoolPdfServiceSpy: jasmine.SpyObj<BeadtoolPdfService>;
   let xlsmPdfServiceSpy: jasmine.SpyObj<XlsmPdfService>;
+  let crochetPatternServiceSpy: jasmine.SpyObj<CrochetPatternService>;
   let flamServiceSpy: jasmine.SpyObj<FlamService>;
 
   beforeEach(async () => {
@@ -40,6 +41,9 @@ describe('ProjectSelectorComponent', () => {
       'loadDocument',
       'renderFrontPage',
     ]);
+    crochetPatternServiceSpy = jasmine.createSpyObj('CrochetPatternService', [
+      'toProject',
+    ]);
     flamServiceSpy = jasmine.createSpyObj('FlamService', [
       'inititalizeFLAM',
       'generateFLAM',
@@ -56,6 +60,7 @@ describe('ProjectSelectorComponent', () => {
         { provide: ProjectDbService, useValue: indexedDBServiceSpy },
         { provide: BeadtoolPdfService, useValue: beadtoolPdfServiceSpy },
         { provide: XlsmPdfService, useValue: xlsmPdfServiceSpy },
+        { provide: CrochetPatternService, useValue: crochetPatternServiceSpy },
         { provide: FlamService, useValue: flamServiceSpy },
         provideRouter(routes),
       ],
