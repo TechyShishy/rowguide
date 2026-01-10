@@ -155,67 +155,67 @@ export class BeadtoolPdfService {
           }).promise
         );
       }),
-        switchMap((pdfDoc: PDFDocumentProxy) => {
-          const pageObservables: Observable<string>[] = [];
+      switchMap((pdfDoc: PDFDocumentProxy) => {
+        const pageObservables: Observable<string>[] = [];
 
-          for (let i = 1; i <= pdfDoc.numPages; i++) {
-            pageObservables.push(this.extractAndCleanPageText(pdfDoc, i));
-          }
-          return forkJoin(pageObservables);
-        }),
-        map((texts: string[]) => texts.join('\n')),
-        tap((text) => this.logger.trace('PDF text:', text)),
-        map((text: string) => this.sanitizeTextContent(text)),
-        map((text: string) => this.cleanText(text)),
-        map((replaceText: string): string => {
-          const match1 = replaceText.match(
-            /((?:Row 1&2 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
-          );
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          pageObservables.push(this.extractAndCleanPageText(pdfDoc, i));
+        }
+        return forkJoin(pageObservables);
+      }),
+      map((texts: string[]) => texts.join('\n')),
+      tap((text) => this.logger.trace('PDF text:', text)),
+      map((text: string) => this.sanitizeTextContent(text)),
+      map((text: string) => this.cleanText(text)),
+      map((text: string) => this.joinContinuationLines(text)),
+      map((replaceText: string): string => {
+        const match1 = replaceText.match(
+          /((?:Row 1&2 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
+        );
 
-          if (match1 && match1[1]) {
-            return match1[1];
-          }
+        if (match1 && match1[1]) {
+          return match1[1];
+        }
 
-          const match2 = replaceText.match(
-            /((?:Row 1 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
-          );
-          if (match2 && match2[1]) {
-            return match2[1];
-          }
+        const match2 = replaceText.match(
+          /((?:Row 1 \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)(?:Row \d+ \([LR]\) (?:\(\d+\)\w+(?:,\s+)?)+\n?)+)/s
+        );
+        if (match2 && match2[1]) {
+          return match2[1];
+        }
 
-          return '';
-        }),
-        map((text: string): string => text.trim()),
-        catchError((error: any): Observable<string> => {
-          // Enhanced error handling with validation error reporting - Integration Point 3
-          const errorContext = {
-            operation: 'loadDocument',
-            details: 'Failed to process PDF document',
-            fileName: file?.name,
-            fileSize: file?.size,
-            fileType: file?.type,
-          };
+        return '';
+    }),
+    map((text: string): string => text.trim()),
+    catchError((error: any): Observable<string> => {
+        // Enhanced error handling with validation error reporting - Integration Point 3
+        const errorContext = {
+          operation: 'loadDocument',
+          details: 'Failed to process PDF document',
+          fileName: file?.name,
+          fileSize: file?.size,
+          fileType: file?.type,
+        };
 
-          // Check if this is a validation-related error
-          if (error.message && error.message.includes('Invalid file')) {
-            errorContext.details =
-              'File validation failed during PDF processing';
+        // Check if this is a validation-related error
+        if (error.message && error.message.includes('Invalid file')) {
+          errorContext.details = 'File validation failed during PDF processing';
 
-            // Log validation event to DataIntegrityService
-            this.dataIntegrity.getRecentEvents(1).forEach((event) => {
-              this.logger.warn('DataIntegrityService validation event:', event);
-            });
-          }
+          // Log validation event to DataIntegrityService
+          this.dataIntegrity.getRecentEvents(1).forEach((event) => {
+            this.logger.warn('DataIntegrityService validation event:', event);
+          });
+        }
 
-          this.errorHandler.handleError(
-            error,
-            errorContext,
-            'Unable to process the PDF file. Please check that the file is not corrupted.',
-            'high'
-          );
-          return throwError(() => error);
-        })
-    );
+        this.errorHandler.handleError(
+          error,
+          errorContext,
+          'Unable to process the PDF file. Please check that the file is not corrupted.',
+          'high'
+        );
+        return throwError(() => error);
+      })
+    ) as Observable<string>;
   }
 
   /**
@@ -341,7 +341,7 @@ export class BeadtoolPdfService {
    * Clean extracted text by removing formatting artifacts
    *
    * Removes BeadTool specific formatting artifacts, asterisk patterns,
-   * and normalizes line breaks for better pattern parsing.
+   * and page headers.
    *
    * @private
    * @param {string} text - Raw extracted text
@@ -350,13 +350,44 @@ export class BeadtoolPdfService {
    * @example
    * ```typescript
    * // Internal usage during text processing
-   * const rawText = '***Pattern Name*** Row 1 (L) (3)A,\n\n(2)B';
+   * const rawText = '***Pattern Name*** Word Chart (Peyote) Row 1 (L) (3)A';
    * const cleaned = this.cleanText(rawText);
-   * // cleaned = 'Row 1 (L) (3)A, (2)B'
+   * // cleaned = 'Row 1 (L) (3)A'
    * ```
    */
   private cleanText(text: string): string {
-    return text.replace(/\*\*\*.*\*\*\*/g, '').replace(/,\n+/g, ', ');
+    return text
+      .replace(/\*\*\*.*\*\*\*/g, '')
+      // Remove page headers that appear in pattern PDFs
+      .replace(/Word Chart \(Peyote\)/g, '');
+  }
+
+  /**
+   * Join continuation lines in pattern text
+   *
+   * Handles row continuations across page boundaries by joining lines that
+   * are split either with or without trailing commas. This is essential for
+   * multi-page PDFs where rows can span page breaks.
+   *
+   * @private
+   * @param {string} text - Text with potential line breaks in rows
+   * @returns {string} Text with continuation lines properly joined
+   *
+   * @example
+   * ```typescript
+   * // Internal usage during text processing
+   * const text = 'Row 1 (L) (3)A,\n(2)B\n(3)C';
+   * const joined = this.joinContinuationLines(text);
+   * // joined = 'Row 1 (L) (3)A, (2)B, (3)C'
+   * ```
+   */
+  private joinContinuationLines(text: string): string {
+    return text
+      // Join lines ending with comma
+      .replace(/,\n+/g, ', ')
+      // Join continuation lines that start with step notation (number)(letter)
+      // This handles cases where a row continues on next line without trailing comma
+      .replace(/\n+(?=\(\d+\)\w)/g, ', ');
   }
 
   /**
