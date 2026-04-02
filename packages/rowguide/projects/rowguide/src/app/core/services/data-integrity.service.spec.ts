@@ -110,15 +110,21 @@ describe('DataIntegrityService', () => {
       expect(result.cleanValue).toBe('ProjectName');
     });
 
-    it('should handle file system unsafe characters', () => {
-      const unsafeName = 'Project<>:"/\\|?*Name';
-      const result: ValidationResult = service.validateProjectName(unsafeName);
+    it('should allow characters that are valid in project names but not file paths', () => {
+      const namesWithSpecialChars = [
+        'Bulba/Ivy/Venusaur',
+        'Project: Version 2',
+        'Pattern <Summer>',
+        'Name|Variant',
+        'Design*Final',
+      ];
 
-      expect(result.isValid).toBe(false);
-      expect(result.issues).toContain(
-        'Removed characters that could cause file system issues'
-      );
-      expect(result.cleanValue).toBe('Project_________Name');
+      namesWithSpecialChars.forEach((name) => {
+        const result: ValidationResult = service.validateProjectName(name);
+        expect(result.isValid).toBe(true);
+        expect(result.issues.length).toBe(0);
+        expect(result.cleanValue).toBe(name);
+      });
     });
 
     it('should handle non-string input gracefully', () => {
@@ -316,20 +322,16 @@ describe('DataIntegrityService', () => {
       expect(events.length).toBeLessThanOrEqual(50);
     });
 
-    it('should focus on data integrity over web security', () => {
-      // Should accept content that would be dangerous on web but fine locally
-      const webUnsafeButLocallyFine =
+    it('should allow characters with no real data integrity risk in IndexedDB storage', () => {
+      // Angular templates auto-escape interpolated values, so < > do not pose XSS risk.
+      // This is an IndexedDB browser app — file system path restrictions do not apply.
+      const nameWithAngleBrackets =
         'Project <script>alert("test")</script> Name';
-      const result = service.validateProjectName(webUnsafeButLocallyFine);
+      const result = service.validateProjectName(nameWithAngleBrackets);
 
-      // Should block this because < > are file system unsafe characters, not because of XSS
-      expect(result.isValid).toBe(false);
-      expect(result.issues).toContain(
-        'Removed characters that could cause file system issues'
-      );
-      expect(result.cleanValue).toBe(
-        'Project _script_alert(_test_)__script_ Name'
-      );
+      expect(result.isValid).toBe(true);
+      expect(result.issues.length).toBe(0);
+      expect(result.cleanValue).toBe(nameWithAngleBrackets);
     });
   });
 });

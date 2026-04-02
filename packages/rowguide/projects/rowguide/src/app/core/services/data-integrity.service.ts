@@ -187,8 +187,7 @@ export class DataIntegrityService {
    * Validation Features:
    * - Type safety validation (ensures string input)
    * - Length constraints (1-255 characters)
-   * - Control character removal (prevents system issues)
-   * - File system safe character filtering
+   * - Control character removal (prevents rendering issues)
    * - Automatic sanitization with fallback values
    *
    * @param name - Raw project name input from user
@@ -202,10 +201,9 @@ export class DataIntegrityService {
    *   this.saveProject({ name: result1.cleanValue });
    * }
    *
-   * // Invalid input with automatic cleaning
-   * const result2 = this.dataIntegrity.validateProjectName('Project<>Name|Invalid');
-   * console.log(result2.cleanValue); // 'Project__Name_Invalid'
-   * console.log(result2.issues); // ['Removed characters that could cause file system issues']
+   * // Names with special characters are allowed (IndexedDB storage, Angular auto-escapes)
+   * const result2 = this.dataIntegrity.validateProjectName('Bulba/Ivy/Venusaur');
+   * console.log(result2.isValid); // true
    *
    * // Null/undefined handling
    * const result3 = this.dataIntegrity.validateProjectName(null as any);
@@ -272,13 +270,6 @@ export class DataIntegrityService {
       if (controlCharsRemoved !== cleanValue) {
         issues.push('Removed control characters');
         cleanValue = controlCharsRemoved;
-      }
-
-      // Check for characters that might cause file system issues
-      const invalidFileChars = /[<>:"/\\|?*]/g;
-      if (invalidFileChars.test(cleanValue)) {
-        issues.push('Removed characters that could cause file system issues');
-        cleanValue = cleanValue.replace(invalidFileChars, '_');
       }
 
       if (issues.length > 0) {
