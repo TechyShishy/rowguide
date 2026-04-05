@@ -211,14 +211,6 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
   private applyingSort$ = new BehaviorSubject<boolean>(false);
 
   /**
-   * Delica color system mapping loaded from JSON configuration.
-   *
-   * Maps Delica color codes to hex color values for visual preview
-   * in the FLAM table. Loaded asynchronously on component init.
-   */
-  private delicaColors: { [key: string]: string } = {};
-
-  /**
    * Full Delica bead inventory keyed by bead code (e.g. "DB0001").
    *
    * Loaded asynchronously from delica-beads.json on component init.
@@ -415,27 +407,14 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
       }
     });
 
-    // Load delica colors mapping
-    this.http
-      .get<{ [key: string]: string }>('assets/delica-colors.json')
-      .subscribe({
-        next: (colors) => {
-          this.delicaColors = colors;
-          // Refresh the table data to apply hex colors now that delica colors are loaded
-          this.refreshTableData();
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.logger.error('Failed to load delica colors', err);
-        },
-      });
-
-    // Load full delica bead inventory for the detail panel
+    // Load delica bead inventory – used for both hex color preview and the detail panel
     this.http
       .get<{ [key: string]: DelicaBead }>('assets/delica-beads.json')
       .subscribe({
         next: (beads) => {
           this.delicaBeads = beads;
+          // Refresh the table data to apply hex colors now that the inventory is loaded
+          this.refreshTableData();
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -761,8 +740,8 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
       count: flamRow.count,
       color: (flamRow.color ?? '').trim(), // Trim whitespace for display
       hexColor:
-        flamRow.color && this.delicaColors[flamRow.color.trim()]
-          ? this.delicaColors[flamRow.color.trim()]
+        flamRow.color && this.delicaBeads[flamRow.color.trim()]
+          ? this.delicaBeads[flamRow.color.trim()].hex
           : '',
     };
   }
@@ -918,8 +897,8 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
       // Save color mappings to project and database
       this.flamService.saveColorMappingsToProject();
 
-      if (flamRow.color && this.delicaColors[flamRow.color]) {
-        flamRow.hexColor = this.delicaColors[flamRow.color];
+      if (flamRow.color && this.delicaBeads[flamRow.color]) {
+        flamRow.hexColor = this.delicaBeads[flamRow.color].hex;
       }
     }
     // Stop editing when focus is lost
