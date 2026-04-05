@@ -10,7 +10,7 @@
       <div [style.visibility]="dataSource.data.length > 0 ? 'visible' : 'hidden'"
            [style.height]="dataSource.data.length > 0 ? 'auto' : '0px'"
            [style.overflow]="'hidden'">
-        <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByKey">
+        <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByKey" multiTemplateDataRows>
           <ng-container matColumnDef="key">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Key</th>
             <td mat-cell *matCellDef="let flamRow" [class.sorted-column]="isColumnSorted('key')">{{flamRow.key}}</td>
@@ -62,11 +62,65 @@
             </td>
           </ng-container>
 
-          <tr mat-header-row
-            *matHeaderRowDef="['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor']">
-          </tr>
+          <!-- Expand/collapse toggle column – only shown for Delica beads -->
+          <ng-container matColumnDef="expand">
+            <th mat-header-cell *matHeaderCellDef aria-label="Bead detail"></th>
+            <td mat-cell *matCellDef="let flamRow">
+              <button *ngIf="getDelicaBeadCode(flamRow)"
+                mat-icon-button
+                class="expand-button"
+                [attr.aria-expanded]="isExpanded(flamRow)"
+                [attr.aria-label]="isExpanded(flamRow) ? 'Collapse bead detail' : 'Expand bead detail'"
+                (click)="$event.stopPropagation(); toggleExpand(flamRow)">
+                <mat-icon>{{isExpanded(flamRow) ? 'expand_less' : 'expand_more'}}</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Full-width detail row for Delica bead information -->
+          <ng-container matColumnDef="expandedDetail">
+            <td mat-cell *matCellDef="let flamRow" [attr.colspan]="displayedColumns.length">
+              <div *ngIf="isExpanded(flamRow)" class="element-detail">
+                <ng-container *ngIf="getDelicaBeadCode(flamRow) as beadCode">
+                  <ng-container *ngIf="getBeadInfo(beadCode) as bead">
+                  <div class="bead-detail-grid">
+                    <span class="bead-detail-label">Code</span>
+                    <span class="bead-detail-value">{{bead.code}}</span>
+
+                    <span class="bead-detail-label">Color</span>
+                    <span class="bead-detail-value bead-color-swatch-cell">
+                      <span *ngIf="bead.hex" class="bead-color-swatch" [style.background-color]="bead.hex" [attr.aria-label]="bead.hex"></span>
+                      <span>{{bead.color_group}}</span>
+                    </span>
+
+                    <span class="bead-detail-label">Glass</span>
+                    <span class="bead-detail-value">{{bead.glass_group}}</span>
+
+                    <span class="bead-detail-label">Finish</span>
+                    <span class="bead-detail-value">{{bead.finish.join(', ')}}</span>
+
+                    <span class="bead-detail-label">Dyed</span>
+                    <span class="bead-detail-value">{{bead.dyed}}</span>
+
+                    <span class="bead-detail-label">Galvanized</span>
+                    <span class="bead-detail-value">{{bead.galvanized}}</span>
+
+                    <span class="bead-detail-label">Plating</span>
+                    <span class="bead-detail-value">{{bead.plating}}</span>
+                  </div>
+                  </ng-container>
+                </ng-container>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row
-            *matRowDef="let row; columns: ['key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn', 'count', 'color', 'hexColor'];"></tr>
+            *matRowDef="let row; columns: displayedColumns;"
+            [class.expanded-row]="isExpanded(row)"></tr>
+          <tr mat-row
+            *matRowDef="let row; columns: ['expandedDetail']"
+            class="detail-row"></tr>
         </table>
         <div class="reset-button-container">
           <button mat-raised-button color="warn" (click)="resetAllColorCodes()">Reset All Color Codes</button>

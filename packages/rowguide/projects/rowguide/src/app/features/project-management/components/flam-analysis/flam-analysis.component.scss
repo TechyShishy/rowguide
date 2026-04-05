@@ -44,11 +44,75 @@ mat-form-field {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-// Ensure the sorted column styling doesn't interfere with other interactive elements
 .sorted-column .color-cell-span {
   background-color: transparent;
 }
 
 .sorted-column mat-form-field {
   background-color: transparent;
+}
+
+// Expand button – minimal footprint so the column stays narrow
+.expand-button {
+  padding: 0;
+}
+
+// Detail row collapses to zero height when not expanded
+.detail-row {
+  height: 0;
+  overflow: hidden;
+}
+
+// The cell inside the detail row needs no default cell padding
+.detail-row td {
+  padding: 0;
+  border-bottom-width: 0;
+}
+
+// Expanded data row gets a subtle bottom border to visually bracket the detail
+.expanded-row td {
+  border-bottom: none;
+}
+
+// Container that animates open/closed
+.element-detail {
+  overflow: hidden;
+  padding: 8px 16px 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-left: 3px solid rgba(0, 0, 0, 0.12);
+}
+
+// Two-column label/value grid for bead properties
+.bead-detail-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  row-gap: 4px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.bead-detail-label {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.bead-detail-value {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.bead-color-swatch-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bead-color-swatch {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }

@@ -202,4 +202,84 @@ describe('FlamAnalysisComponent', () => {
       );
     }));
   });
+
+  describe('Delica bead detail panel', () => {
+    const sampleBead = {
+      code: 'DB0001',
+      hex: '#23242d',
+      color_group: 'Gray',
+      glass_group: 'Opaque',
+      finish: ['Metallic'],
+      dyed: 'Non Dyed',
+      galvanized: 'Non-galvanized',
+      plating: 'Non-Plating',
+    };
+
+    beforeEach(() => {
+      (component as any).delicaBeads = { DB0001: sampleBead };
+    });
+
+    describe('getDelicaBeadCode()', () => {
+      it('should return the color field when it matches a known delica bead', () => {
+        expect(component.getDelicaBeadCode({ key: 'A', color: 'DB0001' })).toBe('DB0001');
+      });
+
+      it('should fall back to the key field when color does not match but key does', () => {
+        expect(component.getDelicaBeadCode({ key: 'DB0001', color: '' })).toBe('DB0001');
+      });
+
+      it('should return null when neither color nor key is a known delica bead', () => {
+        expect(component.getDelicaBeadCode({ key: 'X', color: 'RED' })).toBeNull();
+      });
+
+      it('should trim whitespace when looking up the color field', () => {
+        expect(component.getDelicaBeadCode({ key: 'A', color: ' DB0001 ' })).toBe('DB0001');
+      });
+    });
+
+    describe('getBeadInfo()', () => {
+      it('should return the bead record for a known code', () => {
+        expect(component.getBeadInfo('DB0001')).toEqual(sampleBead);
+      });
+
+      it('should return null for an unknown code', () => {
+        expect(component.getBeadInfo('DB9999')).toBeNull();
+      });
+    });
+
+    describe('toggleExpand()', () => {
+      it('should expand a row whose color matches a delica bead', () => {
+        component.toggleExpand({ key: 'A', color: 'DB0001' });
+        expect(component.expandedElementKey).toBe('A');
+      });
+
+      it('should collapse a row that is already expanded', () => {
+        component.expandedElementKey = 'A';
+        component.toggleExpand({ key: 'A', color: 'DB0001' });
+        expect(component.expandedElementKey).toBeNull();
+      });
+
+      it('should be a no-op when the row is not a delica bead', () => {
+        component.toggleExpand({ key: 'X', color: 'RED' });
+        expect(component.expandedElementKey).toBeNull();
+      });
+    });
+
+    describe('isExpanded()', () => {
+      it('should return true when the row key matches expandedElementKey', () => {
+        component.expandedElementKey = 'A';
+        expect(component.isExpanded({ key: 'A' })).toBeTrue();
+      });
+
+      it('should return false when the row key does not match', () => {
+        component.expandedElementKey = 'B';
+        expect(component.isExpanded({ key: 'A' })).toBeFalse();
+      });
+
+      it('should return false when no row is expanded', () => {
+        component.expandedElementKey = null;
+        expect(component.isExpanded({ key: 'A' })).toBeFalse();
+      });
+    });
+  });
 });

@@ -12,6 +12,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -58,6 +59,20 @@ import { ErrorBoundaryComponent } from '../../../../shared/components/error-boun
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 /**
+ * Delica bead inventory record as stored in delica-beads.json.
+ */
+interface DelicaBead {
+  code: string;
+  hex: string;
+  color_group: string;
+  glass_group: string;
+  finish: string[];
+  dyed: string;
+  galvanized: string;
+  plating: string;
+}
+
+/**
  * FLAM Analysis Component - Dedicated page for First/Last Appearance Map analysis.
  *
  * Provides comprehensive FLAM visualization and color management functionality
@@ -94,6 +109,7 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatIconModule,
     MatListModule,
     MatSortModule,
     MatTableModule,
@@ -149,6 +165,23 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
   }>([]);
 
   /**
+   * Ordered list of visible table columns. Kept as a class property so
+   * the detail-row colspan can reference it via template binding.
+   */
+  displayedColumns: string[] = [
+    'key', 'firstRow', 'firstColumn', 'lastRow', 'lastColumn',
+    'count', 'color', 'hexColor', 'expand',
+  ];
+
+  /**
+   * Key of the currently expanded FLAM row.
+   *
+   * Null when no row is expanded. Used to show or hide the detail
+   * panel that contains Delica bead inventory information.
+   */
+  expandedElementKey: string | null = null;
+
+  /**
    * Currently editing color key for inline editing state management.
    *
    * Tracks which FLAM row is in edit mode for color assignment.
@@ -186,6 +219,14 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
   private delicaColors: { [key: string]: string } = {};
 
   /**
+   * Full Delica bead inventory keyed by bead code (e.g. "DB0001").
+   *
+   * Loaded asynchronously from delica-beads.json on component init.
+   * Used to populate the expandable bead detail panel.
+   */
+  private delicaBeads: { [key: string]: DelicaBead } = {};
+
+  /**
    * TrackBy function for Angular table row optimization.
    *
    * Improves rendering performance by providing stable identity
@@ -210,6 +251,58 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
    */
   isColumnSorted(columnName: string): boolean {
     return this.sort?.active === columnName && this.sort?.direction !== '';
+  }
+
+  /**
+   * Returns the Delica bead code for a table row if one can be resolved,
+   * otherwise returns null. Checks the user-assigned `color` field first,
+   * then the pattern `key` itself as a fallback.
+   *
+   * @param row - FLAM table row
+   * @returns Delica bead code string, or null if the row is not a Delica bead
+   */
+  getDelicaBeadCode(row: { key: string; color: string }): string | null {
+    const colorTrimmed = (row.color ?? '').trim();
+    if (colorTrimmed && this.delicaBeads[colorTrimmed]) {
+      return colorTrimmed;
+    }
+    const keyTrimmed = (row.key ?? '').trim();
+    if (keyTrimmed && this.delicaBeads[keyTrimmed]) {
+      return keyTrimmed;
+    }
+    return null;
+  }
+
+  /**
+   * Returns the full Delica bead record for the given code, or null.
+   *
+   * @param code - Delica bead code (e.g. "DB0001")
+   */
+  getBeadInfo(code: string): DelicaBead | null {
+    return this.delicaBeads[code] ?? null;
+  }
+
+  /**
+   * Toggles the expanded detail panel for the given table row.
+   * No-op when the row does not correspond to a Delica bead.
+   *
+   * @param row - FLAM table row
+   */
+  toggleExpand(row: { key: string; color: string }): void {
+    const code = this.getDelicaBeadCode(row);
+    if (!code) return;
+    this.expandedElementKey =
+      this.expandedElementKey === row.key ? null : row.key;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Returns whether the given table row's detail panel is currently open.
+   *
+   * @param row - FLAM table row
+   */
+  isExpanded(row: { key: string }): boolean {
+    return this.expandedElementKey === row.key;
   }
 
   /**
@@ -334,6 +427,19 @@ export class FlamAnalysisComponent implements OnInit, AfterViewInit {
         },
         error: (err) => {
           this.logger.error('Failed to load delica colors', err);
+        },
+      });
+
+    // Load full delica bead inventory for the detail panel
+    this.http
+      .get<{ [key: string]: DelicaBead }>('assets/delica-beads.json')
+      .subscribe({
+        next: (beads) => {
+          this.delicaBeads = beads;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.logger.error('Failed to load delica bead inventory', err);
         },
       });
 
