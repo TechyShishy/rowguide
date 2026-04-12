@@ -4,13 +4,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import fileDownload from 'js-file-download';
 import { gzip } from 'pako';
 
 import { Project } from '../../../../core/models/project';
 import { ProjectDbService } from '../../../../data/services';
 import { ProjectService } from '../../services';
+import { FileSave } from '../../../../plugins/file-save.plugin';
 
 /**
  * Project Summary Component for project management and overview display.
@@ -64,6 +67,7 @@ import { ProjectService } from '../../services';
     MatInputModule,
     FormsModule,
     MatButtonModule,
+    MatSnackBarModule,
   ],
   templateUrl: './project-summary.component.html',
   styleUrl: './project-summary.component.scss',
@@ -98,7 +102,8 @@ export class ProjectSummaryComponent {
     private indexedDBService: ProjectDbService,
     private ref: ElementRef,
     private router: Router,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private snackBar: MatSnackBar
   ) {}
 
   /**
@@ -214,11 +219,44 @@ export class ProjectSummaryComponent {
    * // File can be imported via ProjectSelectorComponent
    * ```
    */
-  downloadProject() {
-    fileDownload(
-      gzip(JSON.stringify(this.project)),
-      'project.rgp',
-      'application/x-rowguide-project'
-    );
+  async downloadProject(): Promise<void> {
+    const compressed = gzip(JSON.stringify(this.project));
+    const safeName = (this.project.name || 'project').replace(/[/:*?"<>|]/g, '_');
+    const filename = `${safeName}.rgp`;
+
+    if (Capacitor.getPlatform() === 'android') {
+      const base64 = this.uint8ArrayToBase64(compressed);
+      try {
+        const result = await this.saveToDownloadsNative(filename, 'application/octet-stream', base64);
+        this.snackBar.open(`Saved to ${result.path}`, 'OK', { duration: 4000 });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.snackBar.open(`Download failed: ${message}`, 'Dismiss', { duration: 6000 });
+      }
+      return;
+    }
+
+    this.downloadBlobInBrowser(compressed, filename);
+  }
+
+  protected downloadBlobInBrowser(data: Uint8Array, filename: string): void {
+    fileDownload(data, filename, 'application/x-rowguide-project');
+  }
+
+  protected saveToDownloadsNative(
+    filename: string,
+    mimeType: string,
+    data: string
+  ): Promise<{ uri: string; path: string }> {
+    return FileSave.saveToDownloads({ filename, mimeType, data });
+  }
+
+  private uint8ArrayToBase64(bytes: Uint8Array): string {
+    const CHUNK = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
+    }
+    return btoa(binary);
   }
 }
