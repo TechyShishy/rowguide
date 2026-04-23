@@ -62,11 +62,12 @@ export function applyCombine12Transformation(rows: Row[], combine12: boolean): R
  *
  * @example
  * ```typescript
- * const steps1 = [{ id: 1, description: 'A', count: 1 }];
- * const steps2 = [{ id: 2, description: 'B', count: 1 }];
+ * // steps1 = Row 1 (reversed odd-indexed beads), steps2 = Row 2 (even-indexed beads)
+ * const steps1 = [{ id: 1, description: 'A', count: 1 }]; // stored Row 1
+ * const steps2 = [{ id: 2, description: 'B', count: 1 }]; // stored Row 2
  * 
  * const zipped = zipperStepsUtil(steps1, steps2);
- * // Result: [A, B] alternating pattern
+ * // Result: [B, A]  — Row 2 bead first, then reversed Row 1 bead
  * ```
  */
 export function zipperStepsUtil(steps1: Step[], steps2: Step[]): Step[] {
@@ -75,8 +76,13 @@ export function zipperStepsUtil(steps1: Step[], steps2: Step[]): Step[] {
       return [];
     }
 
-    const expandedSteps1 = expandSteps(steps1);
+    // Row 1 is stored as the reversed odd-indexed beads from the original
+    // combined sequence; Row 2 is stored as the even-indexed beads in natural
+    // order. To reconstruct the original flat sequence, reverse Row 1 back to
+    // get the odd-indexed beads, then interleave Row2-first:
+    //   Row2[0], Rev_Row1[0], Row2[1], Rev_Row1[1], ...
     const expandedSteps2 = expandSteps(steps2);
+    const expandedSteps1 = expandSteps(steps1).reverse();
 
     if (
       expandedSteps1.length !== expandedSteps2.length &&
@@ -90,11 +96,11 @@ export function zipperStepsUtil(steps1: Step[], steps2: Step[]): Step[] {
     const mergedSteps: Step[] = [];
 
     for (let i = 0; i < maxLength; i++) {
-      if (i < expandedSteps1.length) {
-        mergedSteps.push(expandedSteps1[i]);
-      }
       if (i < expandedSteps2.length) {
         mergedSteps.push(expandedSteps2[i]);
+      }
+      if (i < expandedSteps1.length) {
+        mergedSteps.push(expandedSteps1[i]);
       }
     }
 
