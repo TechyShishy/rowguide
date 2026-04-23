@@ -159,6 +159,37 @@ describe('ProjectInspectorComponent', () => {
       expect(result).toContain('data:image/png;base64,');
     });
 
+    it('should load project image when image is a legacy Base64 string', async () => {
+      // Old .rgp exports stored the image as a Base64 string rather than
+      // an ArrayBuffer.  The method must return a well-formed data URL.
+      const base64 = 'iVBORw0KGgoAAAANSUhEUg=='; // minimal fake PNG base64
+      const projectWithStringImage = { ...mockProject, image: base64 as unknown as ArrayBuffer };
+
+      const result = await component.loadProjectImage(projectWithStringImage);
+
+      expect(result).toBe(`data:image/png;base64,${base64}`);
+    });
+
+    it('should return already-prefixed data URL as-is', async () => {
+      const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==';
+      const projectWithDataUrl = { ...mockProject, image: dataUrl as unknown as ArrayBuffer };
+
+      const result = await component.loadProjectImage(projectWithDataUrl);
+
+      expect(result).toBe(dataUrl);
+    });
+
+    it('should return empty string when image is a broken plain object from old export', async () => {
+      // Before the export fix, JSON.stringify(ArrayBuffer) produced {}.
+      // loadProjectImage must not try to render it as an image.
+      const brokenImage = {} as unknown as ArrayBuffer;
+      const projectWithBrokenImage = { ...mockProject, image: brokenImage };
+
+      const result = await component.loadProjectImage(projectWithBrokenImage);
+
+      expect(result).toBe('');
+    });
+
     it('should return empty string when project has no image', async () => {
       const projectWithoutImage = { ...mockProject, image: undefined };
 

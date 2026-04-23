@@ -289,14 +289,29 @@ export class ProjectInspectorComponent implements OnInit {
    */
   async loadProjectImage(project: Project): Promise<string> {
     if (project?.image) {
+      // Legacy .rgp exports stored image as a Base64 string rather than an
+      // ArrayBuffer.  Detect that case and return the data URL directly so the
+      // browser can render it without trying to blob-wrap plain text.
+      const raw = project.image as unknown;
+      if (typeof raw === 'string') {
+        // Guard against callers that already supply a full data URL.
+        if (raw.startsWith('data:')) {
+          return raw;
+        }
+        // Legacy exports only supported PNG; hardcode MIME accordingly.
+        return `data:image/png;base64,${raw}`;
+      }
+      // Guard against broken exports where JSON.stringify({} from ArrayBuffer)
+      // produced a plain object.  Display nothing rather than a broken image.
+      if (!(raw instanceof ArrayBuffer)) {
+        return firstValueFrom(of(''));
+      }
       const reader = new FileReader();
       const result = await new Promise<string>((resolve) => {
         reader.onload = () => {
           resolve(reader.result as string);
         };
-        reader.readAsDataURL(
-          new Blob([project.image ?? new ArrayBuffer(0)], { type: 'image/png' })
-        );
+        reader.readAsDataURL(new Blob([raw], { type: 'image/png' }));
       });
       return result;
     }

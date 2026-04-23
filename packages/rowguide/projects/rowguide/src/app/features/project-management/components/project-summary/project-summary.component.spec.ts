@@ -5,6 +5,7 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { provideRouter } from '@angular/router';
 import { routes } from '../../../../app.routes';
 import { Capacitor } from '@capacitor/core';
+import { inflate } from 'pako';
 
 describe('ProjectSummaryComponent', () => {
   let component: ProjectSummaryComponent;
@@ -85,6 +86,29 @@ describe('ProjectSummaryComponent', () => {
         'Dismiss',
         jasmine.objectContaining({ duration: 6000 })
       );
+    });
+
+    it('should serialize ArrayBuffer image as Base64 in exported JSON', async () => {
+      // Arrange: project with an ArrayBuffer image so we can verify JSON.stringify
+      // does NOT silently discard it (which it would if we pass ArrayBuffer directly).
+      const imageBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]); // partial PNG magic
+      component.project = { ...component.project, image: imageBytes.buffer };
+      spyOn(Capacitor, 'getPlatform').and.returnValue('web');
+
+      let capturedData: Uint8Array | undefined;
+      spyOn(component, 'downloadBlobInBrowser' as any).and.callFake(
+        (data: Uint8Array) => { capturedData = data; }
+      );
+
+      await component.downloadProject();
+
+      const json = new TextDecoder().decode(inflate(capturedData!));
+      const parsed = JSON.parse(json);
+
+      // Image must survive the round-trip as a Base64 string, not as {}
+      expect(typeof parsed.image).toBe('string');
+      const expectedBase64 = btoa(String.fromCharCode(...imageBytes));
+      expect(parsed.image).toBe(expectedBase64);
     });
 
     it('should call downloadBlobInBrowser on non-android platform', async () => {

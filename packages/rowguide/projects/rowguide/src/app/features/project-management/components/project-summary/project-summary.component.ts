@@ -220,7 +220,17 @@ export class ProjectSummaryComponent {
    * ```
    */
   async downloadProject(): Promise<void> {
-    const compressed = gzip(JSON.stringify(this.project));
+    // ArrayBuffer is not JSON-serializable (JSON.stringify outputs {}).
+    // Convert it to Base64 so the image survives the round-trip through
+    // JSON → GZIP → file → GZIP → JSON → Project.
+    let projectToExport: Record<string, unknown> = this.project as unknown as Record<string, unknown>;
+    if (this.project.image instanceof ArrayBuffer) {
+      projectToExport = {
+        ...projectToExport,
+        image: this.uint8ArrayToBase64(new Uint8Array(this.project.image)),
+      };
+    }
+    const compressed = gzip(JSON.stringify(projectToExport));
     const safeName = (this.project.name || 'project').replace(/[/:*?"<>|]/g, '_');
     const filename = `${safeName}.rgp`;
 
