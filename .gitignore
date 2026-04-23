@@ -1,5 +1,8 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# Test output artifacts
+test_output.txt
+
 # Compiled output
 /dist
 /tmp

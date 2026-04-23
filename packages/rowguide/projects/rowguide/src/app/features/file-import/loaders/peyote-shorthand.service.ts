@@ -292,13 +292,14 @@ export class PeyoteShorthandService {
     const rowExpanded = this.zipperService.expandSteps(row.steps);
     rowExpanded.forEach((step, index) => {
       if (index % 2 === 0) {
-        row1Expanded.push(step);
-        row1TotalSteps += step.count;
-      } else {
         row2Expanded.push(step);
         row2TotalSteps += step.count;
+      } else {
+        row1Expanded.push(step);
+        row1TotalSteps += step.count;
       }
     });
+    row1Expanded = row1Expanded.reverse();
     const row1Steps = this.zipperService.compressSteps(row1Expanded);
     const row2Steps = this.zipperService.compressSteps(row2Expanded);
     const row1: Row = { id: 1, steps: row1Steps };

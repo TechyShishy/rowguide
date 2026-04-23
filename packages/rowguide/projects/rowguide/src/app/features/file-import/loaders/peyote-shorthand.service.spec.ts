@@ -380,6 +380,57 @@ describe('PeyoteShorthandService', () => {
 
       expect(project.rows.length).toBe(0);
     });
+
+    it('should split odd-indexed beads (reversed) into Row 1 and even-indexed beads into Row 2', () => {
+      // Reference example from BeadTool 4 spec:
+      //   flat: E D F C G B H A  (indices 0–7)
+      //   even (Row 2): E, F, G, H
+      //   odd  (Row 1): D, C, B, A  →  reversed  →  A, B, C, D
+      const realExpand = (steps: Step[]): Step[] => {
+        const result: Step[] = [];
+        let id = 1;
+        for (const step of steps) {
+          for (let i = 0; i < step.count; i++) {
+            result.push({ id: id++, count: 1, description: step.description });
+          }
+        }
+        return result;
+      };
+      const realCompress = (steps: Step[]): Step[] => {
+        if (!steps.length) return [];
+        const result: Step[] = [];
+        let id = 1;
+        let current: Step = { ...steps[0], id: id++, count: 1 };
+        for (let i = 1; i < steps.length; i++) {
+          if (steps[i].description === current.description) {
+            current.count++;
+          } else {
+            result.push({ ...current });
+            current = { ...steps[i], id: id++, count: 1 };
+          }
+        }
+        result.push({ ...current });
+        return result;
+      };
+      zipperServiceSpy.expandSteps.and.callFake(realExpand);
+      zipperServiceSpy.compressSteps.and.callFake(realCompress);
+
+      const projectString =
+        'Row 1&2 (L) (1)E, (1)D, (1)F, (1)C, (1)G, (1)B, (1)H, (1)A';
+      const project: Project = service.toProject(projectString);
+
+      expect(project.rows.length).toBe(2);
+
+      const row1 = project.rows[0];
+      expect(row1.id).toBe(1);
+      expect(row1.steps.map((s) => s.description)).toEqual(['A', 'B', 'C', 'D']);
+      expect(row1.steps.map((s) => s.count)).toEqual([1, 1, 1, 1]);
+
+      const row2 = project.rows[1];
+      expect(row2.id).toBe(2);
+      expect(row2.steps.map((s) => s.description)).toEqual(['E', 'F', 'G', 'H']);
+      expect(row2.steps.map((s) => s.count)).toEqual([1, 1, 1, 1]);
+    });
   });
 
   describe('Custom Delimiter Support', () => {
